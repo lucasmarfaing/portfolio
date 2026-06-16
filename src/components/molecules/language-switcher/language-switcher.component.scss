@@ -1,0 +1,46 @@
+.lang-toggle {
+    position: relative;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+    background-color: #EFEFEF;
+    border-radius: 180px;
+    padding-inline: 5px;
+    padding-block: 4px;
+    position: relative;
+
+    button {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        padding: 0;
+        border: none;
+        border-radius: 180px;
+        width: 25px;
+        height: 25px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        background-color: transparent;
+        transition: color .3s;
+
+        &.selected {
+            color: var(--color-white);
+            cursor: default;
+        }
+    }
+
+    &__background {
+        position: absolute;
+        top: 4px;
+        left: 5px; 
+        z-index: 1;
+        border-radius: 180px;
+        width: 25px;
+        height: 25px;
+        background-color: var(--color-primary);
+        transform: translateX(calc(var(--active-index) * (25px + 5px)));
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}

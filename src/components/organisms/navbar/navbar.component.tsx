@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { SECTIONS } from '@/constants/sections';
-import { SUPPORTED_LANGUAGES } from '@/i18n';
 import './navbar.component.scss';
+import { LanguageSwitcher } from '@/components/molecules/language-switcher/language-switcher.component';
 
 export function Navbar() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   return (
     <header className="navbar">
@@ -16,13 +16,7 @@ export function Navbar() {
         ))}
       </nav>
 
-      <div>
-        {SUPPORTED_LANGUAGES.map((lng) => (
-          <button key={lng} type="button" onClick={() => i18n.changeLanguage(lng)}>
-            {lng.toUpperCase()}
-          </button>
-        ))}
-      </div>
+      <LanguageSwitcher ></LanguageSwitcher>
     </header>
   );
 }
