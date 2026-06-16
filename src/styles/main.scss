@@ -4,11 +4,19 @@
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  font-family: var(--font-sans);
-  height: 100%;
+    margin: 0;
+    font-family: var(--font-sans);
+    height: 100%;
+}
+
+// Les éléments de formulaire n'héritent pas de la police par défaut → on force.
+button,
+input,
+select,
+textarea {
+    font: inherit;
 }

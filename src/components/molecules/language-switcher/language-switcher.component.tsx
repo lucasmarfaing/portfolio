@@ -27,6 +27,7 @@ export function LanguageSwitcher() {
           key={lng}
           type="button"
           lang={lng}
+          title={LANGUAGE_NAMES[lng] ?? lng.toUpperCase()}
           aria-pressed={i18n.language === lng}
           aria-label={LANGUAGE_NAMES[lng] ?? lng.toUpperCase()}
           onClick={() => i18n.changeLanguage(lng)}
