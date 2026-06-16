@@ -1,15 +1,25 @@
 {
+  "button": {
+    "download": "Télécharger mon CV",
+    "contact": "Entrons en contact"
+  },
   "nav": {
     "home": "Accueil",
     "about": "À propos",
+    "skills": "Compétences",
     "projects": "Projets",
     "contact": "Contact"
   },
   "hero": {
+    "hook": "Rêveur ayant les pieds sur terre",
     "experience": {
       "work": "Ans d'expérience",
       "born": "Ans d'existence",
       "mystery": "Ans de mystère"
     }
+  },
+  "a11y": {
+    "languageSwitcher": "Choix de la langue",
+    "primaryNav": "Navigation principale"
   }
 }

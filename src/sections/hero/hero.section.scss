@@ -1,3 +1,16 @@
 #home {
   min-height: 100dvh;
+
+
+  .hook{
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--color-primary);
+    font-size: 25px;
+
+    &::before{
+      content: "—";
+      margin-right: 5px
+    }
+  }
 }

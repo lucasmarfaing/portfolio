@@ -4,7 +4,7 @@ import {
   ProjectsSection,
   ContactSection,
 } from '@/sections';
-import { Navbar } from '@/components';
+import { Navbar } from '@/organisms';
 
 export default function App() {
   return (

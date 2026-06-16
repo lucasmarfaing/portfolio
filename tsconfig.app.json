@@ -25,6 +25,11 @@
 
     /* Path aliases (resolved relative to this tsconfig — no baseUrl needed) */
     "paths": {
+      "@/atoms": ["./src/components/atoms"],
+      "@/molecules": ["./src/components/molecules"],
+      "@/organisms": ["./src/components/organisms"],
+      "@/icons": ["./src/assets/icons"],
+      "@/sections": ["./src/sections"],
       "@/*": ["./src/*"]
     },
 

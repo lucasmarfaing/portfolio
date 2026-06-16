@@ -1,8 +1,25 @@
 {
+  "button": {
+    "download": "Download my resume",
+    "contact": "Let's get in touch"
+  },
   "nav": {
     "home": "Home",
     "about": "About",
+    "skills": "Skills",
     "projects": "Projects",
     "contact": "Contact"
+  },
+  "hero": {
+    "hook": "Head in the clouds, feet on the ground",
+    "experience": {
+      "work": "Years of experience",
+      "born": "Years of existence",
+      "mystery": "Years of mystery"
+    }
+  },
+  "a11y": {
+    "languageSwitcher": "Language",
+    "primaryNav": "Primary"
   }
 }
