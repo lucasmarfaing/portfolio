@@ -1,0 +1,14 @@
+@use 'fonts';
+@use 'root';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  height: 100%;
+}

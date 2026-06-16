@@ -1,0 +1,9 @@
+.dev-label{
+    color: var(--color-black);
+    font-weight: 700;
+    font-size: 30px;
+
+    &__dot{
+        color: var(--color-primary);
+    }
+}

@@ -1,0 +1,19 @@
+.experience{
+    display: flex;
+    flex-direction: column;
+
+
+    &__year{
+        font-size: 30px;
+        font-weight: 700;
+        line-height: 30px;
+    }
+
+    &__plus{
+        color: var(--color-primary)
+    }
+
+    &__label{
+        font-weight: 500;
+    }
+}
