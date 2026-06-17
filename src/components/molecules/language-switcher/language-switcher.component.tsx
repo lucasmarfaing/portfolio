@@ -35,7 +35,9 @@ export function LanguageSwitcher() {
           {lng.toUpperCase()}
         </button>
       ))}
-      <div className='lang-toggle__background' aria-hidden="true"></div>
+      <div className='lang-toggle__slider' aria-hidden="true">
+        <div key={i18n.language} className='lang-toggle__pill'></div>
+      </div>
     </div>
   );
 }
