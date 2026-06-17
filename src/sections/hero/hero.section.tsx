@@ -1,4 +1,4 @@
-import { Button, DevLabel, Icon, Logo } from "@/atoms";
+import { Button, DevLabel, Icon } from "@/atoms";
 import { Experience } from "@/molecules";
 import { useTranslation } from "react-i18next";
 
@@ -11,7 +11,6 @@ export function HeroSection() {
     return (
         <section id="home">
             <span className='hook'>{t('hero.hook')}</span>
-            <Logo></Logo>
             <Button label={"button.contact"} onClick={(): void => { console.log("JE CLIQUE")}}></Button>
             <Experience date={new Date("2018-10-15")} label={"hero.experience.work"}></Experience>
             <Experience date={new Date("1997-04-25")} label={"hero.experience.born"}></Experience>

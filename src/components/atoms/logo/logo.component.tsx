@@ -1,9 +1,14 @@
-
+import type { MouseEvent } from 'react';
 import './logo.component.scss';
 
-export function Logo() {
+interface LogoProps {
+  onClick?: (e: MouseEvent<HTMLAnchorElement>) => void;
+}
 
+export function Logo({ onClick }: LogoProps) {
   return (
-    <span className='logo'><span className='logo__square'></span>LUCAS</span>
+    <a className='logo' href='#home' aria-label="Retour à l'accueil" onClick={onClick}>
+      <span className='logo__square'></span>LUCAS
+    </a>
   );
 }

@@ -5,11 +5,11 @@
     background-color: var(--color-primary);
     border-radius: 9px;
     padding-inline: 20px;
-    padding-block: 10px;
-    font-weight: 600;
+    padding-block: 8px;
+    font-weight: 500;
     cursor: pointer;
 
-    // Focus clavier visible (uniquement au clavier, pas au clic souris).
+    // Accessibilité
     &:focus-visible {
         outline: 2px solid var(--color-primary);
         outline-offset: 2px;
