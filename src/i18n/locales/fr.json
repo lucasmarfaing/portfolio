@@ -10,6 +10,13 @@
     "projects": "Projets",
     "contact": "Contact"
   },
+  "title": {
+    "home": "Développeur, la tête dans les étoiles, les mains dans le code",
+    "about": "À propos",
+    "skills": "Compétences",
+    "projects": "Projets",
+    "contact": "Contact"   
+  },
   "hero": {
     "hook": "Rêveur ayant les pieds sur terre",
     "experience": {

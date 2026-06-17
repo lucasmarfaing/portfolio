@@ -10,6 +10,13 @@
     "projects": "Projects",
     "contact": "Contact"
   },
+  "title": {
+    "home": "Developer, head in the stars, hands in the code",
+    "about": "About",
+    "skills": "Skills",
+    "projects": "Projects",
+    "contact": "Contact"
+  },
   "hero": {
     "hook": "Head in the clouds, feet on the ground",
     "experience": {

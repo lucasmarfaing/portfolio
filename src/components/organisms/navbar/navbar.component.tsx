@@ -6,9 +6,9 @@ import { LanguageSwitcher } from '@/molecules';
 import { Logo } from '@/atoms';
 import './navbar.component.scss';
 
+const SITE_NAME = 'Lucas Marfaing';
 const NAV_LINKS = SECTIONS.filter((s) => s.showNav);
 const HOME_SECTION = SECTIONS[0];
-
 const SCROLL_OFFSET = -90;
 
 export function Navbar() {
@@ -30,6 +30,11 @@ export function Navbar() {
         });
         if (current) setActiveId(current.id);
     });
+
+    useEffect(() => {
+        const section = SECTIONS.find((s) => s.id === activeId);
+        document.title = section ? `${SITE_NAME} — ${t(section.title)}` : SITE_NAME;
+    }, [activeId, t]);
 
     useEffect(() => {
         if (firstRun.current) {
@@ -54,7 +59,7 @@ export function Navbar() {
 
     return (
         <header className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
-            <Logo onClick={(e) => navigateTo(e, HOME_SECTION.id)} />
+            <Logo active={activeId === HOME_SECTION.id} onClick={(e) => navigateTo(e, HOME_SECTION.id)} />
 
             <div className='navbar__left'>
                 <nav className='navbar__nav' aria-label={t('a11y.primaryNav')}>
