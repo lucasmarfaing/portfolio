@@ -6,6 +6,7 @@ import {
     AboutSection,
     ProjectsSection,
     ContactSection,
+    SkillsSections,
 } from '@/sections';
 import { Navbar } from '@/organisms';
 
@@ -18,6 +19,7 @@ export default function App() {
             <main>
                 <HeroSection />
                 <AboutSection />
+                <SkillsSections />
                 <ProjectsSection />
                 <ContactSection />
             </main>

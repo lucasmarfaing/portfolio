@@ -2,6 +2,7 @@
 export const SECTIONS = [
   { id: 'home', navKey: 'nav.home', showNav: false, title: 'title.home' },
   { id: 'about', navKey: 'nav.about', showNav: true, title: 'title.about' },
+  { id: 'skills', navKey: 'nav.skills', showNav: true, title: 'title.skills' },
   { id: 'projects', navKey: 'nav.projects', showNav: true, title: 'title.projects' },
   { id: 'contact', navKey: 'nav.contact', showNav: true, title: 'title.contact'},
 ] as const;
