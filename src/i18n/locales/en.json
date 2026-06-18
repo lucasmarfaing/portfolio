@@ -23,10 +23,15 @@
       "work": "Years of experience",
       "born": "Years of existence",
       "mystery": "Years of mystery"
+    },
+    "back": {
+      "developer": "Developer",
+      "designer": "Designer",
+      "dreamer": "Dreamer"
     }
   },
   "a11y": {
-    "languageSwitcher": "Language",
-    "primaryNav": "Primary"
+    "languageSwitcher": "Language selection",
+    "primaryNav": "Primary navigation"
   }
 }

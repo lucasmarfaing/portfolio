@@ -1,14 +1,15 @@
 .navbar {
     position: fixed;
     top: 15px;
-    left: 15px;
-    right: 15px;
+    // Capée à --width et centrée, comme le contenu. Le calc garde 15px de
+    // marge de chaque côté tant qu'on est sous le cap.
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 30px);
+    max-width: var(--width);
     z-index: 100;
-
-    background-color: color-mix(in srgb, var(--color-white) 12%, transparent);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
     border-radius: 180px;
+    background-color: color-mix(in srgb, var(--color-white) 0%, transparent);
 
     display: flex;
     flex-direction: row;
@@ -18,9 +19,12 @@
     padding-left: 25px;
     height: 60px;
 
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, backdrop-filter 0.3s ease,
+        -webkit-backdrop-filter 0.3s ease;
 
     &--scrolled {
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
         background-color: color-mix(in srgb, var(--color-black) 12%, transparent);
     }
 

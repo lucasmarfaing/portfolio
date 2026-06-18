@@ -23,6 +23,11 @@
       "work": "Ans d'expérience",
       "born": "Ans d'existence",
       "mystery": "Ans de mystère"
+    },
+    "back":{
+      "developer": "Développeur",
+      "designer": "Designer",
+      "dreamer": "Rêveur"
     }
   },
   "a11y": {

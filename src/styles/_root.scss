@@ -2,7 +2,9 @@
   --color-primary: #e23b2e;
   --color-white: #ffffff;
   --color-black: #000000;
-  --width: 1900px;
+  --width: 1440px;
+  // Hauteur réservée à la navbar fixe (top 15px + height 60px + air).
+  --padding-top-navbar: 90px;
 
   --font-sans: 'Poppins', system-ui, -apple-system, sans-serif;
 }
