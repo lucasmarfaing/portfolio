@@ -1,6 +1,6 @@
 {
   "button": {
-    "download": "Download my resume",
+    "download": "Download my <1>resume</1>",
     "contact": "Let's get in touch"
   },
   "nav": {

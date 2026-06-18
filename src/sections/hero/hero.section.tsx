@@ -1,6 +1,8 @@
-import { Button, DevLabel, Icon } from "@/atoms";
+import { Button, DevLabel } from "@/atoms";
 import { Experience } from "@/molecules";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
+
+import mePicture from '@/assets/images/me_picture.png';
 
 import './hero.section.scss';
 
@@ -10,9 +12,14 @@ export function HeroSection() {
 
     return (
         <section id="home">
-            <div className="home_content">
-                <span className='home_content__hook'>{t('hero.hook')}</span>
-                <Button label={"button.contact"} onClick={(): void => { console.log("JE CLIQUE") }}></Button>
+            <div className="home-content">
+                <h1 className="home-content__name">Lucas Marfaing</h1>
+                <span className='home-content__hook'>{t('hero.hook')}</span>
+
+                <div className="actions">
+                    <Button label={"button.contact"} onClick={(): void => { console.log("JE CLIQUE") }}></Button>
+                    <span className="actions__cv"> <Trans i18nKey="button.download" components={{ 1: <span className="accent" /> }} /></span>
+                </div>
 
 
                 <div className="bottom">
@@ -21,8 +28,6 @@ export function HeroSection() {
                         <Experience date={new Date("1997-04-25")} label={"hero.experience.born"}></Experience>
                         <Experience date={new Date("2013-06-01")} label={"hero.experience.mystery"}></Experience>
                     </div>
-
-
 
                     <DevLabel></DevLabel>
                 </div>

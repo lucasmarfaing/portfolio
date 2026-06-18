@@ -2,6 +2,9 @@
     color: var(--color-black);
     font-weight: 700;
     font-size: 30px;
+    line-height: 30px;
+    align-items: flex-end;
+    display: flex;
 
     &__dot{
         color: var(--color-primary);
