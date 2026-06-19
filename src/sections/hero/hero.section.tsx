@@ -13,12 +13,22 @@ export function HeroSection() {
     return (
         <section id="home">
             <div className="home-content">
-                <h1 className="home-content__name">Lucas Marfaing</h1>
-                <span className='home-content__hook'>{t('hero.hook')}</span>
+                <div className="home-content__info">
+                    <div className="home-content__left">
+                        <h1 className="home-content__name">Lucas Marfaing</h1>
+                        <span className='home-content__hook'>{t('hero.hook')}</span>
 
-                <div className="actions">
-                    <Button label={"button.contact"} onClick={(): void => { console.log("JE CLIQUE") }}></Button>
-                    <span className="actions__cv"> <Trans i18nKey="button.download" components={{ 1: <span className="accent" /> }} /></span>
+                        <div className="actions">
+                            <Button label={"button.contact"} onClick={(): void => { console.log("JE CLIQUE") }}></Button>
+                            <span className="actions__cv"> <Trans i18nKey="button.download" components={{ 1: <span className="accent" /> }} /></span>
+                        </div>
+                    </div>
+
+
+                    <div className="me-mask">
+                        <img src={mePicture} alt="photo masquée" />
+                        <div className="me-mask__circle"></div>
+                    </div>
                 </div>
 
 
