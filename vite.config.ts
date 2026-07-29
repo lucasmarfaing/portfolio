@@ -21,6 +21,9 @@ export default defineConfig({
       },
     })],
   resolve: {
+    // Force une seule copie de React (sinon framer-motion en tire une 2e →
+    // "Invalid hook call / more than one copy of React").
+    dedupe: ['react', 'react-dom'],
     // Tier-aware aliases first so they match before the generic '@'.
     alias: [
       { find: '@/atoms', replacement: fileURLToPath(new URL('./src/components/atoms', import.meta.url)) },

@@ -9,7 +9,6 @@ import './navbar.component.scss';
 const SITE_NAME = 'Lucas Marfaing';
 const NAV_LINKS = SECTIONS.filter((s) => s.showNav);
 const HOME_SECTION = SECTIONS[0];
-const SCROLL_OFFSET = -90;
 
 export function Navbar() {
     const { t } = useTranslation();
@@ -48,7 +47,7 @@ export function Navbar() {
     const navigateTo = (e: MouseEvent<HTMLAnchorElement>, id: string) => {
         e.preventDefault();
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        lenis?.scrollTo(`#${id}`, { offset: SCROLL_OFFSET, immediate: reduce });
+        lenis?.scrollTo(`#${id}`, { immediate: reduce });
 
         const target = document.getElementById(id);
         if (target) {
