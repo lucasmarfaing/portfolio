@@ -1,0 +1,110 @@
+{
+  "index": "05",
+  "label": "Missions",
+  "title": "Missions",
+  "titleMuted": "accomplished.",
+  "intro": "Every project is a mission: a goal, a crew, a stack, and a landing in production. Pick a mission to read its debrief.",
+  "labels": {
+    "status": { "done": "Accomplished", "live": "In progress", "archived": "Archived", "secret": "Classified" },
+    "statusLong": { "done": "Accomplished", "live": "In progress", "archived": "Ended · archived", "secret": "Classified" },
+    "feed": "Video feed · Mission",
+    "progress": "Progress",
+    "rec": "REC",
+    "archivedStamp": "Mission ended",
+    "archivedStampSub": "Archived · out of service",
+    "secretStamp": "Classified",
+    "secretStampSub": "Restricted access · Omega level",
+    "phases": ["Briefing", "Design", "Development", "Orbit insertion"],
+    "rows": { "status": "Status", "role": "Role", "stack": "Stack", "duration": "Duration", "crew": "Crew", "launch": "Launch" },
+    "performance": "Performance",
+    "lighthouse": "Lighthouse",
+    "activity": "Activity · commits / month",
+    "months": ["M1", "M3", "M6", "M9", "M12"],
+    "trend": { "up": "▲ Rising", "down": "▼ Falling", "ended": "▼ Activity ended", "secret": "■ Encrypted signal" },
+    "viewMission": "View the mission",
+    "source": "Source code",
+    "requestAccess": "Request access",
+    "accessDenied": "Access denied"
+  },
+  "missions": [
+    {
+      "name": "Gmee",
+      "category": "Social network",
+      "status": "archived",
+      "tint": "red",
+      "screenshotLabel": "[Gmee screenshot]",
+      "elapsed": "4 years · mission ended",
+      "brief": "A social network that respects its users: no sneaky data harvesting, no reselling, no ads. Designed and built as a duo with Thibaut Huguet.",
+      "role": "Creator · designer · dev",
+      "stack": "React Native · Expo · Express · PostgreSQL · Redis · Figma",
+      "duration": "4 years",
+      "crew": "Duo · with Thibaut Huguet",
+      "lighthouse": 86,
+      "activity": [4, 9, 14, 22, 30, 26, 18, 24, 12, 8, 3, 1],
+      "meters": [
+        { "label": "Users", "value": "200", "level": 4 },
+        { "label": "Duration", "value": "4 years", "level": 12 },
+        { "label": "Crew", "value": "2 people", "level": 2 }
+      ]
+    },
+    {
+      "name": "Project Fire",
+      "category": "Mobile game",
+      "status": "live",
+      "phase": 2,
+      "tint": "amber",
+      "screenshotLabel": "[Project Fire screenshot]",
+      "elapsed": "1 year",
+      "brief": "A mobile game in development, where you have to ████████ ██ ██████████. The rest is still classified.",
+      "role": "Creator · designer · dev",
+      "stack": "Unity",
+      "duration": "1 year · ongoing",
+      "crew": "Solo",
+      "activity": [2, 5, 8, 12, 15, 20, 24, 22, 28, 30, 26, 32],
+      "meters": [
+        { "label": "Phase", "value": "Development", "level": 6 },
+        { "label": "Duration", "value": "1 year", "level": 3 },
+        { "label": "Crew", "value": "Solo", "level": 1 }
+      ]
+    },
+    {
+      "name": "This portfolio",
+      "category": "Meta",
+      "status": "live",
+      "phase": 1,
+      "tint": "blue",
+      "screenshotLabel": "[Portfolio screenshot]",
+      "elapsed": "3 months",
+      "brief": "The site you’re visiting right now: designed in Figma, from V1 to V6, then steered all the way to this Mission Control version.",
+      "role": "Creator · designer · dev",
+      "stack": "Figma · Astro · React",
+      "duration": "3 months (V6)",
+      "crew": "Solo",
+      "activity": [1, 2, 1, 3, 2, 4, 3, 5, 6, 8, 10, 14],
+      "meters": [
+        { "label": "Iterations", "value": "6", "level": 6 },
+        { "label": "Technologies", "value": "{technos}", "level": 12 },
+        { "label": "V6 duration", "value": "3 months", "level": 1 }
+      ]
+    },
+    {
+      "name": "Project ██████",
+      "category": "Classified",
+      "status": "secret",
+      "tint": "red",
+      "screenshotLabel": "[ Encrypted signal ]",
+      "elapsed": "Launch 2026",
+      "brief": "Destination: ████████. Objective: ██████ ██ ████████ ███ ██████████. Only declassified information: launch planned for 2026.",
+      "role": "██████████",
+      "stack": "████ · ██████",
+      "launch": "2026",
+      "crew": "█████",
+      "activity": [7, 3, 9, 2, 8, 4, 10, 1, 6, 9, 3, 8],
+      "meters": [
+        { "label": "Budget", "value": "█████", "level": 0 },
+        { "label": "Crew", "value": "███", "level": 0 },
+        { "label": "Destination", "value": "███████", "level": 0 }
+      ]
+    }
+  ]
+}

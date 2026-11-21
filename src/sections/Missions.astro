@@ -1,0 +1,1229 @@
+---
+import Redactable from '@/components/Redactable.astro';
+import SectionHead from '@/components/SectionHead.astro';
+import { fill, type MissionsContent } from '@/lib/content';
+
+interface Props {
+  content: MissionsContent;
+  /** Number of technologies on the star map, usable as {technos} in a meter value */
+  technos: number;
+}
+
+const { content, technos } = Astro.props;
+const { labels } = content;
+
+const tintVar = { red: 'var(--accent)', amber: 'var(--warning)', blue: 'var(--star-blue)' } as const;
+const statusColor = {
+  done: 'var(--success)',
+  live: 'var(--warning)',
+  archived: 'var(--text-muted)',
+  secret: 'var(--accent)',
+} as const;
+
+// Activity chart (SVG 520 × 104)
+const CW = 520;
+const CH = 100;
+const chart = (values: number[]) => {
+  const max = Math.max(...values, 1);
+  const pts = values.map((v, i) => [Math.round((i * CW) / (values.length - 1)), Math.round(CH - 4 - (v / max) * (CH - 14))] as const);
+  const line = `M${pts.map((p) => p.join(' ')).join(' L')}`;
+  const last3 = values.slice(-3).reduce((a, b) => a + b, 0);
+  const prev3 = values.slice(-6, -3).reduce((a, b) => a + b, 0);
+  return { line, area: `${line} L${CW} 104 L0 104 Z`, last: pts.at(-1)!, up: last3 >= prev3 };
+};
+
+const missions = content.missions.map((m, i) => {
+  const secret = m.status === 'secret';
+  const finished = m.status === 'done' || m.status === 'archived';
+  const step = finished ? 4 : (m.phase ?? 1);
+  const accent = secret ? 'var(--accent)' : m.status === 'archived' ? 'var(--text-muted)' : finished ? 'var(--accent)' : 'var(--warning)';
+  const activity = m.activity ? chart(m.activity) : undefined;
+  const phases = labels.phases.map((label, p) => {
+    if (secret) return { label: p === 0 ? `✓ ${label}` : '█'.repeat(6 + p * 2), state: p === 0 ? 'done' : 'redacted' };
+    const state = p < step ? 'done' : p === step ? 'current' : 'todo';
+    return { label: `${state === 'done' ? '✓ ' : state === 'current' ? '● ' : ''}${label}`, state };
+  });
+  const rows = [
+    { key: labels.rows.status, value: labels.statusLong[m.status], color: statusColor[m.status] },
+    { key: labels.rows.role, value: m.role },
+    { key: labels.rows.stack, value: m.stack },
+    ...(m.launch ? [{ key: labels.rows.launch, value: m.launch }] : []),
+    ...(m.duration ? [{ key: labels.rows.duration, value: m.duration }] : []),
+    { key: labels.rows.crew, value: m.crew },
+  ];
+  return {
+    ...m,
+    id: `mission-${i}`,
+    num: secret ? '??' : String(i + 1).padStart(2, '0'),
+    secret,
+    accent,
+    statusColor: statusColor[m.status],
+    tint: tintVar[m.tint],
+    progress: secret ? '███' : finished ? '100 %' : `${step * 25} %`,
+    phases,
+    rows,
+    activity,
+    trend: secret ? labels.trend.secret : m.status === 'archived' ? labels.trend.ended : activity?.up ? labels.trend.up : labels.trend.down,
+    trendColor: secret
+      ? 'var(--accent)'
+      : m.status === 'archived'
+        ? 'var(--text-muted)'
+        : activity?.up
+          ? 'var(--success)'
+          : 'var(--accent-alt)',
+    gauge: secret ? '??' : m.lighthouse === undefined ? '—' : String(m.lighthouse),
+    gaugeDash: m.lighthouse === undefined || secret ? '0 400' : `${Math.round((245 * m.lighthouse) / 100)} 400`,
+    meters: m.meters.map((mt) => ({ ...mt, value: fill(mt.value, { technos }) })),
+  };
+});
+---
+
+<section id="missions" class="mis" aria-labelledby="mis-title" data-missions>
+  <div class="container mis__inner">
+    <div class="mis__head">
+      <SectionHead id="mis-title" index={content.index} label={content.label} title={content.title} titleMuted={content.titleMuted} />
+      <p class="mis__intro">{content.intro}</p>
+    </div>
+
+    <div class="mis__body">
+      <div class="mis__tabs" role="tablist" aria-label={content.label} aria-orientation="vertical">
+        {
+          missions.map((m, i) => (
+            <button
+              type="button"
+              role="tab"
+              id={`${m.id}-tab`}
+              class:list={['tab', { 'is-secret': m.secret }]}
+              aria-selected={i === 0 ? 'true' : 'false'}
+              aria-controls={m.id}
+              tabindex={i === 0 ? 0 : -1}
+              data-tab={i}>
+              <span class="tab__patch">{m.num}</span>
+              <span class="tab__text">
+                <span class="tab__name">
+                  <Redactable text={m.name} />
+                </span>
+                <span class="tab__cat">{m.category}</span>
+              </span>
+              <span class="tab__status" style={`--sc: ${m.statusColor}`}>
+                <span class="tab__status-dot" aria-hidden="true" />
+                {labels.status[m.status]}
+              </span>
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="mis__panels">
+        {
+          missions.map((m, i) => (
+            <div
+              role="tabpanel"
+              id={m.id}
+              aria-labelledby={`${m.id}-tab`}
+              class:list={['panel', { 'is-active': i === 0, 'is-secret': m.secret, 'is-archived': m.status === 'archived' }]}
+              style={`--ac: ${m.accent}; --tint: ${m.tint}`}
+              data-panel={i}>
+              <!-- "Video feed" -->
+              <div class="screen">
+                {m.secret && <div class="screen__noise" aria-hidden="true" />}
+                <span class="screen__scan" aria-hidden="true" />
+                <div class="screen__top">
+                  <span>
+                    {labels.feed} {m.num}
+                  </span>
+                  <span class="screen__meta">
+                    <span class="screen__elapsed">T+ {m.elapsed}</span>
+                    <span style={`color: ${m.secret ? 'var(--accent)' : m.statusColor}`}>
+                      {labels.progress} {m.progress}
+                    </span>
+                    <span class="screen__rec">
+                      <span aria-hidden="true" />
+                      {labels.rec}
+                    </span>
+                  </span>
+                </div>
+                {m.image ? (
+                  <img class="screen__img" src={m.image} alt={m.screenshotLabel} loading="lazy" />
+                ) : (
+                  <span class="screen__placeholder">{m.screenshotLabel}</span>
+                )}
+                {m.status === 'archived' && (
+                  <div class="stamp stamp--archived">
+                    {labels.archivedStamp}
+                    <br />
+                    <span>{labels.archivedStampSub}</span>
+                  </div>
+                )}
+                {m.secret && (
+                  <div class="stamp stamp--secret">
+                    {labels.secretStamp}
+                    <br />
+                    <span>{labels.secretStampSub}</span>
+                  </div>
+                )}
+                <ol class="phases">
+                  {m.phases.map((p) => (
+                    <li class:list={['phase', `is-${p.state}`]}>
+                      <span class="phase__bar" aria-hidden="true" />
+                      <span class="phase__label">{p.label}</span>
+                    </li>
+                  ))}
+                </ol>
+                <span class="corner corner--tl" aria-hidden="true" />
+                <span class="corner corner--tr" aria-hidden="true" />
+                <span class="corner corner--bl" aria-hidden="true" />
+                <span class="corner corner--br" aria-hidden="true" />
+              </div>
+
+              <div class="details">
+                <div class="details__info">
+                  <div class="details__title">
+                    <h3>
+                      <Redactable text={m.name} />
+                    </h3>
+                    <span class="details__cat">{m.category}</span>
+                  </div>
+                  <p class="details__brief">
+                    <Redactable text={m.brief} />
+                  </p>
+                  <div class="details__ctas">
+                    {m.secret ? (
+                      <>
+                        <a class="btn-cta" href="#contact">
+                          {labels.requestAccess} <span aria-hidden="true">↗</span>
+                        </a>
+                        <span class="btn-ghost is-denied" aria-disabled="true">
+                          {labels.accessDenied}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        {m.links?.mission && (
+                          <a class="btn-cta" href={m.links.mission} target="_blank" rel="noopener noreferrer">
+                            {labels.viewMission} <span aria-hidden="true">↗</span>
+                          </a>
+                        )}
+                        {m.links?.source && (
+                          <a class="btn-ghost" href={m.links.source} target="_blank" rel="noopener noreferrer">
+                            {labels.source}
+                          </a>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+                <dl class="details__rows">
+                  {m.rows.map((r) => (
+                    <div>
+                      <dt>{r.key}</dt>
+                      <dd style={r.color ? `color: ${r.color}` : undefined}>
+                        <Redactable text={r.value} />
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+
+              <div class="widgets" aria-hidden="true">
+                <div class="widget widget--gauge">
+                  <span class="widget__label">{labels.performance}</span>
+                  <div class="gauge">
+                    <svg viewBox="0 0 140 140">
+                      <circle cx="70" cy="70" r="52" class="gauge__track" stroke-dasharray="245 400" transform="rotate(135 70 70)" />
+                      <circle cx="70" cy="70" r="52" class="gauge__value" stroke-dasharray={m.gaugeDash} transform="rotate(135 70 70)" />
+                    </svg>
+                    <div class="gauge__text">
+                      <span class:list={['gauge__number', { 'is-empty': m.gauge === '—' }]}>{m.gauge}</span>
+                      <span class="gauge__unit">{labels.lighthouse}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {m.activity && (
+                  <div class="widget widget--chart">
+                    <div class="widget__row">
+                      <span class="widget__label">{labels.activity}</span>
+                      <span class="widget__trend" style={`color: ${m.trendColor}`}>
+                        {m.trend}
+                      </span>
+                    </div>
+                    <svg class="chart" viewBox="0 0 520 104" preserveAspectRatio="none">
+                      <line x1="0" y1="26" x2="520" y2="26" />
+                      <line x1="0" y1="52" x2="520" y2="52" />
+                      <line x1="0" y1="78" x2="520" y2="78" />
+                      <path d={m.activity.area} class="chart__area" />
+                      <path d={m.activity.line} class="chart__line" vector-effect="non-scaling-stroke" />
+                    </svg>
+                    <div class="widget__months">
+                      {labels.months.map((mo) => (
+                        <span>{mo}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div class="widget widget--meters">
+                  {m.meters.map((mt) => (
+                    <div class="meter">
+                      <div class="meter__row">
+                        <span class="widget__label">{mt.label}</span>
+                        <span class="meter__value">
+                          <Redactable text={mt.value} />
+                        </span>
+                      </div>
+                      <div class="meter__cells">
+                        {Array.from({ length: 12 }, (_, c) => (
+                          <span class:list={{ 'is-on': c < mt.level }} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  for (const section of document.querySelectorAll<HTMLElement>('[data-missions]')) {
+    const tabs = [...section.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const panels = [...section.querySelectorAll<HTMLElement>('[data-panel]')];
+
+    const select = (index: number, focus = false) => {
+      const i = (index + tabs.length) % tabs.length;
+      tabs.forEach((t, k) => {
+        t.setAttribute('aria-selected', String(k === i));
+        t.tabIndex = k === i ? 0 : -1;
+      });
+      panels.forEach((p, k) => p.classList.toggle('is-active', k === i));
+      if (focus) tabs[i]?.focus();
+    };
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => select(i));
+      tab.addEventListener('keydown', (e) => {
+        const keys: Record<string, number> = { ArrowDown: i + 1, ArrowRight: i + 1, ArrowUp: i - 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 };
+        if (e.key in keys) {
+          e.preventDefault();
+          select(keys[e.key]!, true);
+        }
+      });
+    });
+  }
+</script>
+
+<style>
+  .mis {
+    position: relative;
+    padding-block: var(--section-pad-top) var(--section-pad-bottom);
+    background: var(--bg);
+  }
+
+  .mis__inner {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, 3vh, 48px);
+  }
+
+  .mis__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 48px;
+  }
+
+  .mis__intro {
+    margin: 0;
+    max-width: 400px;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-soft);
+  }
+
+  .mis__body {
+    display: grid;
+    grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+  }
+
+  /* ---------- Tabs ---------- */
+
+  .mis__tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    min-height: clamp(68px, 9vh, 88px);
+    padding: 14px 20px;
+    border: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .tab:hover {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
+  .tab[aria-selected='true'] {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  }
+
+  .tab__patch {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border: 1.5px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 50%;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .tab.is-secret .tab__patch {
+    border-style: dashed;
+    border-color: var(--accent);
+  }
+
+  .tab[aria-selected='true'] .tab__patch {
+    border: 0;
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .tab__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .tab__name {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .tab__cat {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .tab__status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--sc);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .tab__status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--sc);
+  }
+
+  /* ---------- Panels (stacked: the box keeps the tallest height, nothing jumps) ---------- */
+
+  .mis__panels {
+    display: grid;
+  }
+
+  .panel {
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 2vh, 20px);
+    visibility: hidden;
+  }
+
+  .panel.is-active {
+    visibility: visible;
+  }
+
+  .panel.is-active .screen {
+    animation: screen-in 0.35s ease;
+  }
+
+  @keyframes screen-in {
+    from {
+      opacity: 0.3;
+    }
+  }
+
+  /* ---------- Video feed ---------- */
+
+  .screen {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: clamp(150px, 21vh, 360px);
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
+    border-radius: 16px;
+    background: radial-gradient(600px 300px at 70% 20%, color-mix(in srgb, var(--tint) 16%, transparent), var(--surface) 70%);
+  }
+
+  .is-secret .screen {
+    background: radial-gradient(600px 300px at 70% 20%, color-mix(in srgb, var(--tint) 10%, transparent), var(--surface) 70%);
+  }
+
+  .screen__noise {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background-image:
+      repeating-linear-gradient(0deg, color-mix(in srgb, var(--text) 5%, transparent) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--accent) 4%, transparent) 0 2px, transparent 2px 5px);
+    animation: noise 0.25s steps(2) infinite;
+  }
+
+  @keyframes noise {
+    50% {
+      background-position:
+        0 2px,
+        3px 0;
+    }
+  }
+
+  .screen__scan {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(transparent, color-mix(in srgb, var(--text) 3.5%, transparent), transparent);
+    animation: scan 3.5s linear infinite;
+  }
+
+  @keyframes scan {
+    from {
+      top: -60px;
+    }
+    to {
+      top: 100%;
+    }
+  }
+
+  .screen__top {
+    position: absolute;
+    top: 18px;
+    left: 22px;
+    right: 22px;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .screen__meta {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .screen__rec {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .screen__rec span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: blink 1.6s ease-in-out infinite;
+  }
+
+  .screen__placeholder {
+    padding: 14px 20px;
+    border: 1px dashed var(--line-strong);
+    border-radius: 10px;
+    font-size: 15px;
+    color: var(--text-muted);
+  }
+
+  /* The "Mission ended" stamp replaces the placeholder text on archived missions */
+  .is-archived .screen__placeholder {
+    visibility: hidden;
+  }
+
+
+  .screen__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .stamp {
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    z-index: 2;
+    padding: 10px 18px;
+    border: 2px solid;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--bg) 60%, transparent);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.6;
+    letter-spacing: 0.2em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .stamp span {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+  }
+
+  .stamp--archived {
+    border-color: var(--text-soft);
+    color: var(--text-soft);
+    opacity: 0.85;
+    transform: translate(-50%, -50%) rotate(-8deg);
+  }
+
+  .stamp--archived span {
+    color: var(--text-muted);
+  }
+
+  .stamp--secret {
+    padding: 12px 24px;
+    border-width: 3px;
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--bg) 70%, transparent);
+    color: var(--accent);
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    transform: translate(-50%, -50%) rotate(-6deg);
+  }
+
+  .stamp--secret span {
+    letter-spacing: 0.2em;
+  }
+
+  .phases {
+    position: absolute;
+    left: 22px;
+    right: 22px;
+    bottom: 20px;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .phase {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .phase__bar {
+    height: 4px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--text) 12%, transparent);
+  }
+
+  .phase.is-done .phase__bar {
+    background: var(--accent);
+  }
+
+  .phase.is-current .phase__bar {
+    background: linear-gradient(90deg, var(--accent) 50%, color-mix(in srgb, var(--text) 12%, transparent) 50%);
+  }
+
+  .phase.is-redacted .phase__bar {
+    background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--accent) 50%, transparent) 0 4px, transparent 4px 8px);
+  }
+
+  .phase__label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .phase.is-done .phase__label {
+    color: var(--text);
+  }
+
+  .phase.is-current .phase__label {
+    color: var(--warning);
+  }
+
+  .corner {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border: 0 solid var(--accent);
+  }
+
+  .corner--tl {
+    top: 14px;
+    left: 14px;
+    border-top-width: 2px;
+    border-left-width: 2px;
+  }
+
+  .corner--tr {
+    top: 14px;
+    right: 14px;
+    border-top-width: 2px;
+    border-right-width: 2px;
+  }
+
+  .corner--bl {
+    bottom: 14px;
+    left: 14px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+  }
+
+  .corner--br {
+    bottom: 14px;
+    right: 14px;
+    border-bottom-width: 2px;
+    border-right-width: 2px;
+  }
+
+  /* ---------- Details ---------- */
+
+  .details {
+    display: grid;
+    /* The data sheet widens to fit its longest line (e.g. a long stack), up to 500px */
+    grid-template-columns: minmax(0, 1fr) minmax(300px, max-content);
+    gap: 28px;
+    align-items: start;
+  }
+
+  .details__info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .details__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 14px;
+  }
+
+  .details__title h3 {
+    margin: 0;
+    font-size: clamp(28px, 3.6vh, 34px);
+    font-weight: 600;
+    letter-spacing: -0.035em;
+  }
+
+  .details__cat {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-alt);
+  }
+
+  .details__brief {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-soft);
+  }
+
+  .details__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .details__ctas:empty {
+    display: none;
+  }
+
+  .btn-cta,
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 15px;
+    text-decoration: none;
+  }
+
+  .btn-cta {
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+    transition: background-color 0.2s;
+  }
+
+  .btn-cta:hover {
+    background: var(--accent-alt);
+  }
+
+  .btn-ghost {
+    border: 1px solid var(--line-strong);
+    color: var(--text);
+    font-weight: 500;
+    transition: border-color 0.2s;
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--text);
+  }
+
+  .btn-ghost.is-denied {
+    border-style: dashed;
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .details__rows {
+    display: flex;
+    flex-direction: column;
+    max-width: 500px;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
+    border-radius: 12px;
+  }
+
+  .details__rows div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: clamp(8px, 1.2vh, 11px) 16px;
+    border-bottom: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
+  }
+
+  .details__rows div:last-child {
+    border-bottom: 0;
+  }
+
+  .details__rows dt {
+    flex: none;
+    padding-top: 3px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .details__rows dd {
+    margin: 0;
+    font-size: 14px;
+    text-align: right;
+  }
+
+  /* ---------- Widgets ---------- */
+
+  .widgets {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr) 260px;
+    gap: 10px;
+  }
+
+  .widget {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: clamp(10px, 1.4vh, 14px) 18px;
+    border: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+
+  .widget__label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .widget__row,
+  .meter__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .widget__trend {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .gauge {
+    position: relative;
+    align-self: center;
+    width: 104px;
+    height: 90px;
+  }
+
+  .gauge svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 104px;
+    height: 104px;
+  }
+
+  .gauge circle {
+    fill: none;
+    stroke-width: 10;
+    stroke-linecap: round;
+  }
+
+  .gauge__track {
+    stroke: color-mix(in srgb, var(--text) 8%, transparent);
+  }
+
+  .gauge__value {
+    stroke: var(--ac);
+  }
+
+  .gauge__text {
+    position: absolute;
+    top: 32px;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .gauge__number {
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .gauge__number.is-empty {
+    color: var(--redacted);
+  }
+
+  .gauge__unit {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .chart {
+    display: block;
+    width: 100%;
+    height: clamp(56px, 8vh, 104px);
+  }
+
+  .chart line {
+    stroke: color-mix(in srgb, var(--text) 5%, transparent);
+  }
+
+  .chart__area {
+    fill: color-mix(in srgb, var(--ac) 13%, transparent);
+  }
+
+  .chart__line {
+    fill: none;
+    stroke: var(--ac);
+    stroke-width: 2;
+    stroke-linejoin: round;
+  }
+
+  .widget__months {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+  }
+
+  .widget--meters {
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .meter {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .meter__value {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+
+  .meter__cells {
+    display: flex;
+    gap: 3px;
+  }
+
+  .meter__cells span {
+    flex: 1;
+    height: 8px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+  }
+
+  .meter__cells .is-on {
+    background: var(--ac);
+  }
+
+  .is-secret .meter__cells span {
+    background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--accent) 35%, transparent) 0 3px, transparent 3px 6px);
+  }
+
+  /* ---------- Tablet & mobile ---------- */
+
+  @media (max-width: 1099px) {
+    .mis {
+      border-top: 1px solid var(--line);
+    }
+
+    .mis__inner {
+      gap: 24px;
+    }
+
+    .mis__head {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 24px;
+    }
+
+    .mis__intro {
+      max-width: 560px;
+      font-size: 15px;
+    }
+
+    .mis__body {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .mis__tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    /* Compact tab: patch on the left, name over status */
+    .tab {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      grid-template-areas:
+        'patch name'
+        'patch status';
+      column-gap: 10px;
+      row-gap: 2px;
+      min-height: 56px;
+      padding: 10px 14px 10px 10px;
+      border-radius: 12px;
+    }
+
+    .tab__patch {
+      grid-area: patch;
+      width: 34px;
+      height: 34px;
+      font-size: 11px;
+    }
+
+    .tab__text {
+      grid-area: name;
+    }
+
+    .tab__status {
+      grid-area: status;
+      font-size: 9.5px;
+      letter-spacing: 0.1em;
+    }
+
+    .tab__status-dot {
+      display: none;
+    }
+
+    .tab__name {
+      max-width: 100%;
+      overflow: hidden;
+      font-size: 14px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .tab__cat {
+      display: none;
+    }
+
+    .screen {
+      height: 200px;
+      border-radius: 14px;
+    }
+
+    .screen__top {
+      top: 12px;
+      left: 14px;
+      right: 14px;
+      font-size: 9.5px;
+    }
+
+    .screen__meta > span:not(.screen__elapsed) {
+      display: none;
+    }
+
+    .stamp,
+    .stamp--secret {
+      top: 52%;
+      padding: 8px 14px;
+      border-width: 2px;
+      font-size: 13px;
+      letter-spacing: 0.2em;
+    }
+
+    .stamp span {
+      display: none;
+    }
+
+    .phases {
+      left: 14px;
+      right: 14px;
+      bottom: 12px;
+      gap: 4px;
+    }
+
+    .panel {
+      gap: 16px;
+    }
+
+    .phase__label {
+      font-size: 8.5px;
+      letter-spacing: 0.08em;
+    }
+
+    .corner {
+      display: none;
+    }
+
+    .details {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .details__title {
+      flex-direction: column-reverse;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .details__brief {
+      font-size: 15px;
+    }
+
+    .details__rows dd {
+      font-size: 13px;
+    }
+
+    .widgets {
+      grid-template-columns: 120px minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .widget--chart {
+      display: none;
+    }
+
+    .widget {
+      padding: 12px;
+    }
+
+    .gauge {
+      width: 84px;
+      height: 76px;
+    }
+
+    .gauge svg {
+      width: 84px;
+      height: 84px;
+    }
+
+    .gauge__text {
+      top: 28px;
+    }
+
+    .gauge__number {
+      font-size: 20px;
+    }
+
+    .gauge__unit {
+      display: none;
+    }
+
+    .meter__value {
+      font-size: 13px;
+    }
+
+    .meter__cells {
+      gap: 2px;
+    }
+
+    .meter__cells span {
+      height: 6px;
+    }
+  }
+</style>

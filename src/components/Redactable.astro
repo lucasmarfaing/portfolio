@@ -1,0 +1,19 @@
+---
+/** Renders text where runs of █ are shown as a redacted (classified) bar. */
+import { redactedParts } from '@/lib/content';
+
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+---
+
+{redactedParts(text).map((p) => (p.redacted ? <span class="redacted">{p.text}</span> : p.text))}
+
+<style>
+  .redacted {
+    color: var(--redacted);
+    letter-spacing: -0.05em;
+  }
+</style>

@@ -10,6 +10,8 @@ import enTrajectory from '@/content/en/trajectory.json';
 import frInventory from '@/content/fr/inventory.json';
 import enInventory from '@/content/en/inventory.json';
 import rawSky from '@/content/sky.json';
+import frMissions from '@/content/fr/missions.json';
+import enMissions from '@/content/en/missions.json';
 
 export const locales = ['fr', 'en'] as const;
 export type Locale = (typeof locales)[number];
@@ -190,7 +192,71 @@ const inventorySchema = z.object({
   descriptions: z.record(z.string(), z.string()),
 });
 
+const missionStatus = z.enum(['done', 'live', 'archived', 'secret']);
+const byStatus = z.object({ done: z.string(), live: z.string(), archived: z.string(), secret: z.string() });
+
+const missionsSchema = z.object({
+  ...sectionHead,
+  intro: z.string(),
+  labels: z.object({
+    status: byStatus,
+    statusLong: byStatus,
+    feed: z.string(),
+    progress: z.string(),
+    rec: z.string(),
+    archivedStamp: z.string(),
+    archivedStampSub: z.string(),
+    secretStamp: z.string(),
+    secretStampSub: z.string(),
+    phases: z.array(z.string()).length(4, 'Il faut exactement 4 phases'),
+    rows: z.object({
+      status: z.string(),
+      role: z.string(),
+      stack: z.string(),
+      duration: z.string(),
+      crew: z.string(),
+      launch: z.string(),
+    }),
+    performance: z.string(),
+    lighthouse: z.string(),
+    activity: z.string(),
+    months: z.array(z.string()),
+    trend: z.object({ up: z.string(), down: z.string(), ended: z.string(), secret: z.string() }),
+    viewMission: z.string(),
+    source: z.string(),
+    requestAccess: z.string(),
+    accessDenied: z.string(),
+  }),
+  missions: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        category: z.string(),
+        status: missionStatus,
+        /** Current phase for a mission in progress: 0 Briefing … 3 Mise en orbite */
+        phase: z.number().int().min(0).max(3).optional(),
+        tint: z.enum(['red', 'blue', 'amber']).default('red'),
+        /** Optional screenshot in public/, e.g. "/missions/gmee.webp" */
+        image: z.string().startsWith('/').optional(),
+        screenshotLabel: z.string(),
+        elapsed: z.string(),
+        brief: z.string(),
+        role: z.string(),
+        stack: z.string(),
+        duration: z.string().optional(),
+        launch: z.string().optional(),
+        crew: z.string(),
+        lighthouse: z.number().int().min(0).max(100).optional(),
+        activity: z.array(z.number().min(0)).min(2).optional(),
+        meters: z.array(z.object({ label: z.string(), value: z.string(), level: z.number().int().min(0).max(12) })).max(3),
+        links: z.object({ mission: z.url().optional(), source: z.url().optional() }).optional(),
+      }),
+    )
+    .min(1),
+});
+
 export type SkyContent = z.infer<typeof skySchema>;
+export type MissionsContent = z.infer<typeof missionsSchema>;
 export type InventoryContent = z.infer<typeof inventorySchema>;
 export type SiteContent = z.infer<typeof siteSchema>;
 export type TrajectoryContent = z.infer<typeof trajectorySchema>;
@@ -198,9 +264,10 @@ export type HeroContent = z.infer<typeof heroSchema>;
 export type CrewContent = z.infer<typeof crewSchema>;
 export type Stat = z.infer<typeof stat>;
 
-const raw: Record<Locale, { site: unknown; hero: unknown; crew: unknown; trajectory: unknown; inventory: unknown }> = {
-  fr: { site: frSite, hero: frHero, crew: frCrew, trajectory: frTrajectory, inventory: frInventory },
-  en: { site: enSite, hero: enHero, crew: enCrew, trajectory: enTrajectory, inventory: enInventory },
+type RawLocale = Record<'site' | 'hero' | 'crew' | 'trajectory' | 'inventory' | 'missions', unknown>;
+const raw: Record<Locale, RawLocale> = {
+  fr: { site: frSite, hero: frHero, crew: frCrew, trajectory: frTrajectory, inventory: frInventory, missions: frMissions },
+  en: { site: enSite, hero: enHero, crew: enCrew, trajectory: enTrajectory, inventory: enInventory, missions: enMissions },
 };
 
 /** Loads and validates a locale's content. An invalid JSON file fails the build with a readable message. */
@@ -235,6 +302,7 @@ export function getContent(lang: Locale) {
     hero: parse(heroSchema, raw[lang].hero, 'hero'),
     crew: parse(crewSchema, raw[lang].crew, 'crew'),
     trajectory: parse(trajectorySchema, raw[lang].trajectory, 'trajectory'),
+    missions: parse(missionsSchema, raw[lang].missions, 'missions'),
   };
 }
 
@@ -244,6 +312,13 @@ export const fill = (text: string, values: Record<string, string | number>) =>
 
 /** Text partly hidden with █ characters is shown as a redacted bar. */
 export const isRedacted = (text: string) => text.includes('█');
+
+/** Splits "Objectif : ██████ ██" into plain and redacted parts. */
+export const redactedParts = (text: string) =>
+  text
+    .split(/(█+(?:[ ·]+█+)*)/)
+    .filter(Boolean)
+    .map((part) => ({ text: part, redacted: part.includes('█') }));
 
 /** Splits "le **front-end** et" into plain and highlighted parts. */
 export function highlights(text: string): { text: string; strong: boolean }[] {
