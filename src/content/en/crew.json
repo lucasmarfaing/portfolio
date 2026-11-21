@@ -1,0 +1,31 @@
+{
+  "index": "02",
+  "label": "Crew",
+  "title": "One foot in the stars,",
+  "titleMuted": "the other in the code.",
+  "paragraphs": [
+    "Hey, I’m Lucas. I wrote my first lines of code in 2011 and turned it into my job in 2018. I love turning ideas into living applications, exploring new tech and polishing interfaces that pop.",
+    "Today I focus on **front-end** and **UI design**, because I love crafting experiences from A to Z: beautiful, smooth and fun to use."
+  ],
+  "badge": {
+    "title": "Crew pass",
+    "role": "Pilot",
+    "name": "Lucas Marfaing",
+    "job": "Lead Front-End · Ubigreen",
+    "photoAlt": "ID photo of Lucas",
+    "details": [
+      { "label": "Base", "value": "Toulouse · remote OK" },
+      { "label": "Specialty", "value": "Front-end & UI design" },
+      { "label": "Off duty", "value": "Space & Pokémon" },
+      { "label": "Fuel", "value": "Music & Dr Pepper" }
+    ],
+    "status": "Listening"
+  },
+  "skillsLabel": "Flight protocols · Soft skills",
+  "skills": [
+    { "icon": "team", "title": "Team spirit", "text": "Solo at 2 a.m. or unblocking a teammate, both suit me fine." },
+    { "icon": "search", "title": "Curiosity", "text": "A new library, a fuzzy concept? I open a tab and dig in." },
+    { "icon": "refresh", "title": "Adaptability", "text": "New stack, new context: I adapt fast without cutting corners." },
+    { "icon": "heart", "title": "Passion", "text": "Dev isn’t just a job… I’d be coding on weekends anyway.", "featured": true }
+  ]
+}

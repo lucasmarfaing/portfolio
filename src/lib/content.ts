@@ -3,6 +3,8 @@ import frSite from '@/content/fr/site.json';
 import frHero from '@/content/fr/hero.json';
 import enSite from '@/content/en/site.json';
 import enHero from '@/content/en/hero.json';
+import frCrew from '@/content/fr/crew.json';
+import enCrew from '@/content/en/crew.json';
 
 export const locales = ['fr', 'en'] as const;
 export type Locale = (typeof locales)[number];
@@ -33,7 +35,7 @@ const stat = z
   .object({
     label: z.string().min(1),
     value: z.string().optional(),
-    since: z.string().date().optional(),
+    since: z.iso.date().optional(),
     suffix: z.string().optional(),
   })
   .refine((s) => (s.value === undefined) !== (s.since === undefined), {
@@ -55,13 +57,50 @@ const heroSchema = z.object({
   fuel: z.object({ label: z.string(), detail: z.string(), value: z.string() }),
 });
 
+/** Section heading shared by every numbered section ("02 — Équipage"). */
+const sectionHead = {
+  index: z.string().regex(/^\d{2}$/, 'Numéro de section sur 2 chiffres, ex. "02"'),
+  label: z.string().min(1),
+  title: z.string().min(1),
+  titleMuted: z.string(),
+};
+
+/** Text where **words** are highlighted. */
+const richText = z.string().min(1);
+
+const crewSchema = z.object({
+  ...sectionHead,
+  paragraphs: z.array(richText).min(1),
+  badge: z.object({
+    title: z.string(),
+    role: z.string(),
+    name: z.string().min(1),
+    job: z.string(),
+    photoAlt: z.string().min(1),
+    details: z.array(z.object({ label: z.string(), value: z.string() })).max(6),
+    status: z.string(),
+  }),
+  skillsLabel: z.string(),
+  skills: z
+    .array(
+      z.object({
+        icon: z.enum(['team', 'search', 'refresh', 'heart', 'rocket', 'bulb', 'star', 'code']),
+        title: z.string().min(1),
+        text: z.string(),
+        featured: z.boolean().optional(),
+      }),
+    )
+    .min(1),
+});
+
 export type SiteContent = z.infer<typeof siteSchema>;
 export type HeroContent = z.infer<typeof heroSchema>;
+export type CrewContent = z.infer<typeof crewSchema>;
 export type Stat = z.infer<typeof stat>;
 
-const raw: Record<Locale, { site: unknown; hero: unknown }> = {
-  fr: { site: frSite, hero: frHero },
-  en: { site: enSite, hero: enHero },
+const raw: Record<Locale, { site: unknown; hero: unknown; crew: unknown }> = {
+  fr: { site: frSite, hero: frHero, crew: frCrew },
+  en: { site: enSite, hero: enHero, crew: enCrew },
 };
 
 /** Loads and validates a locale's content. An invalid JSON file fails the build with a readable message. */
@@ -77,7 +116,18 @@ export function getContent(lang: Locale) {
   return {
     site: parse(siteSchema, raw[lang].site, 'site'),
     hero: parse(heroSchema, raw[lang].hero, 'hero'),
+    crew: parse(crewSchema, raw[lang].crew, 'crew'),
   };
+}
+
+/** Splits "le **front-end** et" into plain and highlighted parts. */
+export function highlights(text: string): { text: string; strong: boolean }[] {
+  return text
+    .split(/(\*\*[^*]+\*\*)/)
+    .filter(Boolean)
+    .map((part) =>
+      part.startsWith('**') && part.endsWith('**') ? { text: part.slice(2, -2), strong: true } : { text: part, strong: false },
+    );
 }
 
 /** Whole years between `since` and the build date. */

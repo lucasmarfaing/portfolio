@@ -1,0 +1,31 @@
+{
+  "index": "02",
+  "label": "Équipage",
+  "title": "Un pied dans les étoiles,",
+  "titleMuted": "l’autre dans le code.",
+  "paragraphs": [
+    "Hey, moi c’est Lucas. J’ai écrit mes premières lignes de code en 2011 et j’en ai fait mon métier en 2018. J’aime transformer des idées en applications vivantes, explorer de nouvelles technos et peaufiner des interfaces qui claquent.",
+    "Aujourd’hui je me concentre sur le **front-end** et le **design UI**, parce que j’aime créer des expériences de A à Z : belles, fluides et fun à utiliser."
+  ],
+  "badge": {
+    "title": "Pass équipage",
+    "role": "Pilote",
+    "name": "Lucas Marfaing",
+    "job": "Lead Front-End · Ubigreen",
+    "photoAlt": "Photo d’identité de Lucas",
+    "details": [
+      { "label": "Base", "value": "Toulouse · remote OK" },
+      { "label": "Spécialité", "value": "Front-end & design UI" },
+      { "label": "Hors mission", "value": "Espace & Pokémon" },
+      { "label": "Carburant", "value": "Musique & Dr Pepper" }
+    ],
+    "status": "À l’écoute"
+  },
+  "skillsLabel": "Protocoles de vol · Soft skills",
+  "skills": [
+    { "icon": "team", "title": "Esprit d’équipe", "text": "Solo à 2 h du mat’ ou à débloquer un collègue, les deux me vont." },
+    { "icon": "search", "title": "Curiosité", "text": "Une nouvelle lib, un concept flou ? J’ouvre un onglet et je creuse." },
+    { "icon": "refresh", "title": "Adaptabilité", "text": "Nouvelle stack, nouveau contexte : je m’adapte vite sans perdre en qualité." },
+    { "icon": "heart", "title": "Passion", "text": "Le dev, c’est pas juste un job… j’aurais codé le week-end de toute façon.", "featured": true }
+  ]
+}
