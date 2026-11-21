@@ -1,0 +1,427 @@
+---
+import type { SiteContent } from '@/lib/content';
+
+interface Props {
+  site: SiteContent;
+}
+
+const { site } = Astro.props;
+const otherLang = site.switchLanguage.href.startsWith('/en') ? 'en' : 'fr';
+---
+
+<header class="site-header" data-header>
+  <div class="site-header__inner container">
+    <a class="callsign" href="#top"><span class="callsign__mark" aria-hidden="true"></span>{site.callsign}</a>
+
+    <nav class="site-nav" id="site-nav" aria-label={site.navLabel}>
+      <ul>
+        {
+          site.nav.map((item, i) => (
+            <li>
+              <a href={`#${item.id}`} data-nav={item.id}>
+                <span class="site-nav__dot" aria-hidden="true" />
+                <span class="site-nav__label">{item.label}</span>
+                <span class="site-nav__num" aria-hidden="true">{String(i + 2).padStart(2, '0')}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="site-header__tools">
+      <span class="status">
+        <span class="status__dot blink" aria-hidden="true"></span>
+        <span class="status__long">{site.status}</span>
+        <span class="status__short" aria-hidden="true">{site.statusShort}</span>
+      </span>
+      <a class="tool-btn" href={site.switchLanguage.href} hreflang={otherLang} lang={otherLang} aria-label={site.switchLanguage.ariaLabel}>
+        {site.switchLanguage.label}
+      </a>
+      <button
+        type="button"
+        class="tool-btn"
+        data-theme-toggle
+        data-label-to-light={site.theme.toLight}
+        data-label-to-dark={site.theme.toDark}
+        aria-label={site.theme.toLight}
+      >
+        <svg class="icon-sun" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+        <svg class="icon-moon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"></path></svg>
+      </button>
+      <button
+        type="button"
+        class="tool-btn menu-btn"
+        data-menu-toggle
+        aria-controls="site-nav"
+        aria-expanded="false"
+        data-label-open={site.menu.open}
+        data-label-close={site.menu.close}
+        aria-label={site.menu.open}
+      >
+        <span class="menu-btn__bar" aria-hidden="true"></span>
+        <span class="menu-btn__bar" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+  <span class="site-header__progress" data-progress aria-hidden="true"></span>
+</header>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-header]');
+  const progress = document.querySelector<HTMLElement>('[data-progress]');
+  const root = document.documentElement;
+
+  // Background + reading progress on scroll
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const y = window.scrollY;
+    header?.classList.toggle('is-scrolled', y > 8);
+    const max = root.scrollHeight - window.innerHeight;
+    progress?.style.setProperty('transform', `scaleX(${max > 0 ? Math.min(1, y / max) : 0})`);
+  };
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    },
+    { passive: true },
+  );
+  update();
+
+  // Active section in the nav
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-nav]')];
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        for (const link of links) {
+          if (link.dataset.nav === entry.target.id) link.setAttribute('aria-current', 'true');
+          else link.removeAttribute('aria-current');
+        }
+      }
+    },
+    { rootMargin: '-45% 0px -50% 0px' },
+  );
+  for (const link of links) {
+    const section = document.getElementById(link.dataset.nav ?? '');
+    if (section) observer.observe(section);
+  }
+  const top = document.getElementById('top');
+  if (top) {
+    new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) links.forEach((l) => l.removeAttribute('aria-current'));
+      },
+      { rootMargin: '-45% 0px -50% 0px' },
+    ).observe(top);
+  }
+
+  // Theme toggle (choice remembered in localStorage)
+  const themeBtn = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+  const syncThemeLabel = () => {
+    if (!themeBtn) return;
+    const dark = root.dataset.theme === 'dark';
+    themeBtn.setAttribute('aria-label', (dark ? themeBtn.dataset.labelToLight : themeBtn.dataset.labelToDark) ?? '');
+  };
+  syncThemeLabel();
+  themeBtn?.addEventListener('click', () => {
+    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try {
+      localStorage.setItem('theme', next);
+    } catch {}
+    syncThemeLabel();
+  });
+
+  // Mobile menu
+  const menuBtn = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const setMenu = (open: boolean) => {
+    if (!menuBtn) return;
+    header?.classList.toggle('is-open', open);
+    menuBtn.setAttribute('aria-expanded', String(open));
+    menuBtn.setAttribute('aria-label', (open ? menuBtn.dataset.labelClose : menuBtn.dataset.labelOpen) ?? '');
+  };
+  menuBtn?.addEventListener('click', () => setMenu(menuBtn.getAttribute('aria-expanded') !== 'true'));
+  links.forEach((l) => l.addEventListener('click', () => setMenu(false)));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && header?.classList.contains('is-open')) {
+      setMenu(false);
+      menuBtn?.focus();
+    }
+  });
+</script>
+
+<style>
+  .site-header {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 100;
+    height: var(--header-h);
+    border-bottom: 1px solid var(--line);
+    transition: background-color 0.25s;
+  }
+
+  .site-header.is-open {
+    background: var(--bg);
+  }
+
+  .site-header.is-scrolled:not(.is-open) {
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .site-header__inner {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .callsign {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .callsign__mark {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  .site-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 32px;
+  }
+
+  .site-nav a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 14px;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .site-nav a:hover,
+  .site-nav a[aria-current='true'] {
+    color: var(--text);
+  }
+
+  .site-nav a[aria-current='true'] {
+    font-weight: 500;
+  }
+
+  .site-nav__dot {
+    width: 6px;
+    height: 6px;
+    max-width: 0;
+    margin-right: 0;
+    border-radius: 50%;
+    background: var(--accent);
+    transform: scale(0);
+    transition: all 0.25s;
+  }
+
+  .site-nav a[aria-current='true'] .site-nav__dot {
+    max-width: 6px;
+    margin-right: 8px;
+    transform: scale(1);
+  }
+
+  .site-nav__num {
+    display: none;
+  }
+
+  .site-header__tools {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .status__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+  }
+
+  .status__short {
+    display: none;
+  }
+
+  .tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .tool-btn:hover {
+    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+
+  .icon-moon,
+  :global([data-theme='light']) .icon-sun {
+    display: none;
+  }
+
+  :global([data-theme='light']) .icon-moon {
+    display: block;
+  }
+
+  .menu-btn {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .menu-btn__bar {
+    width: 16px;
+    height: 1.5px;
+    border-radius: 1px;
+    background: currentColor;
+    transition: transform 0.25s;
+  }
+
+  .is-open .menu-btn__bar:first-child {
+    transform: translateY(3.25px) rotate(45deg);
+  }
+
+  .is-open .menu-btn__bar:last-child {
+    transform: translateY(-3.25px) rotate(-45deg);
+  }
+
+  .site-header__progress {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 100%;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  @media (max-width: 1099px) {
+    .site-header__inner {
+      gap: 12px;
+    }
+
+    .site-nav {
+      display: none;
+      position: absolute;
+      top: var(--header-h);
+      left: 0;
+      right: 0;
+      max-height: calc(100svh - var(--header-h));
+      overflow-y: auto;
+      padding: 12px var(--gutter) 24px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .is-open .site-nav {
+      display: block;
+      animation: fade-in 0.2s ease-out;
+    }
+
+    .site-nav ul {
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .site-nav a {
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .site-nav a .site-nav__dot {
+      display: none;
+    }
+
+    .site-nav__label {
+      flex: 1;
+    }
+
+    .site-nav__num {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0;
+      color: var(--text-muted);
+    }
+
+    .menu-btn {
+      display: inline-flex;
+    }
+
+    .status {
+      margin-right: 4px;
+      font-size: 10px;
+    }
+
+    .status__long {
+      display: none;
+    }
+
+    .status__short {
+      display: inline;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .status {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "title": "Lucas Marfaing — Développeur front-end & design UI",
+    "description": "Rêveur, les pieds sur terre. Lucas Marfaing conçoit et code des interfaces front à Toulouse : React, TypeScript, design UI."
+  },
+  "callsign": "LM-26",
+  "status": "Systèmes nominaux",
+  "statusShort": "Nominal",
+  "navLabel": "Navigation principale",
+  "nav": [
+    { "id": "equipage", "label": "Équipage" },
+    { "id": "trajectoire", "label": "Trajectoire" },
+    { "id": "inventaire", "label": "Inventaire" },
+    { "id": "missions", "label": "Missions" },
+    { "id": "contact", "label": "Contact" }
+  ],
+  "menu": { "open": "Ouvrir le menu", "close": "Fermer le menu" },
+  "theme": { "toLight": "Passer en mode clair", "toDark": "Passer en mode sombre" },
+  "switchLanguage": { "label": "EN", "ariaLabel": "Read in English", "href": "/en/" }
+}

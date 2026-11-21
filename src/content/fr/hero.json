@@ -1,0 +1,24 @@
+{
+  "eyebrow": "Pilote · Développeur web & mobile · Toulouse",
+  "firstName": "Lucas",
+  "lastName": "Marfaing",
+  "tagline": "Rêveur, les pieds sur terre.",
+  "intro": "Je conçois et code des interfaces front qui décollent — et qui atterrissent proprement.",
+  "cta": { "label": "Lancer la mission", "href": "#contact" },
+  "cv": { "label": "Télécharger le dossier pilote (CV)", "href": "#" },
+  "portraitAlt": "Portrait de Lucas Marfaing",
+  "milestonesLabel": "Jalons de trajectoire",
+  "milestones": [
+    { "date": "25.04.1997", "label": "Lancement · Toulouse", "variant": "launch" },
+    { "date": "2006", "label": "Pokémon Perle" },
+    { "date": "2008", "label": "Iron Man · MCU" },
+    { "date": "Été 2016", "label": "Voyage à L.A." },
+    { "label": "Classé secret", "variant": "secret", "redactedLabel": "Année confidentielle" }
+  ],
+  "stats": [
+    { "label": "Expérience", "since": "2018-01-01", "suffix": "ans" },
+    { "label": "Temps de vol", "since": "1997-04-25", "suffix": "ans" },
+    { "label": "Zone inexplorée", "value": "13", "suffix": "ans de mystère" }
+  ],
+  "fuel": { "label": "Carburant", "detail": "Musique & Dr Pepper", "value": "100 %" }
+}

@@ -1,0 +1,24 @@
+{
+  "eyebrow": "Pilot · Web & mobile developer · Toulouse",
+  "firstName": "Lucas",
+  "lastName": "Marfaing",
+  "tagline": "A dreamer with both feet on the ground.",
+  "intro": "I design and build front-end interfaces that take off — and land smoothly.",
+  "cta": { "label": "Launch the mission", "href": "#contact" },
+  "cv": { "label": "Download the pilot file (CV)", "href": "#" },
+  "portraitAlt": "Portrait of Lucas Marfaing",
+  "milestonesLabel": "Trajectory milestones",
+  "milestones": [
+    { "date": "25.04.1997", "label": "Launch · Toulouse", "variant": "launch" },
+    { "date": "2006", "label": "Pokémon Pearl" },
+    { "date": "2008", "label": "Iron Man · MCU" },
+    { "date": "Summer 2016", "label": "Trip to L.A." },
+    { "label": "Classified", "variant": "secret", "redactedLabel": "Classified year" }
+  ],
+  "stats": [
+    { "label": "Experience", "since": "2018-01-01", "suffix": "years" },
+    { "label": "Flight time", "since": "1997-04-25", "suffix": "years" },
+    { "label": "Uncharted zone", "value": "13", "suffix": "years of mystery" }
+  ],
+  "fuel": { "label": "Fuel", "detail": "Music & Dr Pepper", "value": "100%" }
+}

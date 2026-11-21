@@ -1,0 +1,640 @@
+---
+import { Image } from 'astro:assets';
+import portrait from '@/assets/images/portrait.png';
+import { statValue, type HeroContent } from '@/lib/content';
+
+interface Props {
+  content: HeroContent;
+}
+
+const { content } = Astro.props;
+---
+
+<section id="top" class="hero">
+  <div class="hero__grid" aria-hidden="true"></div>
+
+  <div class="hero__main container">
+    <div class="hero__text">
+      <p class="mono-label">{content.eyebrow}</p>
+      <h1 class="hero__title">{content.firstName}<br />{content.lastName}</h1>
+      <p class="hero__intro"><span class="hero__tagline">{content.tagline}</span> {content.intro}</p>
+    </div>
+
+    <div class="hero__actions">
+      <a class="btn-primary" href={content.cta.href}>
+        {content.cta.label}
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
+      </a>
+      <a class="hero__cv" href={content.cv.href}>{content.cv.label}</a>
+    </div>
+
+    <div class="hero__visual">
+      <div class="orbit">
+        <div class="orbit__ring orbit__ring--outer" aria-hidden="true"></div>
+        <div class="orbit__ring orbit__ring--inner" aria-hidden="true"></div>
+        <div class="orbit__track spin" aria-hidden="true"><span class="orbit__sat orbit__sat--main"></span></div>
+        <div class="orbit__track orbit__track--inner spin-slow" aria-hidden="true"><span class="orbit__sat orbit__sat--small"></span></div>
+        <div class="orbit__planet" aria-hidden="true"></div>
+        <div class="orbit__portrait">
+          <Image src={portrait} alt={content.portraitAlt} widths={[240, 400, 600, 800]} sizes="(max-width: 1099px) 60vw, 400px" loading="eager" fetchpriority="high" />
+        </div>
+      </div>
+
+      <ol class="milestones" aria-label={content.milestonesLabel}>
+        {
+          content.milestones.map((m) => (
+            <li class:list={['milestone', m.variant && `is-${m.variant}`]}>
+              <span class="milestone__dot" aria-hidden="true" />
+              <span class="milestone__text">
+                <span class="milestone__date">
+                  {m.date ?? <span class="redacted" role="img" aria-label={m.redactedLabel ?? ''} />}
+                </span>
+                <span class="milestone__label">{m.label}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+
+  <div class="hero__stats">
+    <dl class="stats container">
+      {
+        content.stats.map((s) => (
+          <div class="stat">
+            <dt class="stat__label">{s.label}</dt>
+            <dd class="stat__value">
+              {statValue(s)}
+              <span class="stat__plus">+</span>
+              {s.suffix && <span class="stat__suffix"> {s.suffix}</span>}
+            </dd>
+          </div>
+        ))
+      }
+      <div class="stat stat--fuel">
+        <dt class="stat__label">
+          {content.fuel.label}<span class="fuel__inline-detail"> · {content.fuel.detail}</span>
+        </dt>
+        <dd class="fuel">
+          <span class="fuel__bars" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span class="blink"></span>
+          </span>
+          <span class="fuel__value">{content.fuel.value}</span>
+          <span class="fuel__detail">{content.fuel.detail}</span>
+        </dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: clamp(760px, 100svh, 900px);
+    padding-top: var(--header-h);
+    overflow: hidden;
+    background: radial-gradient(1200px 700px at 78% 45%, var(--bg-glow) 0%, var(--bg) 60%);
+  }
+
+  .hero__grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(800px 600px at 78% 45%, black, transparent);
+    -webkit-mask-image: radial-gradient(800px 600px at 78% 45%, black, transparent);
+  }
+
+  /* ---------- Layout ---------- */
+
+  .hero__main {
+    position: relative;
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 620px);
+    grid-template-areas:
+      'text visual'
+      'actions visual';
+    align-content: center;
+    column-gap: 40px;
+    row-gap: 32px;
+    padding-block: 24px;
+  }
+
+  .hero__text {
+    grid-area: text;
+    align-self: end;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .hero__actions {
+    grid-area: actions;
+    align-self: start;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .hero__visual {
+    grid-area: visual;
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    justify-self: end;
+    align-self: center;
+  }
+
+  /* ---------- Text ---------- */
+
+  .hero__title {
+    margin: 0;
+    font-size: clamp(56px, 8.9vw, 128px);
+    font-weight: 600;
+    line-height: 0.9;
+    letter-spacing: -0.055em;
+  }
+
+  .hero__intro {
+    margin: 0;
+    max-width: 520px;
+    font-size: clamp(18px, 1.55vw, 22px);
+    line-height: 1.45;
+    color: var(--text-soft);
+  }
+
+  .hero__tagline {
+    color: var(--text);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    padding: 16px 24px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s, gap 0.2s;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-alt);
+    gap: 18px;
+  }
+
+  .hero__cv {
+    padding-bottom: 3px;
+    border-bottom: 1px solid var(--line-underline);
+    font-size: 15px;
+    color: var(--text-soft);
+    text-decoration: none;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .hero__cv:hover {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+  /* ---------- Orbit ---------- */
+
+  .orbit {
+    position: relative;
+    aspect-ratio: 1;
+  }
+
+  .orbit__ring,
+  .orbit__track {
+    position: absolute;
+    border-radius: 50%;
+  }
+
+  .orbit__ring--outer,
+  .orbit__track {
+    inset: 0;
+  }
+
+  .orbit__ring--outer {
+    border: 1px solid var(--line-ring);
+  }
+
+  .orbit__ring--inner,
+  .orbit__track--inner {
+    inset: 11.667%;
+  }
+
+  .orbit__ring--inner {
+    border: 1px dashed var(--line-dashed);
+  }
+
+  .spin {
+    animation: spin 18s linear infinite;
+  }
+
+  .spin-slow {
+    animation: spin 32s linear infinite reverse;
+  }
+
+  .orbit__sat {
+    position: absolute;
+    border-radius: 50%;
+  }
+
+  .orbit__sat--main {
+    top: -5px;
+    left: calc(50% - 5px);
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    box-shadow: 0 0 16px 4px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+
+  .orbit__sat--small {
+    bottom: -3px;
+    left: calc(50% - 3px);
+    width: 6px;
+    height: 6px;
+    background: var(--text);
+  }
+
+  .orbit__planet,
+  .orbit__portrait {
+    position: absolute;
+    inset: 25%;
+  }
+
+  .orbit__planet {
+    border-radius: 50%;
+    background: radial-gradient(circle at 70% 85%, var(--planet-core) 0%, var(--planet-mid) 42%, var(--planet-edge) 78%);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent),
+      0 0 110px color-mix(in srgb, var(--accent) 32%, transparent);
+  }
+
+  /* The portrait pops out of the top of the planet, but is cut by its bottom curve */
+  .orbit__portrait {
+    clip-path: inset(-50% 0 0 0 round 0 0 50% 50%);
+  }
+
+  .orbit__portrait :global(img) {
+    position: absolute;
+    left: -20.67%;
+    bottom: 0;
+    width: 133.33%;
+    max-width: none;
+    height: auto;
+  }
+
+  /* ---------- Milestones (around the orbit on desktop) ---------- */
+
+  .milestones {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    aspect-ratio: 1;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .milestone {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  .milestone:nth-child(1) { left: 14.5%; top: 35.67%; }
+  .milestone:nth-child(2) { left: 70.33%; top: 4.33%; }
+  .milestone:nth-child(3) { left: 88.17%; top: 46%; }
+  .milestone:nth-child(4) { left: 78%; top: 91.5%; }
+  .milestone:nth-child(5) { left: 16.5%; top: 87.17%; }
+
+  .milestone__dot {
+    position: absolute;
+    left: -4px;
+    top: -4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text);
+  }
+
+  .is-launch .milestone__dot {
+    background: var(--accent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 70%, transparent);
+  }
+
+  .is-secret .milestone__dot {
+    background: transparent;
+    border: 1px dashed var(--accent-alt);
+  }
+
+  .milestone__text {
+    position: absolute;
+    left: 14px;
+    top: -15px;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.3;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--text-muted);
+  }
+
+  .milestone:nth-child(1) .milestone__text,
+  .milestone:nth-child(5) .milestone__text {
+    left: auto;
+    right: 14px;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .milestone__label {
+    color: var(--text);
+  }
+
+  .is-secret .milestone__label {
+    color: var(--accent-alt);
+  }
+
+  .redacted {
+    display: inline-block;
+    width: 34px;
+    height: 10px;
+    border-radius: 1px;
+    background: var(--text);
+    vertical-align: middle;
+  }
+
+  /* ---------- Stats ---------- */
+
+  .hero__stats {
+    position: relative;
+    border-top: 1px solid var(--line);
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 0;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 26px 0 26px 32px;
+    border-right: 1px solid var(--line);
+  }
+
+  .stat:first-child {
+    padding-left: 0;
+  }
+
+  .stat:last-child {
+    border-right: 0;
+  }
+
+  .stat__label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .stat__value {
+    margin: 0;
+    font-size: 40px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .stat__plus {
+    color: var(--accent);
+  }
+
+  .stat__suffix {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--text-muted);
+  }
+
+  .fuel {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0;
+  }
+
+  .fuel__bars {
+    display: flex;
+    gap: 4px;
+  }
+
+  .fuel__bars span {
+    width: 22px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  .fuel__value {
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .fuel__detail {
+    display: none;
+  }
+
+  /* ---------- Tablet & mobile ---------- */
+
+  @media (max-width: 1099px) {
+    .hero {
+      min-height: 0;
+    }
+
+    .hero__main {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'text'
+        'visual'
+        'actions';
+      row-gap: 22px;
+      padding-block: 36px 32px;
+    }
+
+    .hero__text {
+      gap: 22px;
+    }
+
+    .hero__visual {
+      justify-self: center;
+      max-width: 440px;
+    }
+
+    .orbit {
+      width: min(100%, 350px);
+      margin: 8px auto 0;
+    }
+
+    .milestones {
+      position: static;
+      width: auto;
+      aspect-ratio: auto;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .milestone {
+      position: static;
+      width: auto;
+      height: auto;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    .milestone:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
+
+    .milestone__dot {
+      position: static;
+      flex: none;
+      margin-top: 3px;
+    }
+
+    .milestone .milestone__text,
+    .milestone:nth-child(n) .milestone__text {
+      position: static;
+      align-items: flex-start;
+      gap: 2px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-align: left;
+      white-space: normal;
+    }
+
+    .milestone__label {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      padding-inline: 0;
+    }
+
+    .stat,
+    .stat:first-child {
+      gap: 8px;
+      padding: 20px var(--gutter);
+      border-right: 0;
+    }
+
+    .stat:nth-child(odd) {
+      border-right: 1px solid var(--line);
+    }
+
+    .stat:nth-child(-n + 2) {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stat__value {
+      font-size: 32px;
+    }
+
+    .stat__suffix {
+      font-size: 13px;
+    }
+
+    .stat--fuel {
+      gap: 10px;
+    }
+
+    .fuel__inline-detail,
+    .fuel__value {
+      display: none;
+    }
+
+    .fuel {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .fuel__bars {
+      gap: 3px;
+    }
+
+    .fuel__bars span {
+      width: 16px;
+      height: 10px;
+    }
+
+    .fuel__detail {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+  }
+
+  @media (max-width: 639px) {
+    .hero__actions {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      justify-content: center;
+      min-height: 54px;
+      border-radius: 12px;
+    }
+
+    .hero__cv {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 50px;
+      padding: 0 16px;
+      border: 1px solid var(--line-strong);
+      border-radius: 12px;
+      color: var(--text);
+      text-align: center;
+    }
+
+    .hero__visual {
+      max-width: none;
+      width: 100%;
+    }
+  }
+</style>

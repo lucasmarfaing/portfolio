@@ -1,0 +1,43 @@
+{
+  "default": "dark",
+  "dark": {
+    "bg": "#05060A",
+    "bgGlow": "#12101A",
+    "surface": "#0C0D16",
+    "surfaceRaised": "#161827",
+    "text": "#EDEEF2",
+    "textSoft": "#B4B7C6",
+    "textSubtle": "#9A9DB0",
+    "textMuted": "#8B8FA3",
+    "textFaint": "#6E7286",
+    "accent": "#FF5A4A",
+    "accentAlt": "#FF7364",
+    "accentSoft": "#120E16",
+    "onAccent": "#05060A",
+    "success": "#4ADE80",
+    "warning": "#F5B14C",
+    "planetCore": "#FF5A4A",
+    "planetMid": "#6E1A16",
+    "planetEdge": "#160E16"
+  },
+  "light": {
+    "bg": "#F6F5F1",
+    "bgGlow": "#F6F5F1",
+    "surface": "#FFFFFF",
+    "surfaceRaised": "#FFFFFF",
+    "text": "#12131A",
+    "textSoft": "#4A4D5C",
+    "textSubtle": "#5E6273",
+    "textMuted": "#686C7D",
+    "textFaint": "#8A8D9B",
+    "accent": "#FF5A4A",
+    "accentAlt": "#E0412D",
+    "accentSoft": "#FBEDEA",
+    "onAccent": "#F6F5F1",
+    "success": "#16A34A",
+    "warning": "#B97A12",
+    "planetCore": "#FF8A7D",
+    "planetMid": "#FFC2BA",
+    "planetEdge": "#FDE9E6"
+  }
+}

@@ -1,0 +1,20 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SiteHeader from '@/components/SiteHeader.astro';
+import Hero from '@/sections/Hero.astro';
+import { getContent, type Locale } from '@/lib/content';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const { site, hero } = getContent(lang);
+---
+
+<BaseLayout lang={lang} title={site.meta.title} description={site.meta.description}>
+  <SiteHeader site={site} />
+  <main>
+    <Hero content={hero} />
+  </main>
+</BaseLayout>
