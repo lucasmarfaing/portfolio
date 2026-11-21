@@ -1,16 +1,52 @@
 ---
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
 import Redactable from '@/components/Redactable.astro';
 import SectionHead from '@/components/SectionHead.astro';
 import { fill, type MissionsContent } from '@/lib/content';
 
 interface Props {
   content: MissionsContent;
-  /** Number of technologies on the star map, usable as {technos} in a meter value */
-  technos: number;
 }
 
-const { content, technos } = Astro.props;
+const { content } = Astro.props;
 const { labels } = content;
+
+// Mission screenshots live in src/assets/missions/ so Astro can optimise them
+const screenshots = import.meta.glob<{ default: ImageMetadata }>('/src/assets/missions/**/*.{png,jpg,jpeg,webp,avif}', {
+  eager: true,
+});
+const screenshotFor = (file?: string) => {
+  if (!file) return undefined;
+  const found = screenshots[`/src/assets/missions/${file}`];
+  if (!found) throw new Error(`Capture introuvable : src/assets/missions/${file} (champ "image" de missions.json)`);
+  return found.default;
+};
+
+/**
+ * Gallery: every image of a folder, spread over 5 scrolling columns.
+ * Each column repeats its images so the loop (translateY -25 %) is seamless.
+ */
+const galleryFor = (folder?: string) => {
+  if (!folder) return undefined;
+  const prefix = `/src/assets/missions/${folder}/`;
+  const images = Object.keys(screenshots)
+    .filter((path) => path.startsWith(prefix))
+    .sort()
+    .map((path) => screenshots[path]!.default);
+  if (images.length === 0) throw new Error(`Galerie vide : src/assets/missions/${folder}/ (champ "gallery" de missions.json)`);
+  // Phone screenshots (portrait) get narrower tiles and more columns, so the plane is as wide
+  const portrait = images[0]!.height > images[0]!.width;
+  const columnCount = portrait ? 7 : 5; // wide enough that the tilted plane always covers the whole screen
+  const columns = Array.from({ length: columnCount }, (_, c) => {
+    const base = images.map((_, i) => images[(i + c * 2) % images.length]!);
+    // One loop = 6 tiles (5 taller phone tiles). The column holds 4 loops and scrolls by one (25 %),
+    // so the visible window always stays in the middle of the tiles: never an empty edge.
+    const loop = Array.from({ length: portrait ? 5 : 6 }, (_, i) => base[(i + c) % base.length]!);
+    return [...loop, ...loop, ...loop, ...loop];
+  });
+  return { portrait, columns };
+};
 
 const tintVar = { red: 'var(--accent)', amber: 'var(--warning)', blue: 'var(--star-blue)' } as const;
 const statusColor = {
@@ -32,12 +68,45 @@ const chart = (values: number[]) => {
   return { line, area: `${line} L${CW} 104 L0 104 Z`, last: pts.at(-1)!, up: last3 >= prev3 };
 };
 
+const { units } = labels;
+const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
+
+/** The same three meters for every mission, computed from its data sheet (12 cells each). */
+const metersFor = (m: MissionsContent['missions'][number]) => {
+  if (m.status === 'secret') {
+    return [labels.meters.duration, labels.meters.crew, labels.meters.technos].map((label, k) => ({
+      label,
+      value: '█'.repeat(5 - k),
+      level: 0,
+    }));
+  }
+  const technoCount = m.stack.split('·').filter((t) => t.trim()).length;
+  const months = m.months;
+  const duration =
+    months === undefined
+      ? '—'
+      : months < 12
+        ? plural(months, units.month, units.months)
+        : plural(Math.round(months / 12), units.year, units.years);
+  return [
+    // 4 months per cell: 12 cells = 4 years
+    { label: labels.meters.duration, value: duration, level: months ? Math.min(12, Math.ceil(months / 4)) : 0 },
+    {
+      label: labels.meters.crew,
+      value: m.crewSize === undefined ? '—' : m.crewSize === 1 ? units.solo : fill(units.people, { n: m.crewSize }),
+      level: Math.min(12, m.crewSize ?? 0),
+    },
+    { label: labels.meters.technos, value: String(technoCount), level: Math.min(12, technoCount) },
+  ];
+};
+
 const missions = content.missions.map((m, i) => {
   const secret = m.status === 'secret';
   const finished = m.status === 'done' || m.status === 'archived';
   const step = finished ? 4 : (m.phase ?? 1);
   const accent = secret ? 'var(--accent)' : m.status === 'archived' ? 'var(--text-muted)' : finished ? 'var(--accent)' : 'var(--warning)';
   const activity = m.activity ? chart(m.activity) : undefined;
+  const progressPct = finished ? 100 : step * 25;
   const phases = labels.phases.map((label, p) => {
     if (secret) return { label: p === 0 ? `✓ ${label}` : '█'.repeat(6 + p * 2), state: p === 0 ? 'done' : 'redacted' };
     const state = p < step ? 'done' : p === step ? 'current' : 'todo';
@@ -59,21 +128,32 @@ const missions = content.missions.map((m, i) => {
     accent,
     statusColor: statusColor[m.status],
     tint: tintVar[m.tint],
-    progress: secret ? '███' : finished ? '100 %' : `${step * 25} %`,
+    progress: secret ? '███' : `${progressPct} %`,
     phases,
     rows,
     activity,
-    trend: secret ? labels.trend.secret : m.status === 'archived' ? labels.trend.ended : activity?.up ? labels.trend.up : labels.trend.down,
+    trend: secret
+      ? labels.trend.secret
+      : !activity
+        ? labels.trend.none
+        : m.status === 'archived'
+          ? labels.trend.ended
+          : activity.up
+            ? labels.trend.up
+            : labels.trend.down,
     trendColor: secret
       ? 'var(--accent)'
-      : m.status === 'archived'
+      : !activity || m.status === 'archived'
         ? 'var(--text-muted)'
-        : activity?.up
+        : activity.up
           ? 'var(--success)'
           : 'var(--accent-alt)',
-    gauge: secret ? '??' : m.lighthouse === undefined ? '—' : String(m.lighthouse),
-    gaugeDash: m.lighthouse === undefined || secret ? '0 400' : `${Math.round((245 * m.lighthouse) / 100)} 400`,
-    meters: m.meters.map((mt) => ({ ...mt, value: fill(mt.value, { technos }) })),
+    // Progress gauge: same scale as the phases (25 % per phase, 100 % when finished)
+    gauge: secret ? '??' : `${progressPct}%`,
+    gaugeDash: secret || progressPct === 0 ? undefined : `${Math.round((245 * progressPct) / 100)} 400`,
+    meters: metersFor(m),
+    screenshot: screenshotFor(m.image),
+    gallery: galleryFor(m.gallery),
   };
 });
 ---
@@ -126,7 +206,7 @@ const missions = content.missions.map((m, i) => {
               data-panel={i}>
               <!-- "Video feed" -->
               <div class="screen">
-                {m.secret && <div class="screen__noise" aria-hidden="true" />}
+                {(m.secret || m.screen === 'encrypted') && <div class="screen__noise" aria-hidden="true" />}
                 <span class="screen__scan" aria-hidden="true" />
                 <div class="screen__top">
                   <span>
@@ -143,23 +223,50 @@ const missions = content.missions.map((m, i) => {
                     </span>
                   </span>
                 </div>
-                {m.image ? (
-                  <img class="screen__img" src={m.image} alt={m.screenshotLabel} loading="lazy" />
+                {m.gallery ? (
+                  <div class:list={['mosaic', { 'mosaic--portrait': m.gallery.portrait }]} role="img" aria-label={m.screenshotLabel}>
+                    <div class="mosaic__plane">
+                      {m.gallery.columns.map((column, c) => (
+                        <div class:list={['mosaic__col', `mosaic__col--${c + 1}`]}>
+                          {column.map((shot) => (
+                            /* Not lazy: tiles scroll into view constantly, a lazy tile would appear empty for a moment */
+                            <Image
+                              class="mosaic__tile"
+                              src={shot}
+                              alt=""
+                              widths={m.gallery!.portrait ? [200, 320] : [320, 480]}
+                              sizes={m.gallery!.portrait ? '160px' : '240px'}
+                              loading="eager"
+                              decoding="async"
+                              fetchpriority="low"
+                            />
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : m.screenshot ? (
+                  <Image
+                    class="screen__img"
+                    src={m.screenshot}
+                    alt={m.screenshotLabel}
+                    widths={[640, 1080, 1440]}
+                    sizes="(max-width: 1099px) 100vw, 1080px"
+                    loading="lazy"
+                  />
                 ) : (
                   <span class="screen__placeholder">{m.screenshotLabel}</span>
                 )}
                 {m.status === 'archived' && (
                   <div class="stamp stamp--archived">
-                    {labels.archivedStamp}
-                    <br />
-                    <span>{labels.archivedStampSub}</span>
+                    <span class="stamp__main">{labels.archivedStamp}</span>
+                    <span class="stamp__sub">{labels.archivedStampSub}</span>
                   </div>
                 )}
                 {m.secret && (
                   <div class="stamp stamp--secret">
-                    {labels.secretStamp}
-                    <br />
-                    <span>{labels.secretStampSub}</span>
+                    <span class="stamp__main">{labels.secretStamp}</span>
+                    <span class="stamp__sub">{labels.secretStampSub}</span>
                   </div>
                 )}
                 <ol class="phases">
@@ -227,41 +334,51 @@ const missions = content.missions.map((m, i) => {
 
               <div class="widgets" aria-hidden="true">
                 <div class="widget widget--gauge">
-                  <span class="widget__label">{labels.performance}</span>
+                  <span class="widget__label">{labels.gauge}</span>
                   <div class="gauge">
                     <svg viewBox="0 0 140 140">
                       <circle cx="70" cy="70" r="52" class="gauge__track" stroke-dasharray="245 400" transform="rotate(135 70 70)" />
-                      <circle cx="70" cy="70" r="52" class="gauge__value" stroke-dasharray={m.gaugeDash} transform="rotate(135 70 70)" />
+                      {/* No value arc at 0 %: a zero-length round-capped stroke would draw a stray dot */}
+                      {m.gaugeDash && (
+                        <circle cx="70" cy="70" r="52" class="gauge__value" stroke-dasharray={m.gaugeDash} transform="rotate(135 70 70)" />
+                      )}
                     </svg>
                     <div class="gauge__text">
-                      <span class:list={['gauge__number', { 'is-empty': m.gauge === '—' }]}>{m.gauge}</span>
-                      <span class="gauge__unit">{labels.lighthouse}</span>
+                      <span class:list={['gauge__number', { 'is-empty': m.secret }]}>{m.gauge}</span>
+                      <span class="gauge__unit">{labels.gaugeUnit}</span>
                     </div>
                   </div>
                 </div>
 
-                {m.activity && (
-                  <div class="widget widget--chart">
-                    <div class="widget__row">
-                      <span class="widget__label">{labels.activity}</span>
-                      <span class="widget__trend" style={`color: ${m.trendColor}`}>
-                        {m.trend}
-                      </span>
-                    </div>
+                <div class="widget widget--chart">
+                  <div class="widget__row">
+                    <span class="widget__label">{labels.activity}</span>
+                    <span class="widget__trend" style={`color: ${m.trendColor}`}>
+                      {m.trend}
+                    </span>
+                  </div>
+                  <div class="chart-box">
                     <svg class="chart" viewBox="0 0 520 104" preserveAspectRatio="none">
                       <line x1="0" y1="26" x2="520" y2="26" />
                       <line x1="0" y1="52" x2="520" y2="52" />
                       <line x1="0" y1="78" x2="520" y2="78" />
-                      <path d={m.activity.area} class="chart__area" />
-                      <path d={m.activity.line} class="chart__line" vector-effect="non-scaling-stroke" />
+                      {m.activity ? (
+                        <>
+                          <path d={m.activity.area} class="chart__area" />
+                          <path d={m.activity.line} class="chart__line" vector-effect="non-scaling-stroke" />
+                        </>
+                      ) : (
+                        <line x1="0" y1="96" x2="520" y2="96" class="chart__empty" vector-effect="non-scaling-stroke" />
+                      )}
                     </svg>
-                    <div class="widget__months">
-                      {labels.months.map((mo) => (
-                        <span>{mo}</span>
-                      ))}
-                    </div>
+                    {!m.activity && <span class="chart__missing">{labels.activityMissing}</span>}
                   </div>
-                )}
+                  <div class="widget__months">
+                    {labels.months.map((mo) => (
+                      <span>{mo}</span>
+                    ))}
+                  </div>
+                </div>
 
                 <div class="widget widget--meters">
                   {m.meters.map((mt) => (
@@ -582,12 +699,132 @@ const missions = content.missions.map((m, i) => {
   }
 
 
-  .screen__img {
+  /* Screenshot shown like a video feed: slightly dimmed so the overlays stay readable */
+  .screen :global(.screen__img) {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center 45%;
+    opacity: 0.55;
+  }
+
+  /* ---------- Gallery: tilted mosaic of pages, slowly scrolling ---------- */
+
+  .mosaic {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    perspective: 1400px;
+  }
+
+  .mosaic {
+    --tile-w: 240px;
+    --cols: 5;
+  }
+
+  /* Phone screenshots: narrower, taller tiles, more columns */
+  .mosaic--portrait {
+    --tile-w: 160px;
+    --cols: 7;
+  }
+
+  .mosaic__plane {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    grid-template-columns: repeat(var(--cols), var(--tile-w));
+    gap: 18px;
+    transform: translate(-50%, -50%) rotateX(38deg) rotateZ(-24deg);
+    transform-style: preserve-3d;
+  }
+
+  .mosaic__col {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    animation: mosaic-up 46s linear infinite;
+  }
+
+  /* Every other column goes the other way, each at its own speed */
+  .mosaic__col--2,
+  .mosaic__col--4 {
+    animation-name: mosaic-down;
+    animation-duration: 54s;
+  }
+
+  .mosaic__col--3 {
+    animation-duration: 40s;
+  }
+
+  .mosaic__col--4 {
+    animation-duration: 60s;
+  }
+
+  .mosaic__col--5 {
+    animation-duration: 50s;
+  }
+
+  .mosaic__col--6 {
+    animation-name: mosaic-down;
+    animation-duration: 48s;
+  }
+
+  .mosaic__col--7 {
+    animation-duration: 56s;
+  }
+
+  .mosaic :global(.mosaic__tile) {
+    display: block;
+    width: var(--tile-w);
+    height: auto;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    object-position: top;
+    border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+    border-radius: 8px;
+    box-shadow: 0 18px 40px -18px var(--shadow-color);
+    opacity: 0.85;
+  }
+
+  /* Phone screens keep their own shape (rounded frame included) */
+  .mosaic--portrait :global(.mosaic__tile) {
+    aspect-ratio: auto;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    filter: drop-shadow(0 14px 24px var(--shadow-color));
+  }
+
+  /* One loop = a quarter of the column (it holds 4 identical loops) */
+  @keyframes mosaic-up {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-25%);
+    }
+  }
+
+  @keyframes mosaic-down {
+    from {
+      transform: translateY(-25%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .screen:has(.mosaic)::after,
+  .screen:has(.screen__img)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 70%, transparent), transparent 30%, transparent 60%, color-mix(in srgb, var(--surface) 85%, transparent));
+    pointer-events: none;
   }
 
   .stamp {
@@ -602,14 +839,23 @@ const missions = content.missions.map((m, i) => {
     font-family: var(--font-mono);
     font-size: 14px;
     line-height: 1.6;
-    letter-spacing: 0.2em;
     text-align: center;
     text-transform: uppercase;
   }
 
-  .stamp span {
+  /* Letter-spacing leaves a gap after the last letter: an equal padding on the left
+     keeps each line visually centred in the frame. */
+  .stamp__main,
+  .stamp__sub {
+    display: block;
+    --ls: 0.2em;
+    padding-left: var(--ls);
+    letter-spacing: var(--ls);
+  }
+
+  .stamp__sub {
+    --ls: 0.16em;
     font-size: 11px;
-    letter-spacing: 0.16em;
   }
 
   .stamp--archived {
@@ -619,7 +865,7 @@ const missions = content.missions.map((m, i) => {
     transform: translate(-50%, -50%) rotate(-8deg);
   }
 
-  .stamp--archived span {
+  .stamp--archived .stamp__sub {
     color: var(--text-muted);
   }
 
@@ -631,12 +877,15 @@ const missions = content.missions.map((m, i) => {
     color: var(--accent);
     font-size: 22px;
     font-weight: 500;
-    letter-spacing: 0.28em;
     transform: translate(-50%, -50%) rotate(-6deg);
   }
 
-  .stamp--secret span {
-    letter-spacing: 0.2em;
+  .stamp--secret .stamp__main {
+    --ls: 0.28em;
+  }
+
+  .stamp--secret .stamp__sub {
+    --ls: 0.2em;
   }
 
   .phases {
@@ -945,7 +1194,7 @@ const missions = content.missions.map((m, i) => {
   }
 
   .gauge__number {
-    font-size: 26px;
+    font-size: 21px;
     font-weight: 600;
     line-height: 1;
     letter-spacing: -0.04em;
@@ -982,6 +1231,30 @@ const missions = content.missions.map((m, i) => {
     stroke: var(--ac);
     stroke-width: 2;
     stroke-linejoin: round;
+  }
+
+  /* No real data: flat dashed line + label, instead of invented values */
+  .chart-box {
+    position: relative;
+  }
+
+  .chart .chart__empty {
+    stroke: color-mix(in srgb, var(--text) 22%, transparent);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 6;
+  }
+
+  .chart__missing {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
   }
 
   .widget__months {
@@ -1133,10 +1406,13 @@ const missions = content.missions.map((m, i) => {
       padding: 8px 14px;
       border-width: 2px;
       font-size: 13px;
-      letter-spacing: 0.2em;
     }
 
-    .stamp span {
+    .stamp .stamp__main {
+      --ls: 0.2em;
+    }
+
+    .stamp__sub {
       display: none;
     }
 

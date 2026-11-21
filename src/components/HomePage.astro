@@ -25,7 +25,7 @@ const { site, hero, crew, trajectory, inventory, sky, missions, transmissions, c
     <Crew content={crew} callsign={site.callsign} />
     <Trajectory content={trajectory} />
     <Inventory content={inventory} sky={sky} callsign={site.callsign} />
-    <Missions content={missions} technos={sky.stars.length} />
+    <Missions content={missions} />
     <Transmissions content={transmissions} />
     <Contact content={contact} callsign={site.callsign} />
   </main>

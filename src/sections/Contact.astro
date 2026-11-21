@@ -40,7 +40,8 @@ const isPlaceholder = (text: string) => text.trim().startsWith('[');
                   <Tag
                     class:list={['channel', { 'is-static': !c.url }]}
                     href={c.url}
-                    {...(c.url && /^https?:/.test(c.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+                    data-email-domain
+                    {...(c.url && /^https?:|\.pdf$/.test(c.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
                     <span class="channel__main">
                       <Icon name={c.icon} size={20} class="channel__icon" />
                       <span class="channel__text">
@@ -62,7 +63,7 @@ const isPlaceholder = (text: string) => text.trim().startsWith('[');
         </ul>
       </div>
 
-      <div class="console" data-console data-endpoint={form.endpoint} data-mailto={form.mailTo} data-subject={form.mailSubject}>
+      <div class="console" data-console data-email-domain data-endpoint={form.endpoint} data-mailto={form.mailTo} data-subject={form.mailSubject}>
         <div class="console__bar">
           <span class="console__title-long">{form.console}</span>
           <span class="console__title-short">{form.consoleShort}</span>
@@ -103,7 +104,7 @@ const isPlaceholder = (text: string) => text.trim().startsWith('[');
           <!-- Spam trap: real visitors never fill this hidden field -->
           <input class="trap" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <p class="console__error" data-error hidden>
-            {form.errorText} <a href={`mailto:${form.mailTo}`}>{form.mailTo}</a>
+            {form.errorText} <a href={`mailto:${form.mailTo}`} data-email-domain>{form.mailTo}</a>
           </p>
           <button type="submit" class="console__submit">
             {form.submit}

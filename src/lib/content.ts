@@ -225,11 +225,21 @@ const missionsSchema = z.object({
       crew: z.string(),
       launch: z.string(),
     }),
-    performance: z.string(),
-    lighthouse: z.string(),
+    gauge: z.string(),
+    gaugeUnit: z.string(),
     activity: z.string(),
+    activityMissing: z.string(),
     months: z.array(z.string()),
-    trend: z.object({ up: z.string(), down: z.string(), ended: z.string(), secret: z.string() }),
+    trend: z.object({ up: z.string(), down: z.string(), ended: z.string(), secret: z.string(), none: z.string() }),
+    meters: z.object({ duration: z.string(), crew: z.string(), technos: z.string() }),
+    units: z.object({
+      month: z.string(),
+      months: z.string(),
+      year: z.string(),
+      years: z.string(),
+      solo: z.string(),
+      people: z.string(),
+    }),
     viewMission: z.string(),
     source: z.string(),
     requestAccess: z.string(),
@@ -244,8 +254,18 @@ const missionsSchema = z.object({
         /** Current phase for a mission in progress: 0 Briefing … 3 Mise en orbite */
         phase: z.number().int().min(0).max(3).optional(),
         tint: z.enum(['red', 'blue', 'amber']).default('red'),
-        /** Optional screenshot in public/, e.g. "/missions/gmee.webp" */
-        image: z.string().startsWith('/').optional(),
+        /** Optional screenshot: a file name in src/assets/missions/, e.g. "gmee.png" (optimised at build) */
+        image: z
+          .string()
+          .regex(/^[\w-]+\.(png|jpe?g|webp|avif)$/i, 'Nom de fichier du type "gmee.png", placé dans src/assets/missions/')
+          .optional(),
+        /** Optional folder in src/assets/missions/ whose images scroll as a tilted mosaic, e.g. "portfolio" */
+        gallery: z
+          .string()
+          .regex(/^[\w-]+$/, 'Nom de dossier du type "portfolio", placé dans src/assets/missions/')
+          .optional(),
+        /** "encrypted": the video feed shows scrambled noise instead of a screenshot (like a classified mission) */
+        screen: z.enum(['encrypted']).optional(),
         screenshotLabel: z.string(),
         elapsed: z.string(),
         brief: z.string(),
@@ -254,9 +274,12 @@ const missionsSchema = z.object({
         duration: z.string().optional(),
         launch: z.string().optional(),
         crew: z.string(),
-        lighthouse: z.number().int().min(0).max(100).optional(),
+        /** Mission length in months, for the "Duration" meter */
+        months: z.number().int().min(1).optional(),
+        /** Number of people, for the "Crew" meter */
+        crewSize: z.number().int().min(1).optional(),
+        /** Real commits per month (12 values, oldest first). Without it: "Data unavailable". */
         activity: z.array(z.number().min(0)).min(2).optional(),
-        meters: z.array(z.object({ label: z.string(), value: z.string(), level: z.number().int().min(0).max(12) })).max(3),
         links: z.object({ mission: z.url().optional(), source: z.url().optional() }).optional(),
       }),
     )

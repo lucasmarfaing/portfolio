@@ -5,7 +5,7 @@
   "tagline": "A dreamer with both feet on the ground.",
   "intro": "I design and build front-end interfaces that take off — and land smoothly.",
   "cta": { "label": "Launch the mission", "href": "#contact" },
-  "cv": { "label": "Download the pilot file (CV)", "href": "#" },
+  "cv": { "label": "Download the pilot file (CV)", "href": "/cv/Lucas-Marfaing-CV.pdf" },
   "portraitAlt": "Portrait of Lucas Marfaing",
   "milestonesLabel": "Trajectory milestones",
   "milestones": [

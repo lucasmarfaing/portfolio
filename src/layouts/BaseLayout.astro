@@ -3,6 +3,7 @@ import '@fontsource-variable/geist';
 import '@fontsource-variable/geist-mono';
 import '@/styles/global.css';
 import { theme, themeCss } from '@/lib/theme';
+import { domains } from '@/lib/domains';
 import type { Locale } from '@/lib/content';
 
 interface Props {
@@ -49,5 +50,28 @@ const alternates = [
   </head>
   <body>
     <slot />
+    <!--
+      The same site is served on several domains (src/content/domains.json). The HTML is built with the
+      main one; elements marked data-email-domain get the domain the visitor actually used
+      (ask@lucasmarfaing.dev on lucasmarfaing.dev, and so on).
+    -->
+    <script is:inline define:vars={{ domains }}>
+      (function () {
+        var main = domains[0];
+        var host = location.hostname.replace(/^www\./, '');
+        if (host === main || domains.indexOf(host) < 0) return;
+        document.querySelectorAll('[data-email-domain]').forEach(function (el) {
+          ['href', 'data-mailto'].forEach(function (attr) {
+            var value = el.getAttribute(attr);
+            if (value) el.setAttribute(attr, value.split('@' + main).join('@' + host));
+          });
+          var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+          var node;
+          while ((node = walker.nextNode())) {
+            if (node.nodeValue.indexOf('@' + main) >= 0) node.nodeValue = node.nodeValue.split('@' + main).join('@' + host);
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

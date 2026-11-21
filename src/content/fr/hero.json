@@ -5,7 +5,7 @@
   "tagline": "Rêveur, les pieds sur terre.",
   "intro": "Je conçois et code des interfaces front qui décollent — et qui atterrissent proprement.",
   "cta": { "label": "Lancer la mission", "href": "#contact" },
-  "cv": { "label": "Télécharger le dossier pilote (CV)", "href": "#" },
+  "cv": { "label": "Télécharger le dossier pilote (CV)", "href": "/cv/Lucas-Marfaing-CV.pdf" },
   "portraitAlt": "Portrait de Lucas Marfaing",
   "milestonesLabel": "Jalons de trajectoire",
   "milestones": [

@@ -8,9 +8,9 @@
   "availabilityShort": "Listening",
   "channels": [
     { "icon": "mail", "label": "Direct frequency", "value": "ask@lucasmarfaing.pro", "url": "mailto:ask@lucasmarfaing.pro" },
-    { "icon": "linkedin", "label": "LinkedIn", "value": "[/in/lucas-marfaing]" },
+    { "icon": "linkedin", "label": "LinkedIn", "value": "in/lucas-marfaing", "url": "https://www.linkedin.com/in/lucas-marfaing-10b48514a" },
     { "icon": "github", "label": "GitHub", "value": "github.com/lucasmarfaing", "url": "https://github.com/lucasmarfaing" },
-    { "icon": "file", "label": "Pilot file", "value": "Download my CV" }
+    { "icon": "file", "label": "Pilot file", "value": "Download my CV", "url": "/cv/Lucas-Marfaing-CV.pdf" }
   ],
   "form": {
     "console": "Transmission console",

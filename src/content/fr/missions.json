@@ -10,17 +10,20 @@
     "feed": "Flux vidéo · Mission",
     "progress": "Progression",
     "rec": "REC",
-    "archivedStamp": "Mission terminée",
-    "archivedStampSub": "Archivée · hors service",
+    "archivedStamp": "Archivée",
+    "archivedStampSub": "Mission terminée · hors service",
     "secretStamp": "Classifié",
     "secretStampSub": "Accès restreint · niveau Omega",
     "phases": ["Briefing", "Conception", "Développement", "Mise en orbite"],
     "rows": { "status": "Statut", "role": "Rôle", "stack": "Stack", "duration": "Durée", "crew": "Équipage", "launch": "Lancement" },
-    "performance": "Performance",
-    "lighthouse": "Lighthouse",
+    "gauge": "Progression",
+    "gaugeUnit": "Mission",
     "activity": "Activité · commits / mois",
+    "activityMissing": "Données indisponibles",
     "months": ["M1", "M3", "M6", "M9", "M12"],
-    "trend": { "up": "▲ En hausse", "down": "▼ En baisse", "ended": "▼ Fin d’activité", "secret": "■ Signal chiffré" },
+    "trend": { "up": "▲ En hausse", "down": "▼ En baisse", "ended": "▼ Fin d’activité", "secret": "■ Signal chiffré", "none": "— Aucun relevé" },
+    "meters": { "duration": "Durée", "crew": "Équipage", "technos": "Technos" },
+    "units": { "month": "mois", "months": "mois", "year": "an", "years": "ans", "solo": "Solo", "people": "{n} pers." },
     "viewMission": "Voir la mission",
     "source": "Code source",
     "requestAccess": "Demander l’accès",
@@ -32,20 +35,16 @@
       "category": "Réseau social",
       "status": "archived",
       "tint": "red",
-      "screenshotLabel": "[Capture de Gmee]",
+      "gallery": "gmee",
+      "screenshotLabel": "Écrans de l’application Gmee",
       "elapsed": "4 ans · fin de mission",
       "brief": "Un réseau social qui respecte ses utilisateurs : pas de récolte de données en douce, pas de revente, pas de pub. Conçu et développé en duo avec Thibaut Huguet.",
       "role": "Créateur · designer · dev",
       "stack": "React Native · Expo · Express · PostgreSQL · Redis · Figma",
       "duration": "4 ans",
+      "months": 48,
       "crew": "Duo · avec Thibaut Huguet",
-      "lighthouse": 86,
-      "activity": [4, 9, 14, 22, 30, 26, 18, 24, 12, 8, 3, 1],
-      "meters": [
-        { "label": "Utilisateurs", "value": "200", "level": 4 },
-        { "label": "Durée", "value": "4 ans", "level": 12 },
-        { "label": "Équipage", "value": "2 pers.", "level": 2 }
-      ]
+      "crewSize": 2
     },
     {
       "name": "Project Fire",
@@ -53,39 +52,33 @@
       "status": "live",
       "phase": 2,
       "tint": "amber",
-      "screenshotLabel": "[Capture de Project Fire]",
+      "screen": "encrypted",
+      "screenshotLabel": "[ Signal chiffré ]",
       "elapsed": "1 an",
       "brief": "Un jeu mobile en cours de développement, où il faut ████████ ██ ██████████. Le reste est encore classé.",
       "role": "Créateur · designer · dev",
       "stack": "Unity",
       "duration": "1 an · en cours",
+      "months": 12,
       "crew": "Solo",
-      "activity": [2, 5, 8, 12, 15, 20, 24, 22, 28, 30, 26, 32],
-      "meters": [
-        { "label": "Phase", "value": "Développement", "level": 6 },
-        { "label": "Durée", "value": "1 an", "level": 3 },
-        { "label": "Équipage", "value": "Solo", "level": 1 }
-      ]
+      "crewSize": 1
     },
     {
       "name": "Ce portfolio",
       "category": "Méta",
-      "status": "live",
-      "phase": 1,
+      "status": "done",
       "tint": "blue",
-      "screenshotLabel": "[Capture du portfolio]",
+      "gallery": "portfolio",
+      "screenshotLabel": "Pages du portfolio V6",
       "elapsed": "3 mois",
       "brief": "Le site que tu es en train de visiter : conçu dans Figma, de la V1 à la V6, puis piloté jusqu’à cette version Mission Control.",
       "role": "Créateur · designer · dev",
       "stack": "Figma · Astro · React",
       "duration": "3 mois (V6)",
+      "months": 3,
       "crew": "Solo",
-      "activity": [1, 2, 1, 3, 2, 4, 3, 5, 6, 8, 10, 14],
-      "meters": [
-        { "label": "Itérations", "value": "6", "level": 6 },
-        { "label": "Technos", "value": "{technos}", "level": 12 },
-        { "label": "Durée V6", "value": "3 mois", "level": 1 }
-      ]
+      "crewSize": 1,
+      "activity": [0, 0, 0, 0, 0, 0, 14, 1, 0, 0, 0, 11]
     },
     {
       "name": "Projet ██████",
@@ -99,12 +92,7 @@
       "stack": "████ · ██████",
       "launch": "2026",
       "crew": "█████",
-      "activity": [7, 3, 9, 2, 8, 4, 10, 1, 6, 9, 3, 8],
-      "meters": [
-        { "label": "Budget", "value": "█████", "level": 0 },
-        { "label": "Équipage", "value": "███", "level": 0 },
-        { "label": "Destination", "value": "███████", "level": 0 }
-      ]
+      "activity": [7, 3, 9, 2, 8, 4, 10, 1, 6, 9, 3, 8]
     }
   ]
 }
