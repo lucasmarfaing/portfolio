@@ -28,10 +28,20 @@ const waveform = (seed: number) => {
   });
 };
 
+/** Initials written like a chemical element: "Thibaut Huguet" → "Th". */
+const elementSymbol = (name: string) => {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const first = words[0]?.[0]?.toUpperCase() ?? '?';
+  const second = (words.length > 1 ? words.at(-1)![0] : words[0]?.[1])?.toLowerCase() ?? '';
+  return first + second;
+};
+
 const items = content.items.map((t, i) => ({
   ...t,
   code: `TX-${String(i + 1).padStart(2, '0')}`,
   wave: waveform(i),
+  atomic: i + 1,
+  symbol: t.symbol ?? (isPlaceholder(t.name) ? '??' : elementSymbol(t.name)),
 }));
 ---
 
@@ -62,14 +72,15 @@ const items = content.items.map((t, i) => ({
               <span class="slide__mark" aria-hidden="true">
                 “
               </span>
-              <p class:list={['slide__text', { 'is-placeholder': isPlaceholder(t.quote) }]}>{t.quote}</p>
+              <p class="slide__text">{t.quote}</p>
             </blockquote>
             <figcaption class="slide__from">
               {t.photo ? (
                 <img class="slide__photo" src={t.photo} alt="" width="52" height="52" loading="lazy" />
               ) : (
-                <span class="slide__photo slide__photo--empty" aria-hidden="true">
-                  {content.photoPlaceholder}
+                <span class:list={['element', { 'is-placeholder': isPlaceholder(t.name) }]} aria-hidden="true">
+                  <span class="element__number">{t.atomic}</span>
+                  <span class="element__symbol">{t.symbol}</span>
                 </span>
               )}
               <span class="slide__who">
@@ -291,7 +302,8 @@ const items = content.items.map((t, i) => ({
     font-weight: 500;
     line-height: 1.4;
     letter-spacing: -0.02em;
-    color: var(--text);
+    /* Quotes always use the design's grey, real or placeholder */
+    color: var(--text-faint);
   }
 
   .slide.is-active .slide__text {
@@ -323,13 +335,42 @@ const items = content.items.map((t, i) => ({
     object-fit: cover;
   }
 
-  .slide__photo--empty {
+  /* Initials as a periodic-table element (shown when there is no photo) */
+  .element {
+    position: relative;
+    flex: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1.5px dashed color-mix(in srgb, var(--text) 25%, transparent);
+    width: 52px;
+    height: 52px;
+    border: 1.5px solid var(--accent);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    color: var(--accent);
+  }
+
+  .element__number {
+    position: absolute;
+    top: 4px;
+    left: 6px;
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 9px;
+    line-height: 1;
+    opacity: 0.8;
+  }
+
+  .element__symbol {
+    margin-top: 4px;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+  }
+
+  .element.is-placeholder {
+    border-style: dashed;
+    border-color: color-mix(in srgb, var(--text) 25%, transparent);
+    background: transparent;
     color: var(--text-faint);
   }
 
@@ -356,10 +397,6 @@ const items = content.items.map((t, i) => ({
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--text-muted);
-  }
-
-  .slide__text.is-placeholder {
-    color: var(--text-faint);
   }
 
   .slide__name.is-placeholder {
@@ -495,9 +532,14 @@ const items = content.items.map((t, i) => ({
       border-left: 0;
     }
 
-    .slide__photo {
+    .slide__photo,
+    .element {
       width: 44px;
       height: 44px;
+    }
+
+    .element__symbol {
+      font-size: 19px;
     }
 
     .slide__role {

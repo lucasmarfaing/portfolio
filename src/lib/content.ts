@@ -275,8 +275,10 @@ const transmissionsSchema = z.object({
         role: z.string(),
         relation: z.string(),
         quote: z.string().min(1),
-        /** Optional photo in public/, e.g. "/transmissions/jane.webp" */
+        /** Optional photo in public/, e.g. "/transmissions/jane.webp" (otherwise initials as a periodic element) */
         photo: z.string().startsWith('/').optional(),
+        /** Optional element symbol replacing the automatic initials, e.g. "Th" */
+        symbol: z.string().min(1).max(3).optional(),
       }),
     )
     .min(1),

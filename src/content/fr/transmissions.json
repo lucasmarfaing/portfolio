@@ -12,21 +12,21 @@
       "name": "[Prénom Nom]",
       "role": "[Poste · Entreprise]",
       "relation": "Manager",
-      "quote": "[Citation d’un manager : 2 à 3 phrases sur ta façon de travailler et ce que tu as apporté à l’équipe.]"
+      "quote": "[Citation d'un manager : 2 à 3 phrases sur ta façon de travailler et ce que tu as apporté à l’équipe.]"
     },
     {
       "freq": "118.35 MHz",
-      "name": "[Prénom Nom]",
-      "role": "[Poste · Entreprise]",
-      "relation": "Collègue",
-      "quote": "[Citation d’un collègue : ce que c’est de bosser avec toi au quotidien.]"
+      "name": "Thibaut Huguet",
+      "role": "Developpeur mobile - ADN",
+      "relation": "Ancien collègue",
+      "quote": "J'ai passé mes meilleures années de travail avec Lucas. Des rigolades aux migraines pour corriger un bug, un réel plaisir !"
     },
     {
       "freq": "127.05 MHz",
       "name": "[Prénom Nom]",
       "role": "[Poste · Entreprise]",
       "relation": "Client",
-      "quote": "[Citation d’un client ou d’un designer : le résultat livré et la collaboration.]"
+      "quote": "[Citation d'un client ou d'un designer : le résultat livré et la collaboration.]"
     }
   ]
 }

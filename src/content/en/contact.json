@@ -9,7 +9,7 @@
   "channels": [
     { "icon": "mail", "label": "Direct frequency", "value": "ask@lucasmarfaing.pro", "url": "mailto:ask@lucasmarfaing.pro" },
     { "icon": "linkedin", "label": "LinkedIn", "value": "[/in/lucas-marfaing]" },
-    { "icon": "github", "label": "GitHub", "value": "[github.com/…]" },
+    { "icon": "github", "label": "GitHub", "value": "github.com/lucasmarfaing", "url": "https://github.com/lucasmarfaing" },
     { "icon": "file", "label": "Pilot file", "value": "Download my CV" }
   ],
   "form": {
