@@ -3,6 +3,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import SiteHeader from '@/components/SiteHeader.astro';
 import Hero from '@/sections/Hero.astro';
 import Crew from '@/sections/Crew.astro';
+import Trajectory from '@/sections/Trajectory.astro';
 import { getContent, type Locale } from '@/lib/content';
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
 }
 
 const { lang } = Astro.props;
-const { site, hero, crew } = getContent(lang);
+const { site, hero, crew, trajectory } = getContent(lang);
 ---
 
 <BaseLayout lang={lang} title={site.meta.title} description={site.meta.description}>
@@ -18,5 +19,6 @@ const { site, hero, crew } = getContent(lang);
   <main>
     <Hero content={hero} />
     <Crew content={crew} callsign={site.callsign} />
+    <Trajectory content={trajectory} />
   </main>
 </BaseLayout>

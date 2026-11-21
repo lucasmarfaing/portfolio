@@ -1,0 +1,63 @@
+{
+  "index": "03",
+  "label": "Trajectory",
+  "title": "{years} years of flight,",
+  "titleMuted": "{count} waypoints.",
+  "intro": "From the first line of code to Lead Front-End. Pick a waypoint to read its logbook entry.",
+  "origin": { "label": "Starting point", "city": "Toulouse", "coords": "43.60° N · 1.44° E" },
+  "logLabel": "Logbook",
+  "highlightsLabel": "Highlights",
+  "altitudeLabel": "Altitude",
+  "altitudeUnits": { "start": "years · starting point", "one": "year of flight", "many": "years of flight" },
+  "stackLabel": "Onboard equipment",
+  "previous": { "label": "Previous", "ariaLabel": "Previous waypoint" },
+  "next": { "label": "Next", "ariaLabel": "Next waypoint" },
+  "waypoints": [
+    {
+      "year": 2011,
+      "name": "Lift-off",
+      "org": "First lines of code",
+      "type": "Discovery",
+      "description": "The spark: writing a few lines and watching an idea come to life on screen. The start of a passion that never left me.",
+      "highlights": ["Minecraft modding"],
+      "stack": ["HTML / CSS", "PHP", "Java"]
+    },
+    {
+      "year": 2018,
+      "name": "Into orbit",
+      "org": "Ubigreen",
+      "type": "Full-time · Fullstack developer",
+      "description": "First full-time job at Ubigreen, as a fullstack developer: from front to back, and everything in between.",
+      "highlights": ["Earned my Licence Pro RTAI degree", "Hired full-time after my internship"],
+      "stack": ["AngularJS", "SASS", "C#", "SQL Server"]
+    },
+    {
+      "year": 2020,
+      "name": "Change of course",
+      "org": "React Native",
+      "type": "New skill",
+      "description": "Discovering React Native: my love for front-end expands to mobile, with iOS and Android apps.",
+      "highlights": ["Launch of the Gmee mission"],
+      "stack": ["React Native", "Expo", "Jest"]
+    },
+    {
+      "year": 2023,
+      "name": "Taking command",
+      "org": "Ubigreen",
+      "type": "Lead Front-End",
+      "description": "Promoted to Lead Front-End at Ubigreen.",
+      "highlights": ["Spectator at GP Explorer 2, the F4 race"],
+      "stack": ["Angular", "Vitest", "Cypress"]
+    },
+    {
+      "year": 2026,
+      "name": "Unknown destination",
+      "org": "Project ██████",
+      "type": "Classified",
+      "description": "Mission under development. Details will be declassified at launch.",
+      "highlights": ["████████ ██ ██████████", "███ ████████ ██████"],
+      "stack": ["████", "██████"],
+      "secret": true
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "index": "03",
+  "label": "Trajectoire",
+  "title": "{years} ans de vol,",
+  "titleMuted": "{count} points de passage.",
+  "intro": "De la première ligne de code au poste de Lead Front. Sélectionne un point de passage pour lire l’entrée du journal de bord.",
+  "origin": { "label": "Point de départ", "city": "Toulouse", "coords": "43.60° N · 1.44° E" },
+  "logLabel": "Journal de bord",
+  "highlightsLabel": "Faits marquants",
+  "altitudeLabel": "Altitude",
+  "altitudeUnits": { "start": "an · point de départ", "one": "an de vol", "many": "ans de vol" },
+  "stackLabel": "Équipement embarqué",
+  "previous": { "label": "Précédent", "ariaLabel": "Point de passage précédent" },
+  "next": { "label": "Suivant", "ariaLabel": "Point de passage suivant" },
+  "waypoints": [
+    {
+      "year": 2011,
+      "name": "Décollage",
+      "org": "Premières lignes de code",
+      "type": "Découverte",
+      "description": "Le déclic : écrire quelques lignes et voir une idée prendre vie à l’écran. Le début d’une passion qui ne m’a plus quitté.",
+      "highlights": ["Modding Minecraft"],
+      "stack": ["HTML / CSS", "PHP", "Java"]
+    },
+    {
+      "year": 2018,
+      "name": "Mise en orbite",
+      "org": "Ubigreen",
+      "type": "CDI · Développeur fullstack",
+      "description": "Premier poste en CDI chez Ubigreen, en fullstack : du front au back, et tout ce qu’il y a entre les deux.",
+      "highlights": ["Obtention de la Licence Pro RTAI", "CDI décroché à la suite de mon stage"],
+      "stack": ["AngularJS", "SASS", "C#", "SQL Server"]
+    },
+    {
+      "year": 2020,
+      "name": "Changement de cap",
+      "org": "React Native",
+      "type": "Nouvelle compétence",
+      "description": "Découverte de React Native : la passion du front s’étend au mobile, avec des apps iOS et Android.",
+      "highlights": ["Lancement de la mission Gmee"],
+      "stack": ["React Native", "Expo", "Jest"]
+    },
+    {
+      "year": 2023,
+      "name": "Prise de commandement",
+      "org": "Ubigreen",
+      "type": "Lead Front-End",
+      "description": "Nommé Lead Front-End chez Ubigreen.",
+      "highlights": ["Spectateur du GP Explorer 2, la course de F4"],
+      "stack": ["Angular", "Vitest", "Cypress"]
+    },
+    {
+      "year": 2026,
+      "name": "Destination inconnue",
+      "org": "Projet ██████",
+      "type": "Classé secret",
+      "description": "Mission en cours de développement. Les détails seront déclassifiés au lancement.",
+      "highlights": ["████████ ██ ██████████", "███ ████████ ██████"],
+      "stack": ["████", "██████"],
+      "secret": true
+    }
+  ]
+}

@@ -25,6 +25,13 @@ const palette = z
     planetCore: color,
     planetMid: color,
     planetEdge: color,
+    earthCore: color,
+    earthMid: color,
+    earthEdge: color,
+    earthLand: color,
+    earthText: color,
+    redacted: color,
+    redactedBg: color,
   })
   .strict();
 

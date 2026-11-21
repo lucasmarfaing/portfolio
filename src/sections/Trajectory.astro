@@ -1,0 +1,901 @@
+---
+import EarthGlobe from '@/components/EarthGlobe.astro';
+import SectionHead from '@/components/SectionHead.astro';
+import { fill, isRedacted, type TrajectoryContent } from '@/lib/content';
+
+interface Props {
+  content: TrajectoryContent;
+}
+
+const { content } = Astro.props;
+const { waypoints } = content;
+
+// ---------- Flight path geometry (SVG units: 1328 × 290, a quadratic curve) ----------
+const W = 1328;
+const H = 290;
+const P0 = [40, 190];
+const P1 = [760, 190];
+const P2 = [1290, 34];
+const bezier = (t: number) => {
+  const u = 1 - t;
+  return [u * u * P0[0]! + 2 * u * t * P1[0]! + t * t * P2[0]!, u * u * P0[1]! + 2 * u * t * P1[1]! + t * t * P2[1]!] as const;
+};
+const samples = Array.from({ length: 401 }, (_, i) => bezier(i / 400));
+const lengths = samples.reduce<number[]>((acc, p, i) => {
+  const prev = samples[i - 1];
+  acc.push(i === 0 || !prev ? 0 : acc[i - 1]! + Math.hypot(p[0] - prev[0], p[1] - prev[1]));
+  return acc;
+}, []);
+const total = lengths.at(-1)!;
+/** Point at a given percentage of the curve's length. */
+const pointAt = (percent: number) => {
+  const target = (percent / 100) * total;
+  const i = Math.max(0, lengths.findIndex((l) => l >= target));
+  return samples[i]!;
+};
+// Spacing from the design for 5 waypoints, otherwise evenly spread
+const designSpacing = [0, 38.9, 59.1, 80.2, 100];
+const spacing =
+  waypoints.length === designSpacing.length ? designSpacing : waypoints.map((_, i) => (i / (waypoints.length - 1)) * 100);
+
+const firstYear = waypoints[0]!.year;
+const lastYear = waypoints.at(-1)!.year;
+const maxAltitude = Math.max(1, lastYear - firstYear);
+
+// Opens on the latest declassified waypoint
+const lastPublic = waypoints.findLastIndex((w) => !w.secret);
+const initial = lastPublic >= 0 ? lastPublic : 0;
+
+const points = waypoints.map((w, i) => {
+  const [x, y] = pointAt(spacing[i]!);
+  const altitude = w.year - firstYear;
+  return {
+    ...w,
+    code: `WP-${String(i + 1).padStart(2, '0')}`,
+    xPercent: (x / W) * 100,
+    y,
+    progress: spacing[i]!,
+    altitude,
+    altitudeUnit:
+      altitude === 0 ? content.altitudeUnits.start : altitude === 1 ? content.altitudeUnits.one : content.altitudeUnits.many,
+  };
+});
+
+const title = fill(content.title, { years: lastYear - firstYear, count: waypoints.length });
+const titleMuted = fill(content.titleMuted, { years: lastYear - firstYear, count: waypoints.length });
+---
+
+<section id="trajectoire" class="traj" aria-labelledby="traj-title" data-traj data-initial={initial}>
+  <div class="traj__globe"><EarthGlobe /></div>
+  <span class="traj__origin" aria-hidden="true">
+    <span class="traj__origin-city">{content.origin.city}</span>
+    <span>{content.origin.coords}</span>
+  </span>
+
+  <div class="container traj__inner">
+    <div class="traj__head">
+      <SectionHead id="traj-title" index={content.index} label={content.label} title={title} titleMuted={titleMuted} />
+      <p class="traj__intro">{content.intro}</p>
+    </div>
+
+    <!-- Mobile: small globe + starting point -->
+    <div class="traj__start">
+      <div class="traj__start-globe"><EarthGlobe /></div>
+      <p class="traj__start-text">
+        <span class="traj__start-label">{content.origin.label}</span>
+        <span>{content.origin.city}</span>
+        <span>{content.origin.coords}</span>
+      </p>
+    </div>
+
+    <!-- Desktop: flight path with clickable waypoints -->
+    <div class="flight" role="group" aria-label={content.label}>
+      <svg class="flight__svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+        <path class="flight__base" d="M40 190 Q760 190 1290 34" fill="none" vector-effect="non-scaling-stroke"></path>
+        <path
+          class="flight__trail"
+          d="M40 190 Q760 190 1290 34"
+          fill="none"
+          pathLength="100"
+          stroke-dasharray={`${points[initial]!.progress} 100`}
+          vector-effect="non-scaling-stroke"
+          data-trail></path>
+      </svg>
+      {
+        points.map((p, i) => (
+          <>
+            <button
+              type="button"
+              class:list={['wp', { 'is-on': i === initial, 'is-past': i < initial, 'is-secret': p.secret }]}
+              style={`left: calc(${p.xPercent}% - 22px); top: calc(${(p.y / H) * 100}% - 22px)`}
+              aria-pressed={i === initial ? 'true' : 'false'}
+              aria-controls={`log-${i}`}
+              aria-label={`${p.year} — ${p.name}`}
+              data-wp={i}
+              data-progress={p.progress}>
+              <span class="wp__dot" />
+            </button>
+            <span
+              class:list={['wp-label', { 'is-on': i === initial, 'is-last': i === points.length - 1 }]}
+              style={
+                i === points.length - 1
+                  ? `right: calc(${100 - p.xPercent}% - 18px); top: calc(${(p.y / H) * 100}% + 24px)`
+                  : `left: calc(${p.xPercent}% - 18px); top: calc(${(p.y / H) * 100}% + 24px)`
+              }
+              data-wp-label={i}
+              aria-hidden="true">
+              <span class="wp-label__code">{p.code}</span>
+              <span class="wp-label__year">{p.year}</span>
+            </span>
+          </>
+        ))
+      }
+    </div>
+
+    <!-- Logbook entries: one at a time on desktop, a timeline on mobile -->
+    <ol class="logs">
+      {
+        points.map((p, i) => (
+          <li
+            id={`log-${i}`}
+            class:list={['log', { 'is-active': i === initial, 'is-secret': p.secret, 'is-next-secret': points[i + 1]?.secret }]}
+            data-log={i}>
+            <span class="log__rail" aria-hidden="true">
+              <span class="log__rail-dot" />
+              <span class="log__rail-line" />
+            </span>
+
+            <div class="log__id">
+              <span class="log__kicker">
+                <span class="log__kicker-label">{content.logLabel} · </span>
+                {p.code}
+              </span>
+              <span class="log__year">{p.year}</span>
+              <h3 class="log__name">{p.name}</h3>
+              <span class="log__type">
+                <span class="log__type-org">{p.org} · </span>
+                {p.type}
+              </span>
+            </div>
+
+            <div class="log__main">
+              <p class="log__org">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                <span class:list={{ redacted: isRedacted(p.org) }}>{p.org}</span>
+              </p>
+              <p class="log__desc">{p.description}</p>
+              {p.highlights.length > 0 && (
+                <div class="log__block">
+                  <span class="log__label">{content.highlightsLabel}</span>
+                  <ul class="log__highlights">
+                    {p.highlights.map((h) => (
+                      <li>
+                        <span class="log__arrow" aria-hidden="true">▸</span>
+                        <span class:list={{ redacted: isRedacted(h) }}>{h}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div class="log__side">
+              <div class="log__block log__altitude">
+                <span class="log__label">{content.altitudeLabel}</span>
+                <span class="log__alt-value">
+                  {p.altitude}
+                  <span class="log__alt-unit">{p.altitudeUnit}</span>
+                </span>
+                <span class="log__alt-cells" aria-hidden="true">
+                  {Array.from({ length: maxAltitude }, (_, c) => (
+                    <span class:list={{ 'is-filled': c < p.altitude }} />
+                  ))}
+                </span>
+              </div>
+              {p.stack.length > 0 && (
+                <div class="log__block">
+                  <span class="log__label">{content.stackLabel}</span>
+                  <ul class="log__stack">
+                    {p.stack.map((s) => (
+                      <li class:list={{ 'is-redacted': isRedacted(s) }}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <div class="log__nav">
+                <button type="button" class="log__nav-btn" data-step="-1" aria-label={content.previous.ariaLabel}>
+                  ← {content.previous.label}
+                </button>
+                <button type="button" class="log__nav-btn" data-step="1" aria-label={content.next.ariaLabel}>
+                  {content.next.label} →
+                </button>
+              </div>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<script>
+  for (const section of document.querySelectorAll<HTMLElement>('[data-traj]')) {
+    const buttons = [...section.querySelectorAll<HTMLButtonElement>('[data-wp]')];
+    const labels = [...section.querySelectorAll<HTMLElement>('[data-wp-label]')];
+    const logs = [...section.querySelectorAll<HTMLElement>('[data-log]')];
+    const trail = section.querySelector<SVGPathElement>('[data-trail]');
+    const count = buttons.length;
+    let current = Number(section.dataset.initial ?? 0);
+
+    const select = (index: number, focus = false) => {
+      current = (index + count) % count;
+      buttons.forEach((b, i) => {
+        b.classList.toggle('is-on', i === current);
+        b.classList.toggle('is-past', i < current);
+        b.setAttribute('aria-pressed', String(i === current));
+      });
+      labels.forEach((l, i) => l.classList.toggle('is-on', i === current));
+      logs.forEach((l, i) => l.classList.toggle('is-active', i === current));
+      trail?.setAttribute('stroke-dasharray', `${buttons[current]?.dataset.progress ?? 0} 100`);
+      if (focus) buttons[current]?.focus();
+    };
+
+    buttons.forEach((b, i) => b.addEventListener('click', () => select(i)));
+    section.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((b) =>
+      b.addEventListener('click', () => select(current + Number(b.dataset.step))),
+    );
+    // Arrow keys move along the path when a waypoint has focus
+    buttons.forEach((b) =>
+      b.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          select(current + (e.key === 'ArrowRight' ? 1 : -1), true);
+        }
+      }),
+    );
+  }
+</script>
+
+<style>
+  .traj {
+    position: relative;
+    overflow: hidden;
+    padding-block: var(--section-pad-top) var(--section-pad-bottom);
+    background: var(--bg);
+  }
+
+  .traj__globe {
+    position: absolute;
+    left: -204px;
+    bottom: -80px;
+    width: 600px;
+    pointer-events: none;
+  }
+
+  .traj__origin {
+    position: absolute;
+    left: 190px;
+    bottom: 338px;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 9px 13px;
+    border: 1px solid color-mix(in srgb, var(--earth-text) 35%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 8px 24px -8px var(--shadow-color);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--earth-text);
+  }
+
+  .traj__origin-city {
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  /* Desktop sizes follow the window height so the whole section fits on screen */
+  .traj__inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 2.5vh, 36px);
+  }
+
+  .traj__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 48px;
+  }
+
+  .traj__intro {
+    margin: 0;
+    max-width: 400px;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-soft);
+  }
+
+  .traj__start {
+    display: none;
+  }
+
+  /* ---------- Flight path ---------- */
+
+  .flight {
+    position: relative;
+    z-index: 1;
+    height: clamp(150px, 24vh, 290px);
+    margin-bottom: 40px; /* room for the labels under the lowest point */
+  }
+
+  .flight__svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .flight__base {
+    stroke: var(--line-strong);
+    stroke-width: 1.5;
+    stroke-dasharray: 3 6;
+  }
+
+  .flight__trail {
+    stroke: var(--accent);
+    stroke-width: 2;
+    transition: stroke-dasharray 0.7s cubic-bezier(0.5, 0, 0.2, 1);
+  }
+
+  .wp {
+    position: absolute;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .wp:hover {
+    transform: scale(1.15);
+  }
+
+  .wp__dot {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--text);
+    border-radius: 50%;
+    background: var(--bg);
+    transition: width 0.25s, height 0.25s, background-color 0.25s, border-color 0.25s;
+  }
+
+  .wp.is-past .wp__dot {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  .wp.is-secret .wp__dot {
+    border: 2px dashed var(--accent);
+    background: var(--bg);
+  }
+
+  .wp.is-on .wp__dot {
+    width: 22px;
+    height: 22px;
+    border: 3px solid var(--accent);
+    background: var(--bg);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 60%, transparent);
+    animation: wp-pulse 2s ease-out infinite;
+  }
+
+  @keyframes wp-pulse {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent);
+    }
+    100% {
+      box-shadow: 0 0 0 14px transparent;
+    }
+  }
+
+  .wp-label {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    pointer-events: none;
+  }
+
+  .wp-label.is-last {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .wp-label__code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+  }
+
+  .wp-label__year {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: var(--text-soft);
+    transition: font-size 0.25s, color 0.25s;
+  }
+
+  .wp-label.is-on .wp-label__year {
+    font-size: 30px;
+    color: var(--text);
+  }
+
+  /* ---------- Logbook ---------- */
+
+  /* All entries share one grid cell: the box keeps the height of the tallest one,
+     so switching waypoints never makes the section (and the page) jump. */
+  .logs {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    margin: 0 0 0 clamp(200px, 25vw, 360px);
+    padding: 0;
+    list-style: none;
+  }
+
+  .log {
+    grid-area: 1 / 1;
+    display: grid;
+    visibility: hidden;
+    grid-template-columns: minmax(200px, 250px) minmax(0, 1fr) minmax(220px, 260px);
+    gap: 20px;
+    padding: clamp(18px, 2.6vh, 28px) 28px;
+    border: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
+    border-radius: 18px;
+    background: var(--surface);
+  }
+
+  .log.is-active {
+    visibility: visible;
+    animation: log-in 0.4s ease;
+  }
+
+  .log.is-secret {
+    border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
+  @keyframes log-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  .log__rail {
+    display: none;
+  }
+
+  .log__id {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(8px, 1.3vh, 14px);
+    padding-right: 20px;
+    border-right: 1px solid var(--line);
+  }
+
+  .log__kicker,
+  .log__label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .log__label {
+    font-size: 10px;
+  }
+
+  .log__year {
+    font-size: clamp(48px, 6.5vh, 72px);
+    font-weight: 600;
+    line-height: 0.9;
+    letter-spacing: -0.06em;
+  }
+
+  .is-secret .log__year {
+    color: var(--accent);
+  }
+
+  .log__name {
+    margin: 0;
+    font-size: clamp(21px, 2.4vh, 26px);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+
+  .log__type {
+    align-self: flex-start;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent-alt);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .is-secret .log__type {
+    border: 1px dashed var(--accent);
+    background: transparent;
+    color: var(--accent);
+  }
+
+  .log__type-org {
+    display: none;
+  }
+
+  .log__main {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 1.5vh, 16px);
+  }
+
+  .log__org {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 17px;
+    font-weight: 500;
+  }
+
+  .log__org svg {
+    flex: none;
+    color: var(--text-muted);
+  }
+
+  .log__desc {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--text-soft);
+  }
+
+  .log__block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .log__highlights {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .log__highlights li {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 15px;
+  }
+
+  .log__arrow {
+    color: var(--accent);
+  }
+
+  .redacted {
+    color: var(--redacted);
+    letter-spacing: -0.05em;
+  }
+
+  .log__side {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: clamp(10px, 1.6vh, 18px);
+    padding-left: 20px;
+    border-left: 1px solid var(--line);
+  }
+
+  .log__altitude {
+    gap: 10px;
+  }
+
+  .log__alt-value {
+    font-size: clamp(32px, 3.8vh, 40px);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .log__alt-unit {
+    margin-left: 6px;
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--text-muted);
+  }
+
+  .log__alt-cells {
+    display: flex;
+    gap: 3px;
+  }
+
+  .log__alt-cells span {
+    flex: 1;
+    height: 8px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+  }
+
+  .log__alt-cells .is-filled {
+    background: var(--accent);
+  }
+
+  .log__stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .log__stack li {
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--text) 6%, transparent);
+    font-size: 13px;
+  }
+
+  .log__stack .is-redacted {
+    background: var(--redacted-bg);
+    color: var(--redacted);
+  }
+
+  .log__nav {
+    display: flex;
+    gap: 8px;
+  }
+
+  .log__nav-btn {
+    flex: 1;
+    min-height: 44px;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .log__nav-btn:hover {
+    border-color: var(--accent);
+  }
+
+  /* ---------- Tablet & mobile: vertical timeline ---------- */
+
+  @media (max-width: 1099px) {
+    .traj {
+      border-top: 1px solid var(--line);
+    }
+
+    .traj__inner {
+      gap: 24px;
+    }
+
+    .traj__globe,
+    .traj__origin,
+    .flight,
+    .log__kicker-label,
+    .log__main .log__org,
+    .log__altitude,
+    .log__nav {
+      display: none;
+    }
+
+    .traj__head {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 24px;
+    }
+
+    .traj__intro {
+      max-width: 560px;
+      font-size: 15px;
+    }
+
+    .traj__start {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .traj__start-globe {
+      flex: none;
+      width: 150px;
+    }
+
+    .traj__start-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--earth-text);
+    }
+
+    .traj__start-label {
+      color: var(--text);
+    }
+
+    .logs {
+      display: block;
+      margin: 8px 0 0;
+    }
+
+    .log,
+    .log.is-active,
+    .log.is-secret {
+      grid-area: auto;
+      visibility: visible;
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr);
+      grid-template-areas:
+        'rail id'
+        'rail main'
+        'rail side';
+      gap: 10px 14px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      animation: none;
+    }
+
+    .log__rail {
+      grid-area: rail;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .log__rail-dot {
+      flex: none;
+      width: 14px;
+      height: 14px;
+      margin-top: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 15%, transparent);
+    }
+
+    .is-secret .log__rail-dot {
+      border: 2px dashed var(--accent);
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .log__rail-line {
+      flex: 1;
+      width: 2px;
+      background: var(--accent);
+      opacity: 0.6;
+    }
+
+    .is-next-secret .log__rail-line {
+      opacity: 1;
+      background: repeating-linear-gradient(180deg, color-mix(in srgb, var(--accent) 60%, transparent) 0 4px, transparent 4px 9px);
+    }
+
+    .log:last-child .log__rail-line {
+      background: transparent;
+    }
+
+    .log__id {
+      grid-area: id;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      grid-template-areas:
+        'year kicker'
+        'name name'
+        'type type';
+      align-items: baseline;
+      gap: 10px;
+      padding: 0;
+      border: 0;
+    }
+
+    .log__year {
+      grid-area: year;
+      font-size: 34px;
+      line-height: 1;
+      letter-spacing: -0.05em;
+    }
+
+    .log__kicker {
+      grid-area: kicker;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+    }
+
+    .log__name {
+      grid-area: name;
+      font-size: 19px;
+      letter-spacing: -0.02em;
+    }
+
+    .log__type {
+      grid-area: type;
+      justify-self: start;
+      padding: 5px 9px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+    }
+
+    .log__type-org {
+      display: inline;
+    }
+
+    .log__main {
+      grid-area: main;
+      gap: 10px;
+    }
+
+    .log__desc {
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .log__block {
+      gap: 6px;
+    }
+
+    .log__block > .log__label {
+      display: none;
+    }
+
+    .log__highlights li {
+      font-size: 14px;
+    }
+
+    .log__side {
+      grid-area: side;
+      padding: 0 0 28px;
+      border: 0;
+    }
+
+    .log__stack li {
+      font-size: 12px;
+    }
+  }
+</style>

@@ -5,6 +5,9 @@
   --header-h: 72px;
   --gutter: clamp(20px, 4vw, 56px);
   --max-w: 1440px;
+  /* Vertical spacing of every content section */
+  --section-pad-top: clamp(32px, 5vh, 64px);
+  --section-pad-bottom: clamp(64px, 10vh, 112px);
 
   --line-soft: color-mix(in srgb, var(--text) 3.5%, transparent);
   --line: color-mix(in srgb, var(--text) 7%, transparent);
@@ -25,6 +28,8 @@
 @media (max-width: 1099px) {
   :root {
     --header-h: 60px;
+    --section-pad-top: 40px;
+    --section-pad-bottom: 72px;
   }
 }
 

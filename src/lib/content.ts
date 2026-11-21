@@ -5,6 +5,8 @@ import enSite from '@/content/en/site.json';
 import enHero from '@/content/en/hero.json';
 import frCrew from '@/content/fr/crew.json';
 import enCrew from '@/content/en/crew.json';
+import frTrajectory from '@/content/fr/trajectory.json';
+import enTrajectory from '@/content/en/trajectory.json';
 
 export const locales = ['fr', 'en'] as const;
 export type Locale = (typeof locales)[number];
@@ -93,14 +95,46 @@ const crewSchema = z.object({
     .min(1),
 });
 
+const trajectorySchema = z.object({
+  ...sectionHead,
+  intro: z.string(),
+  origin: z.object({ label: z.string(), city: z.string(), coords: z.string() }),
+  logLabel: z.string(),
+  highlightsLabel: z.string(),
+  altitudeLabel: z.string(),
+  altitudeUnits: z.object({ start: z.string(), one: z.string(), many: z.string() }),
+  stackLabel: z.string(),
+  previous: z.object({ label: z.string(), ariaLabel: z.string() }),
+  next: z.object({ label: z.string(), ariaLabel: z.string() }),
+  waypoints: z
+    .array(
+      z.object({
+        year: z.number().int().min(1990).max(2100),
+        name: z.string().min(1),
+        org: z.string(),
+        type: z.string(),
+        description: z.string(),
+        highlights: z.array(z.string()).default([]),
+        stack: z.array(z.string()).default([]),
+        secret: z.boolean().optional(),
+      }),
+    )
+    .min(2, 'Il faut au moins 2 points de passage')
+    .max(8, 'La courbe affiche 8 points de passage au maximum')
+    .refine((w) => w.every((p, i) => i === 0 || p.year >= w[i - 1]!.year), {
+      message: 'Les points de passage doivent être dans l’ordre chronologique',
+    }),
+});
+
 export type SiteContent = z.infer<typeof siteSchema>;
+export type TrajectoryContent = z.infer<typeof trajectorySchema>;
 export type HeroContent = z.infer<typeof heroSchema>;
 export type CrewContent = z.infer<typeof crewSchema>;
 export type Stat = z.infer<typeof stat>;
 
-const raw: Record<Locale, { site: unknown; hero: unknown; crew: unknown }> = {
-  fr: { site: frSite, hero: frHero, crew: frCrew },
-  en: { site: enSite, hero: enHero, crew: enCrew },
+const raw: Record<Locale, { site: unknown; hero: unknown; crew: unknown; trajectory: unknown }> = {
+  fr: { site: frSite, hero: frHero, crew: frCrew, trajectory: frTrajectory },
+  en: { site: enSite, hero: enHero, crew: enCrew, trajectory: enTrajectory },
 };
 
 /** Loads and validates a locale's content. An invalid JSON file fails the build with a readable message. */
@@ -117,8 +151,16 @@ export function getContent(lang: Locale) {
     site: parse(siteSchema, raw[lang].site, 'site'),
     hero: parse(heroSchema, raw[lang].hero, 'hero'),
     crew: parse(crewSchema, raw[lang].crew, 'crew'),
+    trajectory: parse(trajectorySchema, raw[lang].trajectory, 'trajectory'),
   };
 }
+
+/** Replaces {placeholders} in a string, e.g. "{years} ans de vol". */
+export const fill = (text: string, values: Record<string, string | number>) =>
+  text.replace(/\{(\w+)\}/g, (match, key: string) => (key in values ? String(values[key]) : match));
+
+/** Text partly hidden with █ characters is shown as a redacted bar. */
+export const isRedacted = (text: string) => text.includes('█');
 
 /** Splits "le **front-end** et" into plain and highlighted parts. */
 export function highlights(text: string): { text: string; strong: boolean }[] {

@@ -1,0 +1,84 @@
+---
+import { graticulePath, landPath } from '@/assets/earth-paths';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<div class:list={['globe', className]} aria-hidden="true">
+  <svg viewBox="0 0 600 600">
+    <path d={graticulePath} fill="none" class="globe__grid" stroke-width="1"></path>
+    <path d={landPath} class="globe__land" stroke-width="3.2" stroke-linecap="round"></path>
+  </svg>
+  <span class="globe__ring"></span>
+  <span class="globe__marker"></span>
+</div>
+
+<style>
+  .globe {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 50%;
+    background: radial-gradient(circle at 62% 18%, var(--earth-core), var(--earth-mid) 50%, var(--earth-edge) 76%);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--earth-land) 28%, transparent),
+      0 0 110px -10px color-mix(in srgb, var(--earth-land) 40%, transparent);
+  }
+
+  svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .globe__grid {
+    stroke: color-mix(in srgb, var(--earth-land) 18%, transparent);
+  }
+
+  .globe__land {
+    stroke: var(--earth-land);
+    stroke-opacity: 0.6;
+  }
+
+  /* Toulouse */
+  .globe__marker,
+  .globe__ring {
+    position: absolute;
+    left: 60.17%;
+    top: 25.67%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .globe__marker {
+    width: max(9px, 2.67%);
+    aspect-ratio: 1;
+    background: var(--accent);
+    box-shadow: 0 0 14px 3px color-mix(in srgb, var(--accent) 70%, transparent);
+    animation: globe-pulse 2s ease-out infinite;
+  }
+
+  .globe__ring {
+    width: 5.33%;
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+
+  @keyframes globe-pulse {
+    0% {
+      box-shadow:
+        0 0 14px 3px color-mix(in srgb, var(--accent) 70%, transparent),
+        0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent);
+    }
+    100% {
+      box-shadow:
+        0 0 14px 3px color-mix(in srgb, var(--accent) 70%, transparent),
+        0 0 0 14px transparent;
+    }
+  }
+</style>

@@ -22,7 +22,7 @@ const { index, label, title, titleMuted, id } = Astro.props;
   .section-head {
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: clamp(14px, 2.4vh, 28px);
   }
 
   .section-head__index {
@@ -31,7 +31,7 @@ const { index, label, title, titleMuted, id } = Astro.props;
 
   .section-head__title {
     margin: 0;
-    font-size: clamp(36px, 4.2vw, 60px);
+    font-size: clamp(36px, min(4.2vw, 6vh), 60px);
     font-weight: 600;
     line-height: 1.02;
     letter-spacing: -0.045em;
