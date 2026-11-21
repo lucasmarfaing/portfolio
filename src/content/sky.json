@@ -1,0 +1,411 @@
+{
+  "groups": [
+    { "id": "front", "code": "FR", "color": "red" },
+    { "id": "back", "code": "BK", "color": "blue" },
+    { "id": "tools", "code": "OT", "color": "amber" }
+  ],
+  "stars": [
+    {
+      "name": "React",
+      "group": "front",
+      "symbol": "Re",
+      "url": "https://react.dev",
+      "x": 120,
+      "y": 175
+    },
+    {
+      "name": "React Native",
+      "group": "front",
+      "symbol": "Rn",
+      "url": "https://reactnative.dev",
+      "x": 190,
+      "y": 125
+    },
+    {
+      "name": "TypeScript",
+      "group": "front",
+      "symbol": "Ts",
+      "url": "https://www.typescriptlang.org",
+      "x": 262,
+      "y": 152
+    },
+    {
+      "name": "Angular",
+      "group": "front",
+      "symbol": "Ng",
+      "url": "https://angular.dev",
+      "x": 305,
+      "y": 95
+    },
+    {
+      "name": "Angular Signals",
+      "group": "front",
+      "symbol": "Sg",
+      "url": "https://angular.dev/guide/signals",
+      "x": 250,
+      "y": 232
+    },
+    {
+      "name": "Redux",
+      "group": "front",
+      "symbol": "Rx",
+      "url": "https://redux.js.org",
+      "x": 182,
+      "y": 262
+    },
+    {
+      "name": "Zustand",
+      "group": "front",
+      "symbol": "Zu",
+      "url": "https://zustand.docs.pmnd.rs",
+      "x": 128,
+      "y": 330
+    },
+    {
+      "name": "HTML5 / CSS3",
+      "group": "front",
+      "symbol": "Hc",
+      "url": "https://developer.mozilla.org",
+      "x": 222,
+      "y": 322
+    },
+    {
+      "name": "SCSS",
+      "group": "front",
+      "symbol": "Sc",
+      "url": "https://sass-lang.com",
+      "x": 300,
+      "y": 282
+    },
+    {
+      "name": "Node.js",
+      "group": "back",
+      "symbol": "No",
+      "url": "https://nodejs.org",
+      "x": 382,
+      "y": 170
+    },
+    {
+      "name": "Express.js",
+      "group": "back",
+      "symbol": "Ex",
+      "url": "https://expressjs.com",
+      "x": 452,
+      "y": 138
+    },
+    {
+      "name": "Fastify",
+      "group": "back",
+      "symbol": "Fy",
+      "url": "https://fastify.dev",
+      "x": 522,
+      "y": 200
+    },
+    {
+      "name": "C# / .NET",
+      "group": "back",
+      "symbol": "Cs",
+      "url": "https://dotnet.microsoft.com",
+      "x": 502,
+      "y": 282
+    },
+    {
+      "name": "PostgreSQL",
+      "group": "back",
+      "symbol": "Pg",
+      "url": "https://www.postgresql.org",
+      "x": 432,
+      "y": 262
+    },
+    {
+      "name": "MySQL",
+      "group": "back",
+      "symbol": "My",
+      "url": "https://www.mysql.com",
+      "x": 400,
+      "y": 332
+    },
+    {
+      "name": "Redis",
+      "group": "back",
+      "symbol": "Rd",
+      "url": "https://redis.io",
+      "x": 470,
+      "y": 362
+    },
+    {
+      "name": "REST API",
+      "group": "back",
+      "symbol": "Ra",
+      "url": "https://developer.mozilla.org",
+      "x": 545,
+      "y": 330
+    },
+    {
+      "name": "Socket.io",
+      "group": "back",
+      "symbol": "So",
+      "url": "https://socket.io",
+      "x": 420,
+      "y": 410
+    },
+    {
+      "name": "JWT Auth",
+      "group": "back",
+      "symbol": "Jw",
+      "url": "https://jwt.io",
+      "x": 500,
+      "y": 432
+    },
+    {
+      "name": "PHP",
+      "group": "back",
+      "symbol": "Ph",
+      "url": "https://www.php.net",
+      "x": 565,
+      "y": 245
+    },
+    {
+      "name": "Java",
+      "group": "back",
+      "symbol": "Jv",
+      "url": "https://dev.java",
+      "x": 566,
+      "y": 405
+    },
+    {
+      "name": "SQL Server",
+      "group": "back",
+      "symbol": "Sq",
+      "url": "https://www.microsoft.com/sql-server",
+      "x": 350,
+      "y": 372
+    },
+    {
+      "name": "Figma",
+      "group": "tools",
+      "symbol": "Fg",
+      "url": "https://www.figma.com",
+      "x": 130,
+      "y": 420
+    },
+    {
+      "name": "Git",
+      "group": "tools",
+      "symbol": "Gt",
+      "url": "https://git-scm.com",
+      "x": 195,
+      "y": 395
+    },
+    {
+      "name": "Azure",
+      "group": "tools",
+      "symbol": "Az",
+      "url": "https://azure.microsoft.com",
+      "x": 255,
+      "y": 430
+    },
+    {
+      "name": "VS Code",
+      "group": "tools",
+      "symbol": "Vs",
+      "url": "https://code.visualstudio.com",
+      "x": 320,
+      "y": 405
+    },
+    {
+      "name": "Postman",
+      "group": "tools",
+      "symbol": "Pm",
+      "url": "https://www.postman.com",
+      "x": 360,
+      "y": 470
+    },
+    {
+      "name": "Webpack",
+      "group": "tools",
+      "symbol": "Wp",
+      "url": "https://webpack.js.org",
+      "x": 300,
+      "y": 490
+    },
+    {
+      "name": "Vite",
+      "group": "tools",
+      "symbol": "Vi",
+      "url": "https://vite.dev",
+      "x": 235,
+      "y": 520
+    },
+    {
+      "name": "Vitest",
+      "group": "tools",
+      "symbol": "Vt",
+      "url": "https://vitest.dev",
+      "x": 170,
+      "y": 490
+    },
+    {
+      "name": "Jest",
+      "group": "tools",
+      "symbol": "Je",
+      "url": "https://jestjs.io",
+      "x": 285,
+      "y": 560
+    },
+    {
+      "name": "Cypress",
+      "group": "tools",
+      "symbol": "Cy",
+      "url": "https://www.cypress.io",
+      "x": 350,
+      "y": 540
+    },
+    {
+      "name": "Expo",
+      "group": "tools",
+      "symbol": "Xp",
+      "url": "https://expo.dev",
+      "x": 395,
+      "y": 555
+    }
+  ],
+  "links": [
+    [
+      "React",
+      "React Native"
+    ],
+    [
+      "React Native",
+      "TypeScript"
+    ],
+    [
+      "TypeScript",
+      "Angular"
+    ],
+    [
+      "TypeScript",
+      "Angular Signals"
+    ],
+    [
+      "Angular Signals",
+      "Redux"
+    ],
+    [
+      "Redux",
+      "Zustand"
+    ],
+    [
+      "Redux",
+      "HTML5 / CSS3"
+    ],
+    [
+      "Angular Signals",
+      "SCSS"
+    ],
+    [
+      "Fastify",
+      "PHP"
+    ],
+    [
+      "PHP",
+      "REST API"
+    ],
+    [
+      "REST API",
+      "Java"
+    ],
+    [
+      "MySQL",
+      "SQL Server"
+    ],
+    [
+      "Node.js",
+      "Express.js"
+    ],
+    [
+      "Express.js",
+      "Fastify"
+    ],
+    [
+      "Fastify",
+      "C# / .NET"
+    ],
+    [
+      "C# / .NET",
+      "PostgreSQL"
+    ],
+    [
+      "PostgreSQL",
+      "Node.js"
+    ],
+    [
+      "PostgreSQL",
+      "MySQL"
+    ],
+    [
+      "MySQL",
+      "Redis"
+    ],
+    [
+      "Redis",
+      "REST API"
+    ],
+    [
+      "Redis",
+      "JWT Auth"
+    ],
+    [
+      "MySQL",
+      "Socket.io"
+    ],
+    [
+      "Figma",
+      "Git"
+    ],
+    [
+      "Git",
+      "Azure"
+    ],
+    [
+      "Azure",
+      "VS Code"
+    ],
+    [
+      "VS Code",
+      "Postman"
+    ],
+    [
+      "Postman",
+      "Webpack"
+    ],
+    [
+      "Webpack",
+      "Azure"
+    ],
+    [
+      "Webpack",
+      "Vite"
+    ],
+    [
+      "Vite",
+      "Vitest"
+    ],
+    [
+      "Vite",
+      "Jest"
+    ],
+    [
+      "Jest",
+      "Cypress"
+    ],
+    [
+      "Cypress",
+      "Expo"
+    ],
+    [
+      "Postman",
+      "Expo"
+    ]
+  ]
+}

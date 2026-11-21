@@ -7,6 +7,9 @@ import frCrew from '@/content/fr/crew.json';
 import enCrew from '@/content/en/crew.json';
 import frTrajectory from '@/content/fr/trajectory.json';
 import enTrajectory from '@/content/en/trajectory.json';
+import frInventory from '@/content/fr/inventory.json';
+import enInventory from '@/content/en/inventory.json';
+import rawSky from '@/content/sky.json';
 
 export const locales = ['fr', 'en'] as const;
 export type Locale = (typeof locales)[number];
@@ -126,15 +129,78 @@ const trajectorySchema = z.object({
     }),
 });
 
+/** Language-neutral star map: groups, stars (position on a 620×620 map) and constellation links. */
+const skySchema = z
+  .object({
+    groups: z
+      .array(
+        z.object({
+          id: z.string().regex(/^[a-z0-9-]+$/),
+          code: z.string().min(1).max(3),
+          color: z.enum(['red', 'blue', 'amber']),
+        }),
+      )
+      .min(1),
+    stars: z
+      .array(
+        z.object({
+          name: z.string().min(1),
+          group: z.string(),
+          symbol: z.string().min(1).max(3),
+          url: z.url(),
+          x: z.number().min(20).max(600),
+          y: z.number().min(20).max(600),
+          since: z.number().int().min(1990).max(2100).optional(),
+        }),
+      )
+      .min(1),
+    links: z.array(z.tuple([z.string(), z.string()])),
+  })
+  .superRefine((sky, ctx) => {
+    const groupIds = new Set(sky.groups.map((g) => g.id));
+    const names = new Set<string>();
+    sky.stars.forEach((s, i) => {
+      if (!groupIds.has(s.group)) ctx.addIssue({ code: 'custom', path: ['stars', i, 'group'], message: `Groupe inconnu "${s.group}"` });
+      if (names.has(s.name)) ctx.addIssue({ code: 'custom', path: ['stars', i, 'name'], message: `Étoile en double "${s.name}"` });
+      names.add(s.name);
+    });
+    sky.links.forEach(([a, b], i) => {
+      for (const n of [a, b])
+        if (!names.has(n)) ctx.addIssue({ code: 'custom', path: ['links', i], message: `Liaison vers une étoile inconnue "${n}"` });
+    });
+  });
+
+const inventorySchema = z.object({
+  ...sectionHead,
+  intro: z.string(),
+  introTouch: z.string(),
+  mapCaption: z.string(),
+  groups: z.record(z.string(), z.object({ label: z.string(), module: z.string(), sector: z.string() })),
+  card: z.object({
+    title: z.string(),
+    designation: z.string(),
+    module: z.string(),
+    experience: z.string(),
+    years: z.object({ one: z.string(), many: z.string() }),
+    status: z.string(),
+    statusValue: z.string(),
+    sector: z.string(),
+    documentation: z.string(),
+  }),
+  descriptions: z.record(z.string(), z.string()),
+});
+
+export type SkyContent = z.infer<typeof skySchema>;
+export type InventoryContent = z.infer<typeof inventorySchema>;
 export type SiteContent = z.infer<typeof siteSchema>;
 export type TrajectoryContent = z.infer<typeof trajectorySchema>;
 export type HeroContent = z.infer<typeof heroSchema>;
 export type CrewContent = z.infer<typeof crewSchema>;
 export type Stat = z.infer<typeof stat>;
 
-const raw: Record<Locale, { site: unknown; hero: unknown; crew: unknown; trajectory: unknown }> = {
-  fr: { site: frSite, hero: frHero, crew: frCrew, trajectory: frTrajectory },
-  en: { site: enSite, hero: enHero, crew: enCrew, trajectory: enTrajectory },
+const raw: Record<Locale, { site: unknown; hero: unknown; crew: unknown; trajectory: unknown; inventory: unknown }> = {
+  fr: { site: frSite, hero: frHero, crew: frCrew, trajectory: frTrajectory, inventory: frInventory },
+  en: { site: enSite, hero: enHero, crew: enCrew, trajectory: enTrajectory, inventory: enInventory },
 };
 
 /** Loads and validates a locale's content. An invalid JSON file fails the build with a readable message. */
@@ -147,7 +213,24 @@ export function getContent(lang: Locale) {
     }
     return result.data;
   };
+  const skyResult = skySchema.safeParse(rawSky);
+  if (!skyResult.success) {
+    const issues = skyResult.error.issues.map((i) => `  - ${i.path.join('.') || '(racine)'} : ${i.message}`).join('\n');
+    throw new Error(`Contenu invalide dans src/content/sky.json :\n${issues}`);
+  }
+  const sky = skyResult.data;
+  const inventory = parse(inventorySchema, raw[lang].inventory, 'inventory');
+  // Every star and group needs its text in each language
+  const missing = [
+    ...sky.stars.filter((s) => !inventory.descriptions[s.name]).map((s) => `descriptions."${s.name}"`),
+    ...sky.groups.filter((g) => !inventory.groups[g.id]).map((g) => `groups."${g.id}"`),
+  ];
+  if (missing.length)
+    throw new Error(`Contenu manquant dans src/content/${lang}/inventory.json :\n${missing.map((m) => `  - ${m}`).join('\n')}`);
+
   return {
+    sky,
+    inventory,
     site: parse(siteSchema, raw[lang].site, 'site'),
     hero: parse(heroSchema, raw[lang].hero, 'hero'),
     crew: parse(crewSchema, raw[lang].crew, 'crew'),

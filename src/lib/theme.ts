@@ -32,6 +32,9 @@ const palette = z
     earthText: color,
     redacted: color,
     redactedBg: color,
+    starBlue: color,
+    mapCore: color,
+    mapEdge: color,
   })
   .strict();
 

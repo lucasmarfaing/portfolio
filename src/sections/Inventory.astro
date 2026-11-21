@@ -1,0 +1,958 @@
+---
+import { starField } from '@/assets/star-field';
+import SectionHead from '@/components/SectionHead.astro';
+import { fill, yearsSince, type InventoryContent, type SkyContent } from '@/lib/content';
+
+interface Props {
+  content: InventoryContent;
+  sky: SkyContent;
+  callsign: string;
+}
+
+const { content, sky, callsign } = Astro.props;
+
+const SIZE = 620; // map coordinate system
+const pct = (v: number) => `${(v / SIZE) * 100}%`;
+const colorVar = { red: 'var(--accent)', blue: 'var(--star-blue)', amber: 'var(--warning)' } as const;
+const groupById = new Map(sky.groups.map((g) => [g.id, g]));
+const groupColor = (id: string) => colorVar[groupById.get(id)!.color];
+
+// Stars, numbered in file order (R-01, R-02…)
+const stars = sky.stars.map((s, i) => {
+  const group = groupById.get(s.group)!;
+  const text = content.groups[s.group]!;
+  const years = s.since ? yearsSince(`${s.since}-01-01`) : undefined;
+  return {
+    ...s,
+    index: i,
+    color: groupColor(s.group),
+    big: s.group === sky.groups[0]!.id,
+    description: content.descriptions[s.name]!,
+    module: text.module,
+    sector: text.sector,
+    experience: years === undefined ? '' : `${years} ${years > 1 ? content.card.years.many : content.card.years.one}`,
+    num: `R-${String(i + 1).padStart(2, '0')}`,
+    serial: `${callsign.replace(/-/g, '')}-${group.code}-${String(i + 1).padStart(2, '0')}`,
+    // The card opens on the side with the most room
+    side: s.x <= 350 ? 'right' : 'left',
+  };
+});
+const byName = new Map(stars.map((s) => [s.name, s]));
+
+const links = sky.links.map(([a, b]) => {
+  const from = byName.get(a)!;
+  const to = byName.get(b)!;
+  return { x1: from.x, y1: from.y, x2: to.x, y2: to.y, color: from.color };
+});
+
+// A soft glow behind each constellation, centred on its stars
+const glows = sky.groups.map((g) => {
+  const members = stars.filter((s) => s.group === g.id);
+  const cx = members.reduce((t, s) => t + s.x, 0) / members.length;
+  const cy = members.reduce((t, s) => t + s.y, 0) / members.length;
+  return { left: pct(cx - 170), top: pct(cy - 150), color: groupColor(g.id) };
+});
+
+// Planisphere graduations
+const C = SIZE / 2;
+const polar = (r: number, deg: number) => [C + r * Math.cos((deg * Math.PI) / 180), C + r * Math.sin((deg * Math.PI) / 180)] as const;
+const radials = Array.from({ length: 12 }, (_, k) => polar(300, k * 30));
+const ticks = Array.from({ length: 72 }, (_, k) => {
+  const deg = k * 5;
+  const [x1, y1] = polar(300, deg);
+  const [x2, y2] = polar(deg % 30 === 0 ? 284 : 292, deg);
+  return { x1, y1, x2, y2 };
+});
+
+const groupsWithStars = sky.groups.map((g) => ({
+  ...g,
+  color: groupColor(g.id),
+  label: content.groups[g.id]!.label,
+  stars: stars.filter((s) => s.group === g.id),
+}));
+
+const cardData = stars.map((s) => ({
+  name: s.name,
+  symbol: s.symbol,
+  description: s.description,
+  url: s.url,
+  urlLabel: s.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''),
+  module: s.module,
+  sector: s.sector,
+  experience: s.experience,
+  num: s.num,
+  serial: s.serial,
+  group: s.group,
+  color: s.color,
+  side: s.side,
+  x: s.x,
+  y: s.y,
+}));
+
+const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.groups.length });
+---
+
+<section id="inventaire" class="inv" aria-labelledby="inv-title" data-inv>
+  <div class="container inv__inner">
+    <div class="inv__head">
+      <SectionHead id="inv-title" index={content.index} label={content.label} title={content.title} titleMuted={titleMuted} />
+      <p class="inv__intro">
+        <span class="inv__intro-hover">{content.intro}</span>
+        <span class="inv__intro-touch">{content.introTouch}</span>
+      </p>
+    </div>
+
+    <div class="inv__body">
+      <div class="inv__lists">
+        {
+          groupsWithStars.map((g) => (
+            <div class="group" style={`--c: ${g.color}`} data-group={g.id}>
+              <h3 class="group__title">
+                <span class="group__dot" aria-hidden="true" />
+                {g.label}
+              </h3>
+              <ul class="group__items">
+                {g.stars.map((s) => (
+                  <li>
+                    <button type="button" class="chip" data-star={s.index} aria-pressed="false" aria-controls="inv-card">
+                      {s.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div class="group__slot" data-slot={g.id} />
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="sky-wrap">
+        <div class="sky" data-sky>
+          <div class="sky__disc" aria-hidden="true"></div>
+
+          <svg class="sky__field" viewBox="0 0 620 620" aria-hidden="true">
+            {starField.map(([x, y, r, o]) => <circle cx={x} cy={y} r={r} fill-opacity={o} />)}
+          </svg>
+
+          <svg class="sky__grid" viewBox="0 0 620 620" aria-hidden="true">
+            <circle cx="310" cy="310" r="100" class="sky__ring-dash" />
+            <circle cx="310" cy="310" r="200" class="sky__ring-dash" />
+            <circle cx="310" cy="310" r="300" class="sky__ring" />
+            {radials.map(([x, y]) => <line x1="310" y1="310" x2={x} y2={y} class="sky__radial" />)}
+            {ticks.map((t) => <line x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} class="sky__tick" />)}
+          </svg>
+
+          {glows.map((g) => <div class="sky__glow" style={`left: ${g.left}; top: ${g.top}; --c: ${g.color}`} aria-hidden="true" />)}
+
+          <svg class="sky__links" viewBox="0 0 620 620" aria-hidden="true">
+            {links.map((l) => <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} style={`stroke: ${l.color}`} />)}
+          </svg>
+
+          {
+            stars.map((s) => (
+              <span
+                class:list={['star', { 'is-big': s.big }]}
+                style={`left: ${pct(s.x)}; top: ${pct(s.y)}; --c: ${s.color}; --delay: ${((s.index * 0.37) % 3.2).toFixed(2)}s`}
+                data-star={s.index}
+                aria-hidden="true">
+                <span class="star__dot" />
+              </span>
+            ))
+          }
+
+          <span class="sky__caption" aria-hidden="true">{content.mapCaption}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Element card: filled and moved by the script below -->
+  <div class="card" id="inv-card" data-card hidden aria-live="polite">
+    <div class="card__strip">
+      <span>{content.card.title}</span>
+      <span class="card__slot" aria-hidden="true"></span>
+      <span data-f="num"></span>
+    </div>
+    <div class="card__head">
+      <div class="card__designation">
+        <span class="card__label">{content.card.designation}</span>
+        <span class="card__name" data-f="name"></span>
+      </div>
+      <span class="card__symbol" data-f="symbol" aria-hidden="true"></span>
+    </div>
+    <p class="card__desc" data-f="description"></p>
+    <dl class="card__dl">
+      <div><dt class="card__label">{content.card.module}</dt><dd data-f="module"></dd></div>
+      <div data-if="experience"><dt class="card__label">{content.card.experience}</dt><dd data-f="experience"></dd></div>
+      <div>
+        <dt class="card__label">{content.card.status}</dt>
+        <dd class="card__status"><span aria-hidden="true"></span>{content.card.statusValue}</dd>
+      </div>
+      <div><dt class="card__label">{content.card.sector}</dt><dd data-f="sector"></dd></div>
+    </dl>
+    <div class="card__perf" aria-hidden="true"></div>
+    <div class="card__foot">
+      <div class="card__code">
+        <span class="card__barcode" data-barcode aria-hidden="true"></span>
+        <span class="card__serial" data-f="serial"></span>
+      </div>
+      <a class="card__doc" data-doc target="_blank" rel="noopener noreferrer">
+        <span>{content.card.documentation}</span>
+        <span class="card__doc-url"><span data-f="urlLabel"></span> ↗</span>
+      </a>
+    </div>
+  </div>
+
+  <script type="application/json" data-sky-data set:html={JSON.stringify(cardData)} />
+</section>
+
+<script>
+  type Star = {
+    name: string;
+    symbol: string;
+    description: string;
+    url: string;
+    urlLabel: string;
+    module: string;
+    sector: string;
+    experience: string;
+    num: string;
+    serial: string;
+    group: string;
+    color: string;
+    side: 'left' | 'right';
+    x: number;
+    y: number;
+  };
+
+  for (const section of document.querySelectorAll<HTMLElement>('[data-inv]')) {
+    const data: Star[] = JSON.parse(section.querySelector('[data-sky-data]')?.textContent ?? '[]');
+    const card = section.querySelector<HTMLElement>('[data-card]')!;
+    const sky = section.querySelector<HTMLElement>('[data-sky]')!;
+    const chips = [...section.querySelectorAll<HTMLButtonElement>('button[data-star]')];
+    const stars = [...section.querySelectorAll<HTMLElement>('.star[data-star]')];
+    const desktop = window.matchMedia('(min-width: 1100px)');
+    let active: number | null = null;
+    let hideTimer: number | undefined;
+
+    const barcode = (name: string) => {
+      let r = [...name].reduce((t, ch) => (t * 31 + ch.charCodeAt(0)) % 9973, 7);
+      return Array.from({ length: 22 }, () => {
+        r = (r * 17 + 11) % 97;
+        return `<span style="width:${1 + (r % 4)}px;opacity:${r % 5 === 0 ? 0.35 : 1}"></span>`;
+      }).join('');
+    };
+
+    const place = (s: Star) => {
+      if (!desktop.matches) {
+        // Mobile: the card opens under its constellation's list
+        section.querySelector(`[data-slot="${s.group}"]`)?.append(card);
+        card.style.removeProperty('left');
+        card.style.removeProperty('top');
+        return;
+      }
+      sky.append(card);
+      const size = sky.clientWidth;
+      const scale = size / 620;
+      const x = s.x * scale;
+      const y = s.y * scale;
+      const width = card.offsetWidth;
+      const height = card.offsetHeight;
+      card.style.left = `${s.side === 'right' ? x + 26 : x - 26 - width}px`;
+      card.style.top = `${Math.max(0, Math.min(size - height, y - 70))}px`;
+    };
+
+    const show = (i: number) => {
+      window.clearTimeout(hideTimer);
+      if (active === i && !card.hidden) return;
+      active = i;
+      const s = data[i]!;
+      for (const el of card.querySelectorAll<HTMLElement>('[data-f]')) el.textContent = s[el.dataset.f as keyof Star] as string;
+      card.querySelector<HTMLElement>('[data-if="experience"]')!.hidden = !s.experience;
+      card.querySelector<HTMLElement>('[data-barcode]')!.innerHTML = barcode(s.name);
+      const doc = card.querySelector<HTMLAnchorElement>('[data-doc]')!;
+      doc.href = s.url;
+      card.style.setProperty('--c', s.color);
+      section.classList.add('has-active');
+      for (const el of [...chips, ...stars]) {
+        const on = Number(el.dataset.star) === i;
+        el.classList.toggle('is-on', on);
+        if (el instanceof HTMLButtonElement) el.setAttribute('aria-pressed', String(on));
+      }
+      card.hidden = false;
+      card.classList.remove('is-in');
+      void card.offsetWidth; // restart the entrance animation
+      card.classList.add('is-in');
+      place(s);
+    };
+
+    const hide = () => {
+      active = null;
+      card.hidden = true;
+      section.classList.remove('has-active');
+      for (const el of [...chips, ...stars]) {
+        el.classList.remove('is-on');
+        if (el instanceof HTMLButtonElement) el.setAttribute('aria-pressed', 'false');
+      }
+    };
+    const hideSoon = () => {
+      window.clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(hide, 220);
+    };
+    const keep = () => window.clearTimeout(hideTimer);
+
+    for (const el of [...chips, ...stars]) {
+      const i = Number(el.dataset.star);
+      el.addEventListener('pointerenter', (e) => {
+        if (e.pointerType === 'mouse' && desktop.matches) show(i);
+      });
+      el.addEventListener('pointerleave', (e) => {
+        if (e.pointerType === 'mouse' && desktop.matches) hideSoon();
+      });
+    }
+    for (const chip of chips) {
+      const i = Number(chip.dataset.star);
+      chip.addEventListener('focus', () => desktop.matches && show(i));
+      chip.addEventListener('blur', () => desktop.matches && hideSoon());
+      chip.addEventListener('click', () => {
+        if (desktop.matches) show(i);
+        else if (active === i) hide();
+        else show(i);
+      });
+    }
+    card.addEventListener('pointerenter', keep);
+    card.addEventListener('pointerleave', () => desktop.matches && hideSoon());
+    card.addEventListener('focusin', keep);
+    card.addEventListener('focusout', () => desktop.matches && hideSoon());
+    section.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && active !== null) hide();
+    });
+    desktop.addEventListener('change', hide);
+  }
+</script>
+
+<style>
+  .inv {
+    position: relative;
+    overflow: hidden;
+    padding-block: var(--section-pad-top) var(--section-pad-bottom);
+    background: var(--bg);
+  }
+
+  .inv__inner {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, 3vh, 40px);
+  }
+
+  .inv__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 48px;
+  }
+
+  .inv__intro {
+    margin: 0;
+    max-width: 400px;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-soft);
+  }
+
+  .inv__intro-touch {
+    display: none;
+  }
+
+  @media (hover: none) {
+    .inv__intro-hover {
+      display: none;
+    }
+
+    .inv__intro-touch {
+      display: inline;
+    }
+  }
+
+  .inv__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 64px;
+    align-items: center;
+  }
+
+  /* ---------- Lists ---------- */
+
+  .inv__lists {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(20px, 3.5vh, 36px);
+  }
+
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .group__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c);
+  }
+
+  .group__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c);
+    box-shadow: 0 0 10px var(--c);
+  }
+
+  .group__items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .chip {
+    min-height: 34px;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-soft);
+    font-size: 16px;
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+  }
+
+  .chip:hover,
+  .chip.is-on {
+    background: var(--c);
+    color: var(--bg);
+  }
+
+  .group__slot:empty {
+    display: none;
+  }
+
+  /* ---------- Sky map ---------- */
+
+  .sky-wrap {
+    justify-self: end;
+  }
+
+  .sky {
+    position: relative;
+    /* Shrinks with the window height so the whole section fits on screen */
+    width: clamp(400px, calc(100svh - 320px), 620px);
+    aspect-ratio: 1;
+  }
+
+  .sky__disc {
+    position: absolute;
+    inset: 1.6%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 45%, var(--map-core), var(--map-edge) 75%);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--text) 6%, transparent),
+      0 0 120px -30px color-mix(in srgb, var(--star-blue) 25%, transparent);
+  }
+
+  .sky svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .sky__field {
+    fill: var(--text);
+    animation: spin 240s linear infinite;
+  }
+
+  .sky__grid {
+    fill: none;
+  }
+
+  .sky__ring-dash {
+    stroke: color-mix(in srgb, var(--text) 5%, transparent);
+    stroke-dasharray: 2 6;
+  }
+
+  .sky__ring {
+    stroke: color-mix(in srgb, var(--text) 10%, transparent);
+  }
+
+  .sky__radial {
+    stroke: color-mix(in srgb, var(--text) 4%, transparent);
+  }
+
+  .sky__tick {
+    stroke: color-mix(in srgb, var(--text) 18%, transparent);
+  }
+
+  .sky__glow {
+    position: absolute;
+    width: 54.8%;
+    height: 48.4%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--c) 15%, transparent), transparent);
+    pointer-events: none;
+  }
+
+  .sky__links line {
+    stroke-opacity: 0.35;
+    stroke-width: 1;
+  }
+
+  .star {
+    position: absolute;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin: -14px 0 0 -14px;
+    cursor: pointer;
+  }
+
+  .star__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--c);
+    box-shadow: 0 0 12px 2px var(--c);
+    animation: twinkle 3.2s ease-in-out infinite;
+    animation-delay: var(--delay);
+    transition: all 0.2s;
+  }
+
+  .star.is-big .star__dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .has-active .star:not(.is-on) .star__dot {
+    opacity: 0.45;
+  }
+
+  .star.is-on .star__dot {
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    box-shadow: 0 0 28px 6px var(--c);
+    animation: none;
+  }
+
+  :global([data-theme='light']) .star.is-on .star__dot {
+    background: var(--text);
+  }
+
+  @keyframes twinkle {
+    50% {
+      opacity: 0.55;
+    }
+  }
+
+  .sky__caption {
+    position: absolute;
+    left: 50%;
+    bottom: -6px;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--text-faint);
+  }
+
+  /* ---------- Element card ---------- */
+
+  .card {
+    position: absolute;
+    z-index: 5;
+    width: 290px;
+    overflow: hidden;
+    border: 1px solid var(--line-dashed);
+    border-radius: 16px;
+    background: linear-gradient(160deg, var(--surface-raised), var(--surface) 60%);
+    box-shadow:
+      0 30px 60px -20px var(--shadow-color),
+      0 0 50px -16px var(--c);
+  }
+
+  .card[hidden] {
+    display: none;
+  }
+
+  .card.is-in {
+    animation: card-in 0.2s ease-out;
+  }
+
+  @keyframes card-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+
+  .card__strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 18px;
+    background: var(--c);
+    color: var(--bg);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .card__slot {
+    width: 26px;
+    height: 6px;
+    border-radius: 99px;
+    background: var(--bg);
+  }
+
+  .card__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 18px 14px;
+  }
+
+  .card__designation {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .card__label {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .card__name {
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .card__symbol {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    border: 1.5px solid var(--c);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--c) 8%, transparent);
+    color: var(--c);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+  }
+
+  .card__desc {
+    margin: 0;
+    padding: 0 18px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text-soft);
+  }
+
+  .card__dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 14px;
+    margin: 14px 0 0;
+    padding: 0 18px;
+  }
+
+  .card__dl dt {
+    margin-bottom: 3px;
+  }
+
+  .card__dl dd {
+    margin: 0;
+    font-size: 13px;
+  }
+
+  .card__dl [hidden] {
+    display: none;
+  }
+
+  .card__status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--success);
+  }
+
+  .card__status span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+  }
+
+  .card__perf {
+    position: relative;
+    margin-top: 16px;
+    border-top: 1px dashed var(--line-strong);
+  }
+
+  .card__perf::before,
+  .card__perf::after {
+    content: '';
+    position: absolute;
+    top: -9px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--map-edge);
+  }
+
+  .card__perf::before {
+    left: -9px;
+  }
+
+  .card__perf::after {
+    right: -9px;
+  }
+
+  .card__foot {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 18px 16px;
+  }
+
+  .card__code {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .card__barcode {
+    display: flex;
+    gap: 2px;
+    height: 30px;
+  }
+
+  .card__barcode :global(span) {
+    background: var(--text);
+  }
+
+  .card__serial {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+  }
+
+  .card__doc {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 44px;
+    padding: 11px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color 0.2s;
+  }
+
+  .card__doc:hover {
+    border-color: var(--c);
+  }
+
+  .card__doc {
+    gap: 12px;
+  }
+
+  .card__doc-url {
+    min-width: 0;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 400;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    opacity: 0.85;
+  }
+
+  /* ---------- Tablet & mobile ---------- */
+
+  @media (max-width: 1099px) {
+    .inv {
+      border-top: 1px solid var(--line);
+    }
+
+    .inv__inner {
+      gap: 24px;
+    }
+
+    .inv__head {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 24px;
+    }
+
+    .inv__intro {
+      max-width: 560px;
+      font-size: 15px;
+    }
+
+    .inv__body {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* The sky sits behind the lists and stays in view while scrolling them */
+    .sky-wrap {
+      order: -1;
+      position: sticky;
+      top: calc(var(--header-h) + 16px);
+      z-index: 0;
+      align-self: center;
+      width: min(350px, 100%);
+      pointer-events: none;
+      opacity: 0.45;
+      transition: opacity 0.3s;
+    }
+
+    .has-active .sky-wrap {
+      opacity: 0.9;
+    }
+
+    .sky {
+      width: 100%;
+    }
+
+    .sky__caption {
+      display: none;
+    }
+
+    .inv__lists {
+      position: relative;
+      z-index: 1;
+      margin-top: max(-330px, -94vw);
+      gap: 24px;
+    }
+
+    .group__title {
+      gap: 8px;
+      font-size: 10px;
+    }
+
+    .group__dot {
+      width: 7px;
+      height: 7px;
+    }
+
+    .chip {
+      min-height: 40px;
+      padding: 9px 14px;
+      border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--bg) 70%, transparent);
+      font-size: 14px;
+    }
+
+    .chip.is-on {
+      border-color: var(--c);
+    }
+
+    .chip:hover:not(.is-on) {
+      background: color-mix(in srgb, var(--bg) 70%, transparent);
+      color: var(--text-soft);
+    }
+
+    .card {
+      position: static;
+      width: auto;
+      border-radius: 14px;
+      box-shadow: 0 0 40px -16px var(--c);
+    }
+
+    .card__slot,
+    .card__dl,
+    .card__perf,
+    .card__barcode {
+      display: none;
+    }
+
+    .card__strip {
+      padding: 10px 16px;
+      font-size: 10px;
+    }
+
+    .card__head {
+      align-items: center;
+      padding: 16px 16px 12px;
+    }
+
+    .card__name {
+      font-size: 20px;
+    }
+
+    .card__symbol {
+      width: 50px;
+      height: 50px;
+      font-size: 22px;
+    }
+
+    .card__desc {
+      padding: 0 16px;
+      font-size: 14px;
+    }
+
+    .card__foot {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      margin: 12px 16px 0;
+      padding: 12px 0 16px;
+      border-top: 1px dashed var(--line-strong);
+    }
+
+    .card__doc {
+      padding: 0 14px;
+      font-size: 13px;
+    }
+
+    .card__doc-url {
+      display: none;
+    }
+  }
+</style>

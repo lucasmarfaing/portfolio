@@ -25,7 +25,10 @@
     "earthLand": "#8FB0FF",
     "earthText": "#B9CCFF",
     "redacted": "#3A3D4D",
-    "redactedBg": "#1C1E2A"
+    "redactedBg": "#1C1E2A",
+    "starBlue": "#7AA2FF",
+    "mapCore": "#0D0F1D",
+    "mapEdge": "#06070C"
   },
   "light": {
     "bg": "#F6F5F1",
@@ -52,6 +55,9 @@
     "earthLand": "#2F5BD0",
     "earthText": "#3563D9",
     "redacted": "#C3C5CE",
-    "redactedBg": "#E4E3DE"
+    "redactedBg": "#E4E3DE",
+    "starBlue": "#3563D9",
+    "mapCore": "#FFFFFF",
+    "mapEdge": "#EEF1F8"
   }
 }
