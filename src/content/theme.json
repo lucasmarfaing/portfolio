@@ -28,7 +28,9 @@
     "redactedBg": "#1C1E2A",
     "starBlue": "#7AA2FF",
     "mapCore": "#0D0F1D",
-    "mapEdge": "#06070C"
+    "mapEdge": "#06070C",
+    "horizonCore": "#1A1430",
+    "horizonMid": "#0A0B16"
   },
   "light": {
     "bg": "#F6F5F1",
@@ -58,6 +60,8 @@
     "redactedBg": "#E4E3DE",
     "starBlue": "#3563D9",
     "mapCore": "#FFFFFF",
-    "mapEdge": "#EEF1F8"
+    "mapEdge": "#EEF1F8",
+    "horizonCore": "#E8E6F0",
+    "horizonMid": "#F6F5F1"
   }
 }

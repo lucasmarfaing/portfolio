@@ -35,6 +35,8 @@ const palette = z
     starBlue: color,
     mapCore: color,
     mapEdge: color,
+    horizonCore: color,
+    horizonMid: color,
   })
   .strict();
 

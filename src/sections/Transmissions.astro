@@ -1,0 +1,519 @@
+---
+import { fill, type TransmissionsContent } from '@/lib/content';
+
+interface Props {
+  content: TransmissionsContent;
+}
+
+const { content } = Astro.props;
+
+/** Placeholder text from the design, written between [brackets], is shown dimmed. */
+const isPlaceholder = (text: string) => text.trim().startsWith('[');
+
+// A fixed (seeded) audio waveform per transmission, so the page is identical on every build
+const waveform = (seed: number) => {
+  let r = seed * 97 + 13;
+  const rand = () => {
+    r = (r * 9301 + 49297) % 233280;
+    return r / 233280;
+  };
+  return Array.from({ length: 40 }, (_, k) => {
+    const env = Math.sin((Math.PI * k) / 39);
+    return {
+      height: Math.round(8 + env * (20 + rand() * 46)),
+      opacity: (0.45 + env * 0.55).toFixed(2),
+      delay: (rand() * 1.1).toFixed(2),
+      bright: k % 7 === 3,
+    };
+  });
+};
+
+const items = content.items.map((t, i) => ({
+  ...t,
+  code: `TX-${String(i + 1).padStart(2, '0')}`,
+  wave: waveform(i),
+}));
+---
+
+<section class="tx" aria-label={content.label} data-tx data-interval={content.intervalSeconds}>
+  <div class="container tx__inner">
+    <div class="tx__top">
+      <span class="tx__label"><span class="tx__index">{content.index}</span> — {content.label}</span>
+      <span class="tx__meta">
+        <span class="tx__signal"><span class="tx__signal-dot blink" aria-hidden="true"></span>{content.signal}</span>
+        <span class="tx__freq" data-tx-freq>{items[0]!.freq}</span>
+        <span class="tx__code" data-tx-code>{items[0]!.code}</span>
+      </span>
+    </div>
+
+    <div class="tx__slides" aria-live="polite">
+      {
+        items.map((t, i) => (
+          <figure class:list={['slide', { 'is-active': i === 0 }]} data-slide={i} data-freq={t.freq} data-code={t.code}>
+            <div class="slide__wave" aria-hidden="true">
+              {t.wave.map((b) => (
+                <span
+                  class:list={{ 'is-bright': b.bright }}
+                  style={`height: ${b.height}px; opacity: ${b.opacity}; animation-delay: ${b.delay}s`}
+                />
+              ))}
+            </div>
+            <blockquote class="slide__quote">
+              <span class="slide__mark" aria-hidden="true">
+                “
+              </span>
+              <p class:list={['slide__text', { 'is-placeholder': isPlaceholder(t.quote) }]}>{t.quote}</p>
+            </blockquote>
+            <figcaption class="slide__from">
+              {t.photo ? (
+                <img class="slide__photo" src={t.photo} alt="" width="52" height="52" loading="lazy" />
+              ) : (
+                <span class="slide__photo slide__photo--empty" aria-hidden="true">
+                  {content.photoPlaceholder}
+                </span>
+              )}
+              <span class="slide__who">
+                <span class:list={['slide__name', { 'is-placeholder': isPlaceholder(t.name) }]}>{t.name}</span>
+                <span class:list={['slide__role', { 'is-placeholder': isPlaceholder(t.role) }]}>{t.role}</span>
+                <span class="slide__rel">
+                  {content.emitter} · {t.relation}
+                </span>
+              </span>
+            </figcaption>
+          </figure>
+        ))
+      }
+    </div>
+
+    <div class="tx__segments">
+      {
+        items.map((t, i) => (
+          <button
+            type="button"
+            class:list={['seg', { 'is-on': i === 0 }]}
+            aria-label={fill(content.segmentLabel, { n: i + 1 })}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+            data-seg={i}>
+            <span class="seg__track">
+              <span class="seg__fill" />
+            </span>
+            <span class="seg__label">
+              {t.code} · {t.relation}
+            </span>
+          </button>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<script>
+  for (const section of document.querySelectorAll<HTMLElement>('[data-tx]')) {
+    const slides = [...section.querySelectorAll<HTMLElement>('[data-slide]')];
+    const segs = [...section.querySelectorAll<HTMLButtonElement>('[data-seg]')];
+    const freq = section.querySelector<HTMLElement>('[data-tx-freq]');
+    const code = section.querySelector<HTMLElement>('[data-tx-code]');
+    const interval = Number(section.dataset.interval ?? 7) * 1000;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    section.style.setProperty('--tx-interval', `${interval}ms`);
+    let current = 0;
+    let timer: number | undefined;
+    let paused = false;
+
+    const select = (index: number) => {
+      current = (index + slides.length) % slides.length;
+      slides.forEach((s, i) => s.classList.toggle('is-active', i === current));
+      segs.forEach((s, i) => {
+        s.classList.remove('is-on');
+        s.classList.toggle('is-done', i < current);
+        s.setAttribute('aria-pressed', String(i === current));
+      });
+      const seg = segs[current];
+      if (seg) {
+        void seg.offsetWidth; // restart the progress fill
+        seg.classList.add('is-on');
+      }
+      if (freq) freq.textContent = slides[current]?.dataset.freq ?? '';
+      if (code) code.textContent = slides[current]?.dataset.code ?? '';
+    };
+
+    const start = () => {
+      window.clearInterval(timer);
+      if (reducedMotion || paused || slides.length < 2) return;
+      timer = window.setInterval(() => select(current + 1), interval);
+    };
+
+    segs.forEach((s, i) =>
+      s.addEventListener('click', () => {
+        select(i);
+        start();
+      }),
+    );
+    // Pause while the visitor reads (mouse over or keyboard focus inside)
+    const pause = (value: boolean) => {
+      paused = value;
+      section.classList.toggle('is-paused', value);
+      if (value) window.clearInterval(timer);
+      else start();
+    };
+    section.addEventListener('pointerenter', () => pause(true));
+    section.addEventListener('pointerleave', () => pause(false));
+    section.addEventListener('focusin', () => pause(true));
+    section.addEventListener('focusout', () => pause(false));
+
+    start();
+  }
+</script>
+
+<style>
+  .tx {
+    border-block: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
+    background: linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg), var(--text) 2.5%) 50%, var(--bg));
+  }
+
+  .tx__inner {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(24px, 4vh, 44px);
+    padding-block: clamp(36px, 6vh, 56px) clamp(32px, 5vh, 48px);
+  }
+
+  .tx__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .tx__index {
+    color: var(--accent);
+  }
+
+  .tx__meta {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .tx__signal {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--success);
+  }
+
+  .tx__signal-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    animation-duration: 1.4s;
+  }
+
+  .tx__freq {
+    color: var(--accent-alt);
+  }
+
+  /* ---------- Slides (stacked in one cell so the height never jumps) ---------- */
+
+  .tx__slides {
+    display: grid;
+  }
+
+  .slide {
+    grid-area: 1 / 1;
+    display: grid;
+    grid-template-columns: 290px minmax(0, 1fr) 300px;
+    gap: 44px;
+    align-items: center;
+    margin: 0;
+    visibility: hidden;
+  }
+
+  .slide.is-active {
+    visibility: visible;
+  }
+
+  .slide__wave {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 110px;
+    border-radius: 12px;
+    background: radial-gradient(150px 60px at 50% 50%, color-mix(in srgb, var(--accent) 14%, transparent), transparent);
+  }
+
+  .slide__wave span {
+    width: 4px;
+    border-radius: 2px;
+    background: var(--accent);
+    transform-origin: center;
+    animation: wave 1.1s ease-in-out infinite alternate;
+  }
+
+  .slide__wave .is-bright {
+    background: var(--text);
+  }
+
+  @keyframes wave {
+    from {
+      transform: scaleY(0.25);
+    }
+  }
+
+  .is-paused .slide__wave span {
+    animation-play-state: paused;
+  }
+
+  .slide__quote {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin: 0;
+  }
+
+  .slide__mark {
+    font-size: 72px;
+    font-weight: 700;
+    line-height: 0.75;
+    color: var(--accent);
+  }
+
+  .slide__text {
+    margin: 0;
+    font-size: clamp(20px, 1.8vw, 26px);
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .slide.is-active .slide__text {
+    animation: decode 0.8s steps(16) both;
+  }
+
+  @keyframes decode {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  .slide__from {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-left: 28px;
+    border-left: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+  }
+
+  .slide__photo {
+    flex: none;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .slide__photo--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px dashed color-mix(in srgb, var(--text) 25%, transparent);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-faint);
+  }
+
+  .slide__who {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .slide__name {
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .slide__role {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .slide__rel {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .slide__text.is-placeholder {
+    color: var(--text-faint);
+  }
+
+  .slide__name.is-placeholder {
+    color: var(--text-muted);
+  }
+
+  .slide__role.is-placeholder {
+    color: var(--text-faint);
+  }
+
+  /* ---------- Segments ---------- */
+
+  .tx__segments {
+    display: flex;
+    gap: 10px;
+  }
+
+  .seg {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .seg__track {
+    position: relative;
+    display: block;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--text) 14%, transparent);
+    transition: background-color 0.2s;
+  }
+
+  .seg:hover .seg__track {
+    background: color-mix(in srgb, var(--text) 30%, transparent);
+  }
+
+  .seg__fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0;
+    background: var(--accent);
+  }
+
+  .seg.is-done .seg__fill {
+    width: 100%;
+    background: color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
+  .seg.is-on .seg__fill {
+    animation: seg-fill var(--tx-interval, 7s) linear both;
+  }
+
+  .is-paused .seg.is-on .seg__fill {
+    animation-play-state: paused;
+  }
+
+  @keyframes seg-fill {
+    to {
+      width: 100%;
+    }
+  }
+
+  .seg__label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .seg.is-on .seg__label {
+    color: var(--text);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .seg.is-on .seg__fill {
+      width: 100%;
+    }
+  }
+
+  /* ---------- Tablet & mobile ---------- */
+
+  @media (max-width: 1099px) {
+    .tx__inner {
+      gap: 18px;
+      padding-block: 48px;
+    }
+
+    .tx__top {
+      font-size: 10px;
+    }
+
+    .tx__signal,
+    .tx__code {
+      display: none;
+    }
+
+    .slide {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .slide__wave {
+      height: 70px;
+      background: radial-gradient(160px 50px at 50% 50%, color-mix(in srgb, var(--accent) 14%, transparent), transparent);
+    }
+
+    .slide__quote {
+      gap: 8px;
+    }
+
+    .slide__mark {
+      font-size: 20px;
+      line-height: 1.45;
+    }
+
+    .slide__text {
+      font-size: 20px;
+      line-height: 1.45;
+    }
+
+    .slide__from {
+      gap: 12px;
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .slide__photo {
+      width: 44px;
+      height: 44px;
+    }
+
+    .slide__role {
+      display: none;
+    }
+
+    .slide__name {
+      font-size: 15px;
+    }
+
+    .seg {
+      justify-content: center;
+    }
+
+    .seg__label {
+      display: none;
+    }
+  }
+</style>

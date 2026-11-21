@@ -1,0 +1,32 @@
+{
+  "index": "06",
+  "label": "Incoming transmissions",
+  "signal": "Incoming signal",
+  "emitter": "Sender",
+  "photoPlaceholder": "[photo]",
+  "segmentLabel": "Transmission {n}",
+  "intervalSeconds": 7,
+  "items": [
+    {
+      "freq": "142.80 MHz",
+      "name": "[First Last]",
+      "role": "[Position · Company]",
+      "relation": "Manager",
+      "quote": "[Quote from a manager: 2 to 3 sentences about how you work and what you brought to the team.]"
+    },
+    {
+      "freq": "118.35 MHz",
+      "name": "[First Last]",
+      "role": "[Position · Company]",
+      "relation": "Colleague",
+      "quote": "[Quote from a colleague: what it’s like to work with you day to day.]"
+    },
+    {
+      "freq": "127.05 MHz",
+      "name": "[First Last]",
+      "role": "[Position · Company]",
+      "relation": "Client",
+      "quote": "[Quote from a client or designer: the result delivered and the collaboration.]"
+    }
+  ]
+}

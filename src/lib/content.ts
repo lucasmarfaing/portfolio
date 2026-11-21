@@ -12,6 +12,10 @@ import enInventory from '@/content/en/inventory.json';
 import rawSky from '@/content/sky.json';
 import frMissions from '@/content/fr/missions.json';
 import enMissions from '@/content/en/missions.json';
+import frTransmissions from '@/content/fr/transmissions.json';
+import enTransmissions from '@/content/en/transmissions.json';
+import frContact from '@/content/fr/contact.json';
+import enContact from '@/content/en/contact.json';
 
 export const locales = ['fr', 'en'] as const;
 export type Locale = (typeof locales)[number];
@@ -255,6 +259,81 @@ const missionsSchema = z.object({
     .min(1),
 });
 
+const transmissionsSchema = z.object({
+  index: sectionHead.index,
+  label: z.string(),
+  signal: z.string(),
+  emitter: z.string(),
+  photoPlaceholder: z.string(),
+  segmentLabel: z.string(),
+  intervalSeconds: z.number().min(3).max(30),
+  items: z
+    .array(
+      z.object({
+        freq: z.string(),
+        name: z.string().min(1),
+        role: z.string(),
+        relation: z.string(),
+        quote: z.string().min(1),
+        /** Optional photo in public/, e.g. "/transmissions/jane.webp" */
+        photo: z.string().startsWith('/').optional(),
+      }),
+    )
+    .min(1),
+});
+
+const contactSchema = z.object({
+  index: sectionHead.index,
+  label: z.string(),
+  title: z.string().min(1),
+  titleAccent: z.string(),
+  intro: z.string(),
+  availability: z.string(),
+  availabilityShort: z.string(),
+  channels: z
+    .array(
+      z.object({
+        icon: z.enum(['mail', 'linkedin', 'github', 'file', 'link']),
+        label: z.string(),
+        value: z.string(),
+        /** Without a url, the channel is shown but not clickable */
+        url: z.string().optional(),
+      }),
+    )
+    .max(6),
+  form: z.object({
+    console: z.string(),
+    consoleShort: z.string(),
+    statusOpen: z.string(),
+    statusSending: z.string(),
+    statusSent: z.string(),
+    typeLabel: z.string(),
+    types: z.array(z.string()).min(1),
+    nameLabel: z.string(),
+    namePlaceholder: z.string(),
+    emailLabel: z.string(),
+    emailPlaceholder: z.string(),
+    messageLabel: z.string(),
+    messagePlaceholder: z.string(),
+    submit: z.string(),
+    sentTitle: z.string(),
+    sentText: z.string(),
+    sentTextMail: z.string(),
+    errorText: z.string(),
+    reset: z.string(),
+    /**
+     * Where the form is sent: "/api/contact" (this site's own Node route), a form service URL,
+     * or empty to open the visitor's mail app with the message instead.
+     */
+    endpoint: z.union([z.literal(''), z.url(), z.string().regex(/^\/[\w\-/]+$/, 'Chemin du type "/api/contact"')]),
+    mailTo: z.email(),
+    mailSubject: z.string(),
+  }),
+  footer: z.object({ signoff: z.string(), backToTop: z.string(), copyright: z.string(), coords: z.string() }),
+});
+
+export type TransmissionsContent = z.infer<typeof transmissionsSchema>;
+export type ContactContent = z.infer<typeof contactSchema>;
 export type SkyContent = z.infer<typeof skySchema>;
 export type MissionsContent = z.infer<typeof missionsSchema>;
 export type InventoryContent = z.infer<typeof inventorySchema>;
@@ -264,10 +343,31 @@ export type HeroContent = z.infer<typeof heroSchema>;
 export type CrewContent = z.infer<typeof crewSchema>;
 export type Stat = z.infer<typeof stat>;
 
-type RawLocale = Record<'site' | 'hero' | 'crew' | 'trajectory' | 'inventory' | 'missions', unknown>;
+type RawLocale = Record<
+  'site' | 'hero' | 'crew' | 'trajectory' | 'inventory' | 'missions' | 'transmissions' | 'contact',
+  unknown
+>;
 const raw: Record<Locale, RawLocale> = {
-  fr: { site: frSite, hero: frHero, crew: frCrew, trajectory: frTrajectory, inventory: frInventory, missions: frMissions },
-  en: { site: enSite, hero: enHero, crew: enCrew, trajectory: enTrajectory, inventory: enInventory, missions: enMissions },
+  fr: {
+    site: frSite,
+    hero: frHero,
+    crew: frCrew,
+    trajectory: frTrajectory,
+    inventory: frInventory,
+    missions: frMissions,
+    transmissions: frTransmissions,
+    contact: frContact,
+  },
+  en: {
+    site: enSite,
+    hero: enHero,
+    crew: enCrew,
+    trajectory: enTrajectory,
+    inventory: enInventory,
+    missions: enMissions,
+    transmissions: enTransmissions,
+    contact: enContact,
+  },
 };
 
 /** Loads and validates a locale's content. An invalid JSON file fails the build with a readable message. */
@@ -303,6 +403,8 @@ export function getContent(lang: Locale) {
     crew: parse(crewSchema, raw[lang].crew, 'crew'),
     trajectory: parse(trajectorySchema, raw[lang].trajectory, 'trajectory'),
     missions: parse(missionsSchema, raw[lang].missions, 'missions'),
+    transmissions: parse(transmissionsSchema, raw[lang].transmissions, 'transmissions'),
+    contact: parse(contactSchema, raw[lang].contact, 'contact'),
   };
 }
 

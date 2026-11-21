@@ -1,0 +1,45 @@
+{
+  "index": "07",
+  "label": "Communication channel",
+  "title": "An idea floating around?",
+  "titleAccent": "Let’s bring it down to earth.",
+  "intro": "Freelance, job, collab or just hello: open a channel, I’ll answer from the Toulouse base.",
+  "availability": "Listening · channel open to great proposals",
+  "availabilityShort": "Listening",
+  "channels": [
+    { "icon": "mail", "label": "Direct frequency", "value": "ask@lucasmarfaing.pro", "url": "mailto:ask@lucasmarfaing.pro" },
+    { "icon": "linkedin", "label": "LinkedIn", "value": "[/in/lucas-marfaing]" },
+    { "icon": "github", "label": "GitHub", "value": "[github.com/…]" },
+    { "icon": "file", "label": "Pilot file", "value": "Download my CV" }
+  ],
+  "form": {
+    "console": "Transmission console",
+    "consoleShort": "Console",
+    "statusOpen": "Channel open",
+    "statusSending": "Transmitting…",
+    "statusSent": "Sent",
+    "typeLabel": "Mission type",
+    "types": ["Freelance", "Job offer", "Collab", "Just saying hi"],
+    "nameLabel": "Call sign",
+    "namePlaceholder": "Your name",
+    "emailLabel": "Return frequency",
+    "emailPlaceholder": "you@email.com",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Describe your mission: goal, timing, crew…",
+    "submit": "Transmit the message",
+    "sentTitle": "Transmission sent",
+    "sentText": "Message received at the base. I’ll get back to you on your frequency as soon as possible.",
+    "sentTextMail": "Your mail app opened with the message ready to go. All that’s left is to send it.",
+    "errorText": "The transmission failed. Try again, or email me directly.",
+    "reset": "New transmission",
+    "endpoint": "/api/contact",
+    "mailTo": "ask@lucasmarfaing.pro",
+    "mailSubject": "[Portfolio] {type} — {name}"
+  },
+  "footer": {
+    "signoff": "End of transmission",
+    "backToTop": "Back to base",
+    "copyright": "© {year} Lucas Marfaing · Designed in Figma, coded with passion (and Dr Pepper).",
+    "coords": "43.6047° N · 1.4442° E · Toulouse, planet Earth"
+  }
+}

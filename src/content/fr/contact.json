@@ -1,0 +1,45 @@
+{
+  "index": "07",
+  "label": "Canal de communication",
+  "title": "Une idée qui flotte ?",
+  "titleAccent": "Posons-la sur terre.",
+  "intro": "Freelance, poste, collab ou simple bonjour : ouvre un canal, je réponds depuis la base de Toulouse.",
+  "availability": "À l’écoute · canal ouvert aux belles propositions",
+  "availabilityShort": "À l’écoute",
+  "channels": [
+    { "icon": "mail", "label": "Fréquence directe", "value": "ask@lucasmarfaing.pro", "url": "mailto:ask@lucasmarfaing.pro" },
+    { "icon": "linkedin", "label": "LinkedIn", "value": "[/in/lucas-marfaing]" },
+    { "icon": "github", "label": "GitHub", "value": "[github.com/…]" },
+    { "icon": "file", "label": "Dossier pilote", "value": "Télécharger le CV" }
+  ],
+  "form": {
+    "console": "Console de transmission",
+    "consoleShort": "Console",
+    "statusOpen": "Canal ouvert",
+    "statusSending": "Transmission…",
+    "statusSent": "Transmis",
+    "typeLabel": "Type de mission",
+    "types": ["Freelance", "Poste / CDI", "Collab", "Juste dire bonjour"],
+    "nameLabel": "Indicatif",
+    "namePlaceholder": "Ton nom",
+    "emailLabel": "Fréquence de retour",
+    "emailPlaceholder": "ton@email.fr",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Décris ta mission : objectif, délais, équipage…",
+    "submit": "Transmettre le message",
+    "sentTitle": "Transmission envoyée",
+    "sentText": "Message bien reçu à la base. Je te recontacte sur ta fréquence dès que possible.",
+    "sentTextMail": "Ton application mail s’est ouverte avec le message prêt à partir. Il ne reste plus qu’à l’envoyer.",
+    "errorText": "La transmission a échoué. Réessaie, ou écris-moi directement par mail.",
+    "reset": "Nouvelle transmission",
+    "endpoint": "/api/contact",
+    "mailTo": "ask@lucasmarfaing.pro",
+    "mailSubject": "[Portfolio] {type} — {name}"
+  },
+  "footer": {
+    "signoff": "Fin de transmission",
+    "backToTop": "Retour à la base",
+    "copyright": "© {year} Lucas Marfaing · Conçu dans Figma, codé avec passion (et Dr Pepper).",
+    "coords": "43.6047° N · 1.4442° E · Toulouse, planète Terre"
+  }
+}

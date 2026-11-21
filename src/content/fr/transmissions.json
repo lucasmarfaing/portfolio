@@ -1,0 +1,32 @@
+{
+  "index": "06",
+  "label": "Transmissions reçues",
+  "signal": "Signal entrant",
+  "emitter": "Émetteur",
+  "photoPlaceholder": "[photo]",
+  "segmentLabel": "Transmission {n}",
+  "intervalSeconds": 7,
+  "items": [
+    {
+      "freq": "142.80 MHz",
+      "name": "[Prénom Nom]",
+      "role": "[Poste · Entreprise]",
+      "relation": "Manager",
+      "quote": "[Citation d’un manager : 2 à 3 phrases sur ta façon de travailler et ce que tu as apporté à l’équipe.]"
+    },
+    {
+      "freq": "118.35 MHz",
+      "name": "[Prénom Nom]",
+      "role": "[Poste · Entreprise]",
+      "relation": "Collègue",
+      "quote": "[Citation d’un collègue : ce que c’est de bosser avec toi au quotidien.]"
+    },
+    {
+      "freq": "127.05 MHz",
+      "name": "[Prénom Nom]",
+      "role": "[Poste · Entreprise]",
+      "relation": "Client",
+      "quote": "[Citation d’un client ou d’un designer : le résultat livré et la collaboration.]"
+    }
+  ]
+}

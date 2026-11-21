@@ -6,6 +6,8 @@ import Crew from '@/sections/Crew.astro';
 import Trajectory from '@/sections/Trajectory.astro';
 import Inventory from '@/sections/Inventory.astro';
 import Missions from '@/sections/Missions.astro';
+import Transmissions from '@/sections/Transmissions.astro';
+import Contact from '@/sections/Contact.astro';
 import { getContent, type Locale } from '@/lib/content';
 
 interface Props {
@@ -13,7 +15,7 @@ interface Props {
 }
 
 const { lang } = Astro.props;
-const { site, hero, crew, trajectory, inventory, sky, missions } = getContent(lang);
+const { site, hero, crew, trajectory, inventory, sky, missions, transmissions, contact } = getContent(lang);
 ---
 
 <BaseLayout lang={lang} title={site.meta.title} description={site.meta.description}>
@@ -24,5 +26,7 @@ const { site, hero, crew, trajectory, inventory, sky, missions } = getContent(la
     <Trajectory content={trajectory} />
     <Inventory content={inventory} sky={sky} callsign={site.callsign} />
     <Missions content={missions} technos={sky.stars.length} />
+    <Transmissions content={transmissions} />
+    <Contact content={contact} callsign={site.callsign} />
   </main>
 </BaseLayout>
