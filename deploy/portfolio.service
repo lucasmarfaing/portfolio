@@ -6,7 +6,7 @@
 # Adjust User and WorkingDirectory to your server.
 
 [Unit]
-Description=Portfolio LM-26 — contact API (Astro Node server)
+Description=Portfolio LM-26 - contact API (Astro Node server)
 After=network.target
 
 [Service]

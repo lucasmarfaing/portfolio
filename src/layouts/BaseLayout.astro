@@ -4,7 +4,9 @@ import '@fontsource-variable/geist-mono';
 import '@/styles/global.css';
 import { theme, themeCss } from '@/lib/theme';
 import { domains } from '@/lib/domains';
-import type { Locale } from '@/lib/content';
+import { getContent, type Locale } from '@/lib/content';
+import { getImage } from 'astro:assets';
+import portrait from '@/assets/images/portrait.png';
 
 interface Props {
   lang: Locale;
@@ -20,6 +22,39 @@ const alternates = [
   { lang: 'fr', href: new URL('/', Astro.site) },
   { lang: 'en', href: new URL('/en/', Astro.site) },
 ];
+
+// Structured data so Google knows who the site is about (name, job, profiles)
+const content = getContent(lang);
+const home = alternates[0]!.href.href;
+const photo = await getImage({ src: portrait, width: 600, format: 'jpg' });
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Person',
+      '@id': `${home}#person`,
+      name: `${content.hero.firstName} ${content.hero.lastName}`,
+      jobTitle: content.crew.badge.job.split('·')[0]!.trim(),
+      worksFor: content.crew.badge.job.includes('·')
+        ? { '@type': 'Organization', name: content.crew.badge.job.split('·').at(-1)!.trim() }
+        : undefined,
+      description: content.site.meta.description,
+      url: home,
+      image: new URL(photo.src, Astro.site).href,
+      email: `mailto:${content.contact.form.mailTo}`,
+      address: { '@type': 'PostalAddress', addressLocality: content.trajectory.origin.city, addressCountry: 'FR' },
+      sameAs: content.contact.channels.map((c) => c.url).filter((u): u is string => !!u && /^https:/.test(u)),
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${home}#website`,
+      name: `${content.hero.firstName} ${content.hero.lastName}`,
+      url: home,
+      inLanguage: ['fr', 'en'],
+      publisher: { '@id': `${home}#person` },
+    },
+  ],
+};
 ---
 
 <!doctype html>
@@ -39,6 +74,13 @@ const alternates = [
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : 'en_US'} />
+    <meta property="og:image" content={new URL('/og.png', Astro.site).href} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${content.hero.firstName} ${content.hero.lastName} — ${content.hero.tagline}`} />
+    <meta property="og:site_name" content={`${content.hero.firstName} ${content.hero.lastName}`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    {!noindex && <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />}
     <meta name="theme-color" content={theme[theme.default].bg} />
     <style is:inline set:html={themeCss}></style>
     <script is:inline>

@@ -32,7 +32,7 @@
       "stack": ["AngularJS", "SASS", "C#", "SQL Server"]
     },
     {
-      "year": 2020,
+      "year": 2021,
       "name": "Change of course",
       "org": "React Native",
       "type": "New skill",
@@ -41,12 +41,12 @@
       "stack": ["React Native", "Expo", "Jest"]
     },
     {
-      "year": 2023,
+      "year": 2022,
       "name": "Taking command",
       "org": "Ubigreen",
       "type": "Lead Front-End",
       "description": "Promoted to Lead Front-End at Ubigreen.",
-      "highlights": ["Spectator at GP Explorer 2, the F4 race"],
+      "highlights": ["Leading a team of 3", "Web, mobile and API security: pentests and fixes"],
       "stack": ["Angular", "Vitest", "Cypress"]
     },
     {

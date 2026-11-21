@@ -38,12 +38,12 @@
       "gallery": "gmee",
       "screenshotLabel": "Screens of the Gmee app",
       "elapsed": "4 years · mission ended",
-      "brief": "A social network that respects its users: no sneaky data harvesting, no reselling, no ads. Designed and built as a duo with Thibaut Huguet.",
+      "brief": "A social network that respects its users: no sneaky data harvesting, no reselling, no ads. Designed and built as a duo with [Thibaut Huguet](http://thibauthuguet.fr/).",
       "role": "Creator · designer · dev",
       "stack": "React Native · Expo · Express · PostgreSQL · Redis · Figma",
       "duration": "4 years",
       "months": 48,
-      "crew": "Duo · with Thibaut Huguet",
+      "crew": "Duo · with [Thibaut Huguet](http://thibauthuguet.fr/)",
       "crewSize": 2
     },
     {
@@ -71,14 +71,17 @@
       "gallery": "portfolio",
       "screenshotLabel": "Pages of the portfolio V6",
       "elapsed": "3 months",
-      "brief": "The site you’re visiting right now: designed in Figma, from V1 to V6, then steered all the way to this Mission Control version.",
+      "brief": "The site you're visiting right now: designed in Figma, from V1 to V6, then steered all the way to this Mission Control version.",
       "role": "Creator · designer · dev",
-      "stack": "Figma · Astro · React",
+      "stack": "Figma · Astro · TypeScript",
       "duration": "3 months (V6)",
       "months": 3,
       "crew": "Solo",
       "crewSize": 1,
-      "activity": [0, 0, 0, 0, 0, 0, 14, 1, 0, 0, 0, 11]
+      "activity": [0, 0, 0, 0, 0, 0, 14, 1, 0, 0, 0, 11],
+      "links": {
+        "source": "https://github.com/lucasmarfaing/portfolio"
+      }
     },
     {
       "name": "Project ██████",

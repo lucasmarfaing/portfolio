@@ -16,7 +16,7 @@ Le build produit :
 
 ## Première installation sur le serveur
 
-1. Copier le projet (ou au minimum `dist/`, `package.json`, `package-lock.json`) dans `/var/www/portfolio`, puis installer les dépendances de production :
+1. Copier le projet (ou au minimum `dist/`, `scripts/`, `deploy/`, `package.json`, `package-lock.json`) dans `/var/www/portfolio`, puis installer les dépendances de production :
    ```bash
    cd /var/www/portfolio && npm ci --omit=dev
    ```

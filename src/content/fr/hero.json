@@ -16,9 +16,9 @@
     { "label": "Classé secret", "variant": "secret", "redactedLabel": "Année confidentielle" }
   ],
   "stats": [
-    { "label": "Expérience", "since": "2018-01-01", "suffix": "ans" },
+    { "label": "Expérience", "since": "2018-10-01", "suffix": "ans" },
     { "label": "Temps de vol", "since": "1997-04-25", "suffix": "ans" },
-    { "label": "Zone inexplorée", "value": "13", "suffix": "ans de mystère" }
+    { "label": "Zone inexplorée", "since": "2013-05-14", "suffix": "ans de mystère" }
   ],
-  "fuel": { "label": "Carburant", "detail": "Musique & Dr Pepper", "value": "100 %" }
+  "fuel": { "label": "Carburant", "detail": "Musique & Dr Pepper", "value": "97%" }
 }

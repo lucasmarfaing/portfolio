@@ -16,9 +16,9 @@
     { "label": "Classified", "variant": "secret", "redactedLabel": "Classified year" }
   ],
   "stats": [
-    { "label": "Experience", "since": "2018-01-01", "suffix": "years" },
+    { "label": "Experience", "since": "2018-10-01", "suffix": "years" },
     { "label": "Flight time", "since": "1997-04-25", "suffix": "years" },
-    { "label": "Uncharted zone", "value": "13", "suffix": "years of mystery" }
+    { "label": "Uncharted zone", "since": "2013-05-14", "suffix": "years of mystery" }
   ],
-  "fuel": { "label": "Fuel", "detail": "Music & Dr Pepper", "value": "100%" }
+  "fuel": { "label": "Fuel", "detail": "Music & Dr Pepper", "value": "97%" }
 }

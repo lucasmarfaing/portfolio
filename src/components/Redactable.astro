@@ -1,5 +1,8 @@
 ---
-/** Renders text where runs of █ are shown as a redacted (classified) bar. */
+/**
+ * Renders text where runs of █ are shown as a redacted (classified) bar,
+ * and [label](https://…) becomes a link opening in a new tab.
+ */
 import { redactedParts } from '@/lib/content';
 
 interface Props {
@@ -7,13 +10,50 @@ interface Props {
 }
 
 const { text } = Astro.props;
+
+type Chunk = { text: string; href?: string };
+const chunks: Chunk[] = [];
+const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
+let last = 0;
+for (const match of text.matchAll(linkPattern)) {
+  if (match.index > last) chunks.push({ text: text.slice(last, match.index) });
+  chunks.push({ text: match[1]!, href: match[2]! });
+  last = match.index + match[0].length;
+}
+if (last < text.length) chunks.push({ text: text.slice(last) });
 ---
 
-{redactedParts(text).map((p) => (p.redacted ? <span class="redacted">{p.text}</span> : p.text))}
+{
+  chunks.map((c) => {
+    const parts = redactedParts(c.text).map((p) => (p.redacted ? <span class="redacted">{p.text}</span> : p.text));
+    return c.href ? (
+      <a class="inline-link" href={c.href} target="_blank" rel="noopener">
+        {parts}
+      </a>
+    ) : (
+      parts
+    );
+  })
+}
 
 <style>
   .redacted {
     color: var(--redacted);
     letter-spacing: -0.05em;
+  }
+
+  .inline-link {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--accent) 70%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
+  }
+
+  .inline-link:hover,
+  .inline-link:focus-visible {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
   }
 </style>

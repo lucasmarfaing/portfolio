@@ -36,14 +36,14 @@
       "status": "archived",
       "tint": "red",
       "gallery": "gmee",
-      "screenshotLabel": "Écrans de l’application Gmee",
+      "screenshotLabel": "Écrans de l'application Gmee",
       "elapsed": "4 ans · fin de mission",
-      "brief": "Un réseau social qui respecte ses utilisateurs : pas de récolte de données en douce, pas de revente, pas de pub. Conçu et développé en duo avec Thibaut Huguet.",
+      "brief": "Un réseau social qui respecte ses utilisateurs : pas de récolte de données en douce, pas de revente, pas de pub. Conçu et développé en duo avec [Thibaut Huguet](http://thibauthuguet.fr/).",
       "role": "Créateur · designer · dev",
       "stack": "React Native · Expo · Express · PostgreSQL · Redis · Figma",
       "duration": "4 ans",
       "months": 48,
-      "crew": "Duo · avec Thibaut Huguet",
+      "crew": "Duo · avec [Thibaut Huguet](http://thibauthuguet.fr/)",
       "crewSize": 2
     },
     {
@@ -73,12 +73,15 @@
       "elapsed": "3 mois",
       "brief": "Le site que tu es en train de visiter : conçu dans Figma, de la V1 à la V6, puis piloté jusqu’à cette version Mission Control.",
       "role": "Créateur · designer · dev",
-      "stack": "Figma · Astro · React",
+      "stack": "Figma · Astro · TypeScript",
       "duration": "3 mois (V6)",
       "months": 3,
       "crew": "Solo",
       "crewSize": 1,
-      "activity": [0, 0, 0, 0, 0, 0, 14, 1, 0, 0, 0, 11]
+      "activity": [0, 0, 0, 0, 0, 0, 14, 1, 0, 0, 0, 11],
+      "links": {
+        "source": "https://github.com/lucasmarfaing/portfolio"
+      }
     },
     {
       "name": "Projet ██████",

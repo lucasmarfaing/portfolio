@@ -32,7 +32,7 @@
       "stack": ["AngularJS", "SASS", "C#", "SQL Server"]
     },
     {
-      "year": 2020,
+      "year": 2021,
       "name": "Changement de cap",
       "org": "React Native",
       "type": "Nouvelle compétence",
@@ -41,12 +41,12 @@
       "stack": ["React Native", "Expo", "Jest"]
     },
     {
-      "year": 2023,
+      "year": 2022,
       "name": "Prise de commandement",
       "org": "Ubigreen",
       "type": "Lead Front-End",
       "description": "Nommé Lead Front-End chez Ubigreen.",
-      "highlights": ["Spectateur du GP Explorer 2, la course de F4"],
+      "highlights": ["Pilotage d’une équipe de 3 personnes", "Sécurité web, mobile et API : pentest et correctifs"],
       "stack": ["Angular", "Vitest", "Cypress"]
     },
     {
