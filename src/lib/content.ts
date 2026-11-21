@@ -159,6 +159,8 @@ const skySchema = z
           x: z.number().min(20).max(600),
           y: z.number().min(20).max(600),
           since: z.number().int().min(1990).max(2100).optional(),
+          /** active = "En service", reserve = "En réserve", archived = "Archivé" (default: active) */
+          status: z.enum(['active', 'reserve', 'archived']).default('active'),
         }),
       )
       .min(1),
@@ -191,7 +193,7 @@ const inventorySchema = z.object({
     experience: z.string(),
     years: z.object({ one: z.string(), many: z.string() }),
     status: z.string(),
-    statusValue: z.string(),
+    statusValues: z.object({ active: z.string(), reserve: z.string(), archived: z.string() }),
     sector: z.string(),
     documentation: z.string(),
   }),

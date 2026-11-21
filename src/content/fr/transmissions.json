@@ -23,9 +23,9 @@
     },
     {
       "freq": "127.05 MHz",
-      "name": "[Prénom Nom]",
-      "role": "[Poste · Entreprise]",
-      "relation": "Client",
+      "name": "Nicolas Gonzales",
+      "role": "Scrum master - Ubigreen",
+      "relation": "Collègue",
       "quote": "[Citation d'un client ou d'un designer : le résultat livré et la collaboration.]"
     }
   ]

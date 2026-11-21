@@ -76,10 +76,11 @@ const cardData = stars.map((s) => ({
   symbol: s.symbol,
   description: s.description,
   url: s.url,
-  urlLabel: s.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''),
   module: s.module,
   sector: s.sector,
   experience: s.experience,
+  status: s.status,
+  statusLabel: content.card.statusValues[s.status],
   num: s.num,
   serial: s.serial,
   group: s.group,
@@ -183,10 +184,10 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     <p class="card__desc" data-f="description"></p>
     <dl class="card__dl">
       <div><dt class="card__label">{content.card.module}</dt><dd data-f="module"></dd></div>
-      <div data-if="experience"><dt class="card__label">{content.card.experience}</dt><dd data-f="experience"></dd></div>
+      <div data-if-experience><dt class="card__label">{content.card.experience}</dt><dd data-f="experience"></dd></div>
       <div>
         <dt class="card__label">{content.card.status}</dt>
-        <dd class="card__status"><span aria-hidden="true"></span>{content.card.statusValue}</dd>
+        <dd class="card__status" data-status-tone><span aria-hidden="true"></span><span data-f="statusLabel"></span></dd>
       </div>
       <div><dt class="card__label">{content.card.sector}</dt><dd data-f="sector"></dd></div>
     </dl>
@@ -198,7 +199,7 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
       </div>
       <a class="card__doc" data-doc target="_blank" rel="noopener noreferrer">
         <span>{content.card.documentation}</span>
-        <span class="card__doc-url"><span data-f="urlLabel"></span> ↗</span>
+        <span class="card__doc-arrow" aria-hidden="true">↗</span>
       </a>
     </div>
   </div>
@@ -212,10 +213,11 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     symbol: string;
     description: string;
     url: string;
-    urlLabel: string;
     module: string;
     sector: string;
     experience: string;
+    status: 'active' | 'reserve' | 'archived';
+    statusLabel: string;
     num: string;
     serial: string;
     group: string;
@@ -268,7 +270,9 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
       active = i;
       const s = data[i]!;
       for (const el of card.querySelectorAll<HTMLElement>('[data-f]')) el.textContent = s[el.dataset.f as keyof Star] as string;
-      card.querySelector<HTMLElement>('[data-if="experience"]')!.hidden = !s.experience;
+      // Experience only appears when a "since" year is set in sky.json
+      card.querySelector<HTMLElement>('[data-if-experience]')!.hidden = !s.experience;
+      card.querySelector<HTMLElement>('[data-status-tone]')!.dataset.tone = s.status;
       card.querySelector<HTMLElement>('[data-barcode]')!.innerHTML = barcode(s.name);
       const doc = card.querySelector<HTMLAnchorElement>('[data-doc]')!;
       doc.href = s.url;
@@ -334,7 +338,8 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
 <style>
   .inv {
     position: relative;
-    overflow: hidden;
+    /* clip (not hidden): hidden would break the sticky sky map on mobile */
+    overflow: clip;
     padding-block: var(--section-pad-top) var(--section-pad-bottom);
     background: var(--bg);
   }
@@ -707,18 +712,28 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     display: none;
   }
 
+  /* Status: green = in service, amber = in reserve, grey = archived */
   .card__status {
+    --tone: var(--success);
     display: flex;
     align-items: center;
     gap: 6px;
-    color: var(--success);
+    color: var(--tone);
   }
 
-  .card__status span {
+  .card__status[data-tone='reserve'] {
+    --tone: var(--warning);
+  }
+
+  .card__status[data-tone='archived'] {
+    --tone: var(--text-muted);
+  }
+
+  .card__status > span:first-child {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--success);
+    background: var(--tone);
   }
 
   .card__perf {
@@ -799,15 +814,9 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     gap: 12px;
   }
 
-  .card__doc-url {
-    min-width: 0;
-    overflow: hidden;
-    font-family: var(--font-mono);
-    font-size: 11px;
+  .card__doc-arrow {
     font-weight: 400;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    opacity: 0.85;
+    color: var(--c);
   }
 
   /* ---------- Tablet & mobile ---------- */
@@ -947,12 +956,9 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     }
 
     .card__doc {
+      gap: 8px;
       padding: 0 14px;
       font-size: 13px;
-    }
-
-    .card__doc-url {
-      display: none;
     }
   }
 </style>

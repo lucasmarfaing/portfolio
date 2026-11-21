@@ -91,7 +91,8 @@
       "symbol": "Ex",
       "url": "https://expressjs.com",
       "x": 452,
-      "y": 138
+      "y": 138,
+      "status": "reserve"
     },
     {
       "name": "Fastify",
@@ -107,7 +108,8 @@
       "symbol": "Cs",
       "url": "https://dotnet.microsoft.com",
       "x": 502,
-      "y": 282
+      "y": 282,
+      "status": "reserve"
     },
     {
       "name": "PostgreSQL",
@@ -123,7 +125,8 @@
       "symbol": "My",
       "url": "https://www.mysql.com",
       "x": 400,
-      "y": 332
+      "y": 332,
+      "status": "reserve"
     },
     {
       "name": "Redis",
@@ -163,7 +166,8 @@
       "symbol": "Ph",
       "url": "https://www.php.net",
       "x": 565,
-      "y": 245
+      "y": 245,
+      "status": "archived"
     },
     {
       "name": "Java",
@@ -171,7 +175,8 @@
       "symbol": "Jv",
       "url": "https://dev.java",
       "x": 566,
-      "y": 405
+      "y": 405,
+      "status": "archived"
     },
     {
       "name": "SQL Server",
@@ -179,7 +184,8 @@
       "symbol": "Sq",
       "url": "https://www.microsoft.com/sql-server",
       "x": 350,
-      "y": 372
+      "y": 372,
+      "status": "reserve"
     },
     {
       "name": "Figma",
@@ -259,7 +265,8 @@
       "symbol": "Cy",
       "url": "https://www.cypress.io",
       "x": 350,
-      "y": 540
+      "y": 540,
+      "status": "reserve"
     },
     {
       "name": "Expo",

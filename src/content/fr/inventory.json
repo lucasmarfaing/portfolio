@@ -18,7 +18,7 @@
     "experience": "Expérience",
     "years": { "one": "an", "many": "ans" },
     "status": "Statut",
-    "statusValue": "Opérationnel",
+    "statusValues": { "active": "En service", "reserve": "En réserve", "archived": "Archivé" },
     "sector": "Secteur",
     "documentation": "Documentation"
   },
