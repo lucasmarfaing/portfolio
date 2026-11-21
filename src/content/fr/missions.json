@@ -47,7 +47,7 @@
       "crewSize": 2
     },
     {
-      "name": "Project Fire",
+      "name": "Projet Emeraude",
       "category": "Jeu mobile",
       "status": "live",
       "phase": 2,
@@ -93,7 +93,7 @@
       "brief": "Destination : ████████. Objectif : ██████ ██ ████████ ███ ██████████. Seule information déclassifiée : lancement prévu en 2026.",
       "role": "██████████",
       "stack": "████ · ██████",
-      "launch": "2026",
+      "launch": "Inconnu",
       "crew": "█████",
       "activity": [7, 3, 9, 2, 8, 4, 10, 1, 6, 9, 3, 8]
     }

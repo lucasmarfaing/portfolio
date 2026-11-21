@@ -47,7 +47,7 @@
       "crewSize": 2
     },
     {
-      "name": "Project Fire",
+      "name": "Project Emerald",
       "category": "Mobile game",
       "status": "live",
       "phase": 2,
@@ -93,7 +93,7 @@
       "brief": "Destination: ████████. Objective: ██████ ██ ████████ ███ ██████████. Only declassified information: launch planned for 2026.",
       "role": "██████████",
       "stack": "████ · ██████",
-      "launch": "2026",
+      "launch": "Unknown",
       "crew": "█████",
       "activity": [7, 3, 9, 2, 8, 4, 10, 1, 6, 9, 3, 8]
     }
