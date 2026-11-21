@@ -16,6 +16,8 @@ import frTransmissions from '@/content/fr/transmissions.json';
 import enTransmissions from '@/content/en/transmissions.json';
 import frContact from '@/content/fr/contact.json';
 import enContact from '@/content/en/contact.json';
+import frNotFound from '@/content/fr/notfound.json';
+import enNotFound from '@/content/en/notfound.json';
 
 export const locales = ['fr', 'en'] as const;
 export type Locale = (typeof locales)[number];
@@ -334,6 +336,27 @@ const contactSchema = z.object({
   footer: z.object({ signoff: z.string(), backToTop: z.string(), copyright: z.string(), coords: z.string() }),
 });
 
+const notFoundSchema = z.object({
+  metaTitle: z.string().min(1),
+  status: z.string(),
+  eyebrow: z.string(),
+  eyebrowShort: z.string(),
+  title: z.string().min(1),
+  text: z.string(),
+  home: z.string(),
+  report: z.string(),
+  astronautLabel: z.string(),
+  telemetry: z.object({
+    title: z.string(),
+    status: z.string(),
+    rows: z.array(z.object({ label: z.string(), value: z.string(), tone: z.enum(['alert', 'ok']).optional() })).max(6),
+  }),
+  routesLabel: z.string(),
+  footer: z.string(),
+  coords: z.string(),
+});
+
+export type NotFoundContent = z.infer<typeof notFoundSchema>;
 export type TransmissionsContent = z.infer<typeof transmissionsSchema>;
 export type ContactContent = z.infer<typeof contactSchema>;
 export type SkyContent = z.infer<typeof skySchema>;
@@ -346,7 +369,7 @@ export type CrewContent = z.infer<typeof crewSchema>;
 export type Stat = z.infer<typeof stat>;
 
 type RawLocale = Record<
-  'site' | 'hero' | 'crew' | 'trajectory' | 'inventory' | 'missions' | 'transmissions' | 'contact',
+  'site' | 'hero' | 'crew' | 'trajectory' | 'inventory' | 'missions' | 'transmissions' | 'contact' | 'notFound',
   unknown
 >;
 const raw: Record<Locale, RawLocale> = {
@@ -359,6 +382,7 @@ const raw: Record<Locale, RawLocale> = {
     missions: frMissions,
     transmissions: frTransmissions,
     contact: frContact,
+    notFound: frNotFound,
   },
   en: {
     site: enSite,
@@ -369,6 +393,7 @@ const raw: Record<Locale, RawLocale> = {
     missions: enMissions,
     transmissions: enTransmissions,
     contact: enContact,
+    notFound: enNotFound,
   },
 };
 
@@ -407,6 +432,7 @@ export function getContent(lang: Locale) {
     missions: parse(missionsSchema, raw[lang].missions, 'missions'),
     transmissions: parse(transmissionsSchema, raw[lang].transmissions, 'transmissions'),
     contact: parse(contactSchema, raw[lang].contact, 'contact'),
+    notFound: parse(notFoundSchema, raw[lang].notFound, 'notfound'),
   };
 }
 

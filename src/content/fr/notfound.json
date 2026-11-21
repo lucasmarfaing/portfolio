@@ -1,0 +1,24 @@
+{
+  "metaTitle": "404 — Perdu dans l’espace · Lucas Marfaing",
+  "status": "Signal perdu",
+  "eyebrow": "Erreur 404 · Objet non identifié · Hors orbite",
+  "eyebrowShort": "Erreur 404 · Hors orbite",
+  "title": "Houston, on a un problème.",
+  "text": "Cette page a dérivé hors de l’orbite, ou elle n’a jamais décollé. Pas de panique : la base n’est jamais très loin.",
+  "home": "Retour à la base",
+  "report": "Signaler l’incident",
+  "astronautLabel": "Astronaute à la dérive",
+  "telemetry": {
+    "title": "Télémétrie de l’objet",
+    "status": "Non résolu",
+    "rows": [
+      { "label": "Dernière position", "value": "??° N · ??° E" },
+      { "label": "Distance à la base", "value": "404 000 km" },
+      { "label": "Liaison", "value": "Rompue", "tone": "alert" },
+      { "label": "Équipage", "value": "Sain et sauf", "tone": "ok" }
+    ]
+  },
+  "routesLabel": "Itinéraires de secours",
+  "footer": "Code 404 · Tentative de reconnexion",
+  "coords": "43.6047° N · 1.4442° E · Toulouse, planète Terre"
+}

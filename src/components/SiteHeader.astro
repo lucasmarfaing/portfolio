@@ -3,22 +3,26 @@ import type { SiteContent } from '@/lib/content';
 
 interface Props {
   site: SiteContent;
+  /** Page the section links point to: "" on the home page, "/" or "/en/" from another page (404) */
+  home?: string;
+  /** Replaces the "systems nominal" status, e.g. "Signal lost" on the 404 */
+  alert?: string;
 }
 
-const { site } = Astro.props;
+const { site, home = '', alert } = Astro.props;
 const otherLang = site.switchLanguage.href.startsWith('/en') ? 'en' : 'fr';
 ---
 
 <header class="site-header" data-header>
   <div class="site-header__inner container">
-    <a class="callsign" href="#top"><span class="callsign__mark" aria-hidden="true"></span>{site.callsign}</a>
+    <a class="callsign" href={`${home}#top`}><span class="callsign__mark" aria-hidden="true"></span>{site.callsign}</a>
 
     <nav class="site-nav" id="site-nav" aria-label={site.navLabel}>
       <ul>
         {
           site.nav.map((item, i) => (
             <li>
-              <a href={`#${item.id}`} data-nav={item.id}>
+              <a href={`${home}#${item.id}`} data-nav={item.id}>
                 <span class="site-nav__dot" aria-hidden="true" />
                 <span class="site-nav__label">{item.label}</span>
                 <span class="site-nav__num" aria-hidden="true">{String(i + 2).padStart(2, '0')}</span>
@@ -30,10 +34,10 @@ const otherLang = site.switchLanguage.href.startsWith('/en') ? 'en' : 'fr';
     </nav>
 
     <div class="site-header__tools">
-      <span class="status">
+      <span class:list={['status', { 'is-alert': alert }]}>
         <span class="status__dot blink" aria-hidden="true"></span>
-        <span class="status__long">{site.status}</span>
-        <span class="status__short" aria-hidden="true">{site.statusShort}</span>
+        <span class="status__long">{alert ?? site.status}</span>
+        <span class="status__short" aria-hidden="true">{alert ?? site.statusShort}</span>
       </span>
       <a class="tool-btn" href={site.switchLanguage.href} hreflang={otherLang} lang={otherLang} aria-label={site.switchLanguage.ariaLabel}>
         {site.switchLanguage.label}
@@ -279,6 +283,21 @@ const otherLang = site.switchLanguage.href.startsWith('/en') ? 'en' : 'fr';
 
   .status__short {
     display: none;
+  }
+
+  .status.is-alert {
+    color: var(--accent);
+  }
+
+  .status.is-alert .status__dot {
+    background: var(--accent);
+    animation: blink-hard 1.2s steps(1) infinite;
+  }
+
+  @keyframes blink-hard {
+    50% {
+      opacity: 0;
+    }
   }
 
   .tool-btn {

@@ -1,0 +1,24 @@
+{
+  "metaTitle": "404 — Lost in space · Lucas Marfaing",
+  "status": "Signal lost",
+  "eyebrow": "Error 404 · Unidentified object · Out of orbit",
+  "eyebrowShort": "Error 404 · Out of orbit",
+  "title": "Houston, we have a problem.",
+  "text": "This page drifted out of orbit, or it never took off. Don’t panic: the base is never far away.",
+  "home": "Back to base",
+  "report": "Report the incident",
+  "astronautLabel": "Astronaut drifting in space",
+  "telemetry": {
+    "title": "Object telemetry",
+    "status": "Unresolved",
+    "rows": [
+      { "label": "Last position", "value": "??° N · ??° E" },
+      { "label": "Distance to base", "value": "404,000 km" },
+      { "label": "Link", "value": "Broken", "tone": "alert" },
+      { "label": "Crew", "value": "Safe and sound", "tone": "ok" }
+    ]
+  },
+  "routesLabel": "Emergency routes",
+  "footer": "Code 404 · Attempting to reconnect",
+  "coords": "43.6047° N · 1.4442° E · Toulouse, planet Earth"
+}

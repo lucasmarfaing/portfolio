@@ -1,0 +1,629 @@
+---
+import { lostStars } from '@/assets/lost-stars';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import EarthGlobe from '@/components/EarthGlobe.astro';
+import SiteHeader from '@/components/SiteHeader.astro';
+import { getContent, type Locale } from '@/lib/content';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const { site, notFound: nf } = getContent(lang);
+const home = lang === 'fr' ? '/' : `/${lang}/`;
+---
+
+<BaseLayout lang={lang} title={nf.metaTitle} description={nf.text} noindex>
+  <SiteHeader site={site} home={home} alert={nf.status} />
+
+  <div class="lost">
+    <svg class="lost__stars" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      {lostStars.map(([x, y, r, o]) => <circle cx={x} cy={y} r={r} fill-opacity={o} />)}
+    </svg>
+
+    <main class="lost__main container">
+      <div class="lost__intro">
+        <p class="mono-label">
+          <span class="lost__eyebrow-long">{nf.eyebrow}</span>
+          <span class="lost__eyebrow-short">{nf.eyebrowShort}</span>
+        </p>
+
+        <div class="code404" role="img" aria-label="404">
+          <span class="code404__digit" aria-hidden="true">4</span>
+          <span class="code404__globe" aria-hidden="true">
+            <EarthGlobe marker={false} />
+            <span class="code404__orbit"><span /></span>
+          </span>
+          <span class="code404__digit" aria-hidden="true">4</span>
+        </div>
+
+        <h1 class="lost__title">{nf.title}</h1>
+        <p class="lost__text">{nf.text}</p>
+        <div class="lost__actions">
+          <a class="lost__home" href={home}>
+            {nf.home}
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"></path><path d="M5 10v10h14V10"></path></svg>
+          </a>
+          <a class="lost__report" href={`${home}#contact`}>{nf.report}</a>
+        </div>
+      </div>
+
+      <div class="lost__side">
+        <div class="astronaut">
+          <svg role="img" aria-label={nf.astronautLabel} width="190" height="230" viewBox="0 0 190 230" fill="none">
+            <path class="astronaut__tether" d="M70 150 C 40 190, 20 170, 4 214" stroke-width="2" stroke-dasharray="5 5" stroke-linecap="round"></path>
+            <circle cx="4" cy="214" r="4" class="astronaut__accent"></circle>
+            <rect x="104" y="78" width="40" height="64" rx="12" class="astronaut__pack" stroke-width="2"></rect>
+            <rect x="60" y="80" width="64" height="76" rx="22" class="astronaut__suit"></rect>
+            <rect x="74" y="104" width="30" height="20" rx="5" class="astronaut__panel"></rect>
+            <circle cx="82" cy="114" r="3" class="astronaut__accent"></circle>
+            <circle cx="94" cy="114" r="3" class="astronaut__ok"></circle>
+            <rect x="40" y="92" width="26" height="16" rx="8" transform="rotate(-35 53 100)" class="astronaut__suit"></rect>
+            <rect x="116" y="92" width="26" height="16" rx="8" transform="rotate(30 129 100)" class="astronaut__suit"></rect>
+            <rect x="66" y="148" width="20" height="40" rx="10" transform="rotate(12 76 168)" class="astronaut__suit"></rect>
+            <rect x="96" y="148" width="20" height="40" rx="10" transform="rotate(-18 106 168)" class="astronaut__suit"></rect>
+            <circle cx="92" cy="54" r="38" class="astronaut__suit"></circle>
+            <path d="M66 54 a26 22 0 0 1 52 0 v4 a26 18 0 0 1 -52 0z" class="astronaut__visor"></path>
+            <path d="M76 46 q8 -10 22 -6" stroke-width="3" stroke-linecap="round" opacity=".8" class="astronaut__glint-red"></path>
+            <path d="M104 62 q6 -2 8 -8" stroke-width="2" stroke-linecap="round" opacity=".7" class="astronaut__glint-blue"></path>
+          </svg>
+        </div>
+
+        <div class="telemetry">
+          <div class="telemetry__bar">
+            <span>{nf.telemetry.title}</span>
+            <span class="telemetry__status">{nf.telemetry.status}</span>
+          </div>
+          <dl class="telemetry__grid">
+            {
+              nf.telemetry.rows.map((r) => (
+                <div>
+                  <dt>{r.label}</dt>
+                  <dd class:list={r.tone && `is-${r.tone}`}>{r.value}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+
+        <nav class="routes" aria-label={nf.routesLabel}>
+          <span class="routes__label">{nf.routesLabel}</span>
+          <ul>
+            {
+              site.nav.map((item) => (
+                <li>
+                  <a href={`${home}#${item.id}`}>{item.label}</a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </div>
+    </main>
+
+    <footer class="lost__footer">
+      <div class="container lost__footer-inner">
+        <span>
+          {site.callsign} · {nf.footer}<span class="cursor" aria-hidden="true">_</span>
+        </span>
+        <span class="lost__coords">{nf.coords}</span>
+      </div>
+    </footer>
+  </div>
+</BaseLayout>
+
+<style>
+  .lost {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
+    padding-top: var(--header-h);
+    overflow: hidden;
+    background: radial-gradient(900px 600px at 30% 55%, color-mix(in srgb, var(--star-blue) 7%, var(--bg)), var(--bg) 70%);
+  }
+
+  .lost__stars {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: var(--text);
+    pointer-events: none;
+  }
+
+  .lost__main {
+    position: relative;
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 520px);
+    gap: 40px;
+    align-items: center;
+    padding-block: clamp(24px, 4vh, 48px);
+  }
+
+  .lost__intro {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(18px, 3vh, 30px);
+  }
+
+  .lost__eyebrow-short {
+    display: none;
+  }
+
+  /* ---------- 4 🌍 4 ---------- */
+
+  .code404 {
+    --d: clamp(120px, min(18vw, 28vh), 260px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: calc(var(--d) * 0.96);
+    animation: glitch 4s steps(1) infinite;
+  }
+
+  .code404__digit {
+    font-size: var(--d);
+    font-weight: 700;
+    line-height: 0.8;
+    letter-spacing: -0.07em;
+  }
+
+  .code404__globe {
+    position: relative;
+    flex: none;
+    width: calc(var(--d) * 0.885);
+    height: calc(var(--d) * 0.885);
+  }
+
+  .code404__orbit {
+    position: absolute;
+    inset: -9.5%;
+    border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 50%;
+    animation: spin 14s linear infinite;
+  }
+
+  .code404__orbit span {
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    margin-left: -6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 16px 4px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+
+  @keyframes glitch {
+    0%,
+    92%,
+    100% {
+      transform: none;
+      opacity: 1;
+    }
+    93% {
+      transform: translateX(3px);
+      opacity: 0.7;
+    }
+    95% {
+      transform: translateX(-4px);
+    }
+    97% {
+      transform: translateX(1px);
+      opacity: 0.85;
+    }
+  }
+
+  .lost__title {
+    margin: 0;
+    font-size: clamp(34px, min(3.9vw, 6.5vh), 56px);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.045em;
+  }
+
+  .lost__text {
+    max-width: 600px;
+    margin: 0;
+    font-size: clamp(16px, 1.4vw, 19px);
+    line-height: 1.6;
+    color: var(--text-soft);
+  }
+
+  .lost__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .lost__home,
+  .lost__report {
+    display: inline-flex;
+    align-items: center;
+    min-height: 52px;
+    padding: 16px 24px;
+    border-radius: 10px;
+    font-size: 16px;
+    text-decoration: none;
+  }
+
+  .lost__home {
+    gap: 12px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+    transition: background-color 0.2s, gap 0.2s;
+  }
+
+  .lost__home:hover {
+    background: var(--accent-alt);
+    gap: 16px;
+  }
+
+  .lost__report {
+    border: 1px solid var(--line-strong);
+    color: var(--text);
+    font-weight: 500;
+    transition: border-color 0.2s;
+  }
+
+  .lost__report:hover {
+    border-color: var(--text);
+  }
+
+  /* ---------- Right column ---------- */
+
+  .lost__side {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 22px;
+    min-height: min(600px, 62vh);
+  }
+
+  .astronaut {
+    position: absolute;
+    top: 10px;
+    right: 70px;
+    animation: drift 9s ease-in-out infinite;
+  }
+
+  .astronaut svg {
+    width: clamp(130px, 22vh, 190px);
+    height: auto;
+  }
+
+  @keyframes drift {
+    0%,
+    100% {
+      transform: translate(0, 0) rotate(-12deg);
+    }
+    50% {
+      transform: translate(-30px, 24px) rotate(10deg);
+    }
+  }
+
+  .astronaut__tether {
+    stroke: color-mix(in srgb, var(--text) 50%, transparent);
+  }
+
+  .astronaut__accent {
+    fill: var(--accent);
+  }
+
+  .astronaut__ok {
+    fill: var(--success);
+  }
+
+  .astronaut__suit {
+    fill: #e7e9f1;
+  }
+
+  .astronaut__panel {
+    fill: #c9ccda;
+  }
+
+  .astronaut__pack {
+    fill: #2a2e44;
+    stroke: #4a5070;
+  }
+
+  :global([data-theme='light']) .astronaut__pack {
+    fill: #d9dae2;
+  }
+
+  .astronaut__visor {
+    fill: #0e1124;
+  }
+
+  .astronaut__glint-red {
+    stroke: var(--accent-alt);
+  }
+
+  .astronaut__glint-blue {
+    stroke: var(--star-blue);
+  }
+
+  .telemetry {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+  }
+
+  .telemetry__bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .telemetry__status {
+    color: var(--accent);
+  }
+
+  .telemetry__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 20px;
+    margin: 0;
+    padding: 6px 18px 14px;
+  }
+
+  .telemetry__grid dt {
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .telemetry__grid dd {
+    margin: 4px 0 0;
+    font-size: 15px;
+  }
+
+  .telemetry__grid .is-alert {
+    color: var(--accent-alt);
+  }
+
+  .telemetry__grid .is-ok {
+    color: var(--success);
+  }
+
+  .routes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .routes__label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .routes ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .routes a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 10px 14px;
+    border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+    border-radius: 999px;
+    color: var(--text-soft);
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .routes a:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  /* ---------- Footer ---------- */
+
+  .lost__footer {
+    position: relative;
+    border-top: 1px solid var(--line);
+  }
+
+  .lost__footer-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    min-height: 64px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .cursor {
+    animation: blink-hard 1.2s steps(1) infinite;
+  }
+
+  @keyframes blink-hard {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  /* ---------- Tablet & mobile ---------- */
+
+  @media (max-width: 1099px) {
+    .lost {
+      background: radial-gradient(500px 500px at 30% 30%, color-mix(in srgb, var(--star-blue) 7%, var(--bg)), var(--bg) 70%);
+    }
+
+    .lost__main {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+      padding-block: 28px 24px;
+    }
+
+    .lost__intro {
+      gap: 22px;
+    }
+
+    .lost__eyebrow-long {
+      display: none;
+    }
+
+    .lost__eyebrow-short {
+      display: inline;
+    }
+
+    .lost__intro .mono-label {
+      font-size: 10px;
+    }
+
+    .code404 {
+      --d: 128px;
+      gap: 6px;
+      height: 130px;
+      margin-top: 56px;
+      animation: none;
+    }
+
+    .code404__globe {
+      width: 104px;
+      height: 104px;
+    }
+
+    .code404__orbit {
+      inset: -12px;
+    }
+
+    .code404__orbit span {
+      top: -5px;
+      width: 9px;
+      height: 9px;
+      margin-left: -4px;
+    }
+
+    .lost__title {
+      font-size: 34px;
+      line-height: 1.05;
+    }
+
+    .lost__text {
+      font-size: 16px;
+    }
+
+    .lost__actions {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .lost__home,
+    .lost__report {
+      justify-content: center;
+      border-radius: 12px;
+    }
+
+    .lost__home {
+      min-height: 54px;
+    }
+
+    .lost__report {
+      min-height: 50px;
+      font-size: 15px;
+    }
+
+    .lost__side {
+      position: static;
+      min-height: 0;
+    }
+
+    .astronaut {
+      top: calc(var(--header-h) + 8px);
+      right: 8px;
+      animation-name: drift-small;
+    }
+
+    .astronaut svg {
+      width: 78px;
+    }
+
+    @keyframes drift-small {
+      0%,
+      100% {
+        transform: translate(0, 0) rotate(-12deg);
+      }
+      50% {
+        transform: translate(-14px, 12px) rotate(10deg);
+      }
+    }
+
+    .telemetry__bar {
+      padding: 10px 14px;
+      font-size: 9.5px;
+    }
+
+    .telemetry__grid {
+      gap: 0;
+      padding: 0;
+    }
+
+    .telemetry__grid div {
+      padding: 12px 14px;
+    }
+
+    .telemetry__grid dt {
+      margin-top: 0;
+      font-size: 9.5px;
+    }
+
+    .telemetry__grid dd {
+      font-size: 14px;
+    }
+
+    .routes__label {
+      font-size: 9.5px;
+    }
+
+    .routes ul {
+      gap: 6px;
+    }
+
+    .routes a {
+      min-height: 44px;
+      padding: 0 14px;
+    }
+
+    .lost__footer-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      padding-block: 16px;
+      font-size: 10px;
+    }
+  }
+</style>
