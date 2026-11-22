@@ -10,6 +10,9 @@ export default defineConfig({
   output: 'static',
   adapter: node({ mode: 'standalone' }),
   integrations: [react()],
+  // Bundle every library into dist/server, so the server only needs dist/ and Node (no npm install there).
+  // Build only: the dev server needs the libraries left external.
+  vite: process.argv.includes('build') ? { ssr: { noExternal: true } } : {},
   i18n: {
     defaultLocale: 'fr',
     locales: ['fr', 'en'],

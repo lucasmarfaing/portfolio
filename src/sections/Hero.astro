@@ -93,7 +93,7 @@ const { content } = Astro.props;
     position: relative;
     display: flex;
     flex-direction: column;
-    min-height: clamp(760px, 100svh, 900px);
+    min-height: max(760px, 100svh);
     padding-top: var(--header-h);
     overflow: hidden;
     background: radial-gradient(1200px 700px at 78% 45%, var(--bg-glow) 0%, var(--bg) 60%);
@@ -393,7 +393,8 @@ const { content } = Astro.props;
   .stats {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin: 0;
+    /* Vertical only: the horizontal centering comes from .container */
+    margin-block: 0;
   }
 
   .stat {

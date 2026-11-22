@@ -267,9 +267,15 @@ const titleMuted = fill(content.titleMuted, { years: lastYear - firstYear, count
     background: var(--bg);
   }
 
+  /* Anchored to the content column, not to the window edge (stays in place on very wide screens) */
+  .traj__globe,
+  .traj__origin {
+    --column-left: max(0px, (100% - var(--max-w)) / 2);
+  }
+
   .traj__globe {
     position: absolute;
-    left: -204px;
+    left: calc(var(--column-left) - 204px);
     bottom: -80px;
     width: 600px;
     pointer-events: none;
@@ -277,7 +283,7 @@ const titleMuted = fill(content.titleMuted, { years: lastYear - firstYear, count
 
   .traj__origin {
     position: absolute;
-    left: 190px;
+    left: calc(var(--column-left) + 190px);
     bottom: 338px;
     z-index: 1;
     display: flex;

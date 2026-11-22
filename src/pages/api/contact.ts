@@ -10,6 +10,7 @@
  */
 import type { APIRoute } from 'astro';
 import nodemailer, { type Transporter } from 'nodemailer';
+import { domains } from '@/lib/domains';
 
 export const prerender = false;
 
@@ -47,8 +48,16 @@ const getTransport = () => {
 export const POST: APIRoute = async ({ request, clientAddress, site }) => {
   // Only accept submissions coming from the site itself
   const origin = request.headers.get('origin');
-  const allowed = [site?.origin, new URL(request.url).origin].filter(Boolean);
-  if (origin && !allowed.includes(origin)) return json(403, { ok: false, error: 'origin' });
+  // (every domain from domains.json, with or without www.)
+  const allowed = [
+    site?.origin,
+    new URL(request.url).origin,
+    ...domains.flatMap((d) => [`https://${d}`, `https://www.${d}`]),
+  ].filter(Boolean);
+  if (origin && !allowed.includes(origin)) {
+    console.warn(`[contact] refused: unknown origin ${origin}`);
+    return json(403, { ok: false, error: 'origin' });
+  }
 
   let data: FormData;
   try {
@@ -63,12 +72,21 @@ export const POST: APIRoute = async ({ request, clientAddress, site }) => {
   const message = field('message');
 
   // Spam trap: bots fill the hidden field. Pretend it worked.
-  if (String(data.get('_gotcha') ?? '')) return json(200, { ok: true });
+  if (String(data.get('_gotcha') ?? '')) {
+    console.warn('[contact] ignored: spam trap filled');
+    return json(200, { ok: true });
+  }
 
-  if (!name || !message || !EMAIL_RE.test(email)) return json(400, { ok: false, error: 'fields' });
+  if (!name || !message || !EMAIL_RE.test(email)) {
+    console.warn('[contact] refused: missing or invalid fields');
+    return json(400, { ok: false, error: 'fields' });
+  }
 
   const ip = request.headers.get('x-real-ip') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? clientAddress;
-  if (isRateLimited(ip)) return json(429, { ok: false, error: 'rate' });
+  if (isRateLimited(ip)) {
+    console.warn(`[contact] refused: too many messages from ${ip}`);
+    return json(429, { ok: false, error: 'rate' });
+  }
 
   const subject = `[Portfolio] ${type || 'Contact'} — ${name}`.replace(/[\r\n]+/g, ' ');
   const text = `${message}\n\n—\n${name} <${email}>\nType : ${type || '—'}\nIP : ${ip}`;
@@ -84,13 +102,16 @@ export const POST: APIRoute = async ({ request, clientAddress, site }) => {
   }
 
   try {
-    await getTransport().sendMail({
+    const to = env('CONTACT_TO') || 'ask@lucasmarfaing.pro';
+    const info = await getTransport().sendMail({
       from: { name: 'Portfolio LM-26', address: env('CONTACT_FROM') || env('SMTP_USER') },
-      to: env('CONTACT_TO') || 'ask@lucasmarfaing.pro',
+      to,
       replyTo: { name, address: email },
       subject,
       text,
     });
+    // The SMTP server accepted the message: from here, delivery is up to the mail providers
+    console.log(`[contact] sent to ${to} — SMTP answer: ${info.response}`);
     return json(200, { ok: true });
   } catch (error) {
     console.error('[contact] sending failed:', error);

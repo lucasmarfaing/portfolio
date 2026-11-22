@@ -86,6 +86,20 @@ button {
   padding-inline: var(--gutter);
 }
 
+/*
+ * Desktop: each main section fills the screen under the header, content centered.
+ * On usual screens the content is already that tall; on very tall screens this avoids
+ * seeing the next section peek in. (Not the hero, the testimonials band or the contact.)
+ */
+@media (min-width: 1100px) {
+  main > section[id]:not(.hero):not(.contact) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100svh - var(--header-h));
+  }
+}
+
 .mono-label {
   margin: 0;
   font-family: var(--font-mono);

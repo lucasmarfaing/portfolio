@@ -1,54 +1,61 @@
-# Déploiement
+# Déploiement (à la main, serveur Debian)
 
-Le site est en HTML statique (servi par nginx). Seule la route `/api/contact` tourne sur un petit serveur Node.
+Le build produit un dossier `dist/` **autonome** : c'est la seule chose à envoyer sur le serveur.
 
-## Build
+- `dist/client/` : le site statique, servi par nginx ;
+- `dist/server/` : le petit serveur Node du formulaire de contact (`/api/contact`), avec toutes ses bibliothèques incluses.
 
-```bash
-npm ci
-npm run build
+Pas de `npm install` sur le serveur, pas de `node_modules`, pas de `package.json`.
+
+## Sur le PC : build
+
+```powershell
+npm.cmd run build
 ```
 
-Le build produit :
+## Première installation (une seule fois)
 
-- `dist/client/` : le site statique, à servir par nginx ;
-- `dist/server/entry.mjs` : le petit serveur Node du formulaire de contact.
+Sur le serveur, il faut Node **22.23 ou plus** (`node -v`). Sinon :
 
-## Première installation sur le serveur
+```bash
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo bash -
+sudo apt install -y nodejs nginx
+```
 
-1. Copier le projet (ou au minimum `dist/`, `scripts/`, `deploy/`, `package.json`, `package-lock.json`) dans `/var/www/portfolio`, puis installer les dépendances de production :
+1. Envoyer `dist/` dans `/var/www/portfolio/` (FileZilla/WinSCP, ou `scp -r dist toi@serveur:/tmp/` puis `sudo mkdir -p /var/www/portfolio && sudo mv /tmp/dist /var/www/portfolio/`).
+2. Créer `/var/www/portfolio/.env` à partir de `.env.example` (identifiants SMTP), puis :
    ```bash
-   cd /var/www/portfolio && npm ci --omit=dev
+   sudo chown -R www-data:www-data /var/www/portfolio
+   sudo chmod 600 /var/www/portfolio/.env
    ```
-2. Créer `/var/www/portfolio/.env` à partir de `.env.example` et y mettre les identifiants SMTP.
+3. Envoyer aussi `deploy/portfolio.service` et `deploy/nginx.conf` (n'importe où, par ex. `/tmp/`), puis :
    ```bash
-   chmod 600 .env
-   ```
-3. Installer le service :
-   ```bash
-   sudo cp deploy/portfolio.service /etc/systemd/system/
+   sudo cp /tmp/portfolio.service /etc/systemd/system/
    sudo systemctl daemon-reload
    sudo systemctl enable --now portfolio
-   ```
-4. Ajouter le bloc de `deploy/nginx.conf` à la configuration nginx, puis :
-   ```bash
+   sudo cp /tmp/nginx.conf /etc/nginx/sites-available/portfolio
+   sudo ln -s /etc/nginx/sites-available/portfolio /etc/nginx/sites-enabled/
    sudo nginx -t && sudo systemctl reload nginx
+   ```
+4. HTTPS :
+   ```bash
+   sudo apt install -y certbot python3-certbot-nginx
+   sudo certbot --nginx -d lucasmarfaing.pro -d www.lucasmarfaing.pro -d lucasmarfaing.dev -d www.lucasmarfaing.dev
    ```
 
 ## Mise à jour
 
 ```bash
-npm run build                 # en local ou sur le serveur
-# copier dist/ sur le serveur, puis :
+sudo rm -rf /var/www/portfolio/dist
+# envoyer le nouveau dist/ dans /var/www/portfolio/
+sudo chown -R www-data:www-data /var/www/portfolio/dist
 sudo systemctl restart portfolio
 ```
-
-Les pages statiques sont prises en compte immédiatement ; le redémarrage ne sert qu'au formulaire.
 
 ## Vérifier le formulaire
 
 ```bash
-journalctl -u portfolio -f    # affiche les erreurs d'envoi éventuelles
+sudo journalctl -u portfolio -n 50
 ```
 
 En local (`npm run dev`) sans `.env`, les messages ne sont pas envoyés : ils s'affichent dans le terminal.
