@@ -36,16 +36,68 @@ const elementSymbol = (name: string) => {
   return first + second;
 };
 
+// ---------- Alien alphabet: glyphs drawn as small SVG strokes (same on every device, no font needed) ----------
+const GLYPHS = 36;
+const seeded = (seed: number) => {
+  let r = seed * 7919 + 17;
+  return () => {
+    r = (r * 9301 + 49297) % 233280;
+    return r / 233280;
+  };
+};
+const glyphPaths = Array.from({ length: GLYPHS }, (_, g) => {
+  const rand = seeded(g + 1);
+  const pick = <T,>(list: T[]) => list[Math.floor(rand() * list.length)]!;
+  const xs = [1.5, 5, 8.5];
+  const ys = [1.5, 5, 9, 12.5];
+  // A main stroke (vertical, or a diagonal), then 1 to 3 extra strokes, and sometimes a dot
+  const parts = [rand() < 0.6 ? `M${pick(xs)} 1.5V12.5` : `M${pick(xs)} ${pick(ys)}L${pick(xs)} ${pick(ys)}`];
+  const extra = 1 + Math.floor(rand() * 3);
+  for (let k = 0; k < extra; k++) {
+    parts.push(`M${pick(xs)} ${pick(ys)}L${pick(xs)} ${pick(ys)}`);
+  }
+  if (rand() < 0.35) {
+    const x = pick(xs);
+    const y = pick(ys);
+    parts.push(`M${x - 1} ${y}a1 1 0 1 0 2 0a1 1 0 1 0 -2 0`);
+  }
+  return parts.join('');
+});
+
+/** The quote's shape (word lengths), written with seeded glyph numbers. The real words never reach the page. */
+const alienWords = (quote: string, seed: number) => {
+  const rand = seeded(seed + 101);
+  return quote
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => Array.from({ length: Math.min(12, Math.max(1, word.replace(/[^\p{L}\p{N}]/gu, '').length)) }, () => Math.floor(rand() * GLYPHS)));
+};
+
 const items = content.items.map((t, i) => ({
   ...t,
-  code: `TX-${String(i + 1).padStart(2, '0')}`,
+  code: t.alien ? 'TX-??' : `TX-${String(i + 1).padStart(2, '0')}`,
   wave: waveform(i),
-  atomic: i + 1,
-  symbol: t.symbol ?? (isPlaceholder(t.name) ? '??' : elementSymbol(t.name)),
+  atomic: t.alien ? '?' : String(i + 1),
+  // An alien sender gets a morphing glyph unless a symbol is set by hand
+  symbol: t.symbol ?? (t.alien ? undefined : isPlaceholder(t.name) ? '??' : elementSymbol(t.name)),
+  words: t.alien ? alienWords(t.quote, i) : [],
 }));
 ---
 
 <section class="tx" aria-label={content.label} data-tx data-interval={content.intervalSeconds}>
+  {
+    items.some((t) => t.alien) && (
+      <svg class="glyph-defs" width="0" height="0" aria-hidden="true" data-glyph-count={GLYPHS}>
+        <defs>
+          {glyphPaths.map((d, g) => (
+            <symbol id={`txg-${g}`} viewBox="0 0 10 14">
+              <path d={d} />
+            </symbol>
+          ))}
+        </defs>
+      </svg>
+    )
+  }
   <div class="container tx__inner">
     <div class="tx__top">
       <span class="tx__label"><span class="tx__index">{content.index}</span> — {content.label}</span>
@@ -59,7 +111,7 @@ const items = content.items.map((t, i) => ({
     <div class="tx__slides" aria-live="polite">
       {
         items.map((t, i) => (
-          <figure class:list={['slide', { 'is-active': i === 0 }]} data-slide={i} data-freq={t.freq} data-code={t.code}>
+          <figure class:list={['slide', { 'is-active': i === 0, 'slide--alien': t.alien }]} data-slide={i} data-freq={t.freq} data-code={t.code}>
             <div class="slide__wave" aria-hidden="true">
               {t.wave.map((b) => (
                 <span
@@ -72,15 +124,38 @@ const items = content.items.map((t, i) => ({
               <span class="slide__mark" aria-hidden="true">
                 “
               </span>
-              <p class="slide__text">{t.quote}</p>
+              {t.alien ? (
+                <p class="slide__text slide__text--alien" role="img" aria-label={content.alienLabel} data-alien>
+                  {t.words.map((word, w) => (
+                    <>
+                      {w > 0 && ' '}
+                      <span class="glyph-word">
+                        {word.map((g) => (
+                          <svg class="glyph" viewBox="0 0 10 14" aria-hidden="true">
+                            <use href={`#txg-${g}`} />
+                          </svg>
+                        ))}
+                      </span>
+                    </>
+                  ))}
+                </p>
+              ) : (
+                <p class="slide__text">{t.quote}</p>
+              )}
             </blockquote>
             <figcaption class="slide__from">
               {t.photo ? (
                 <img class="slide__photo" src={t.photo} alt="" width="52" height="52" loading="lazy" />
               ) : (
-                <span class:list={['element', { 'is-placeholder': isPlaceholder(t.name) }]} aria-hidden="true">
+                <span class:list={['element', { 'is-placeholder': isPlaceholder(t.name), 'element--alien': t.alien }]} aria-hidden="true">
                   <span class="element__number">{t.atomic}</span>
-                  <span class="element__symbol">{t.symbol}</span>
+                  {t.alien && !t.symbol ? (
+                    <svg class="glyph element__glyph" viewBox="0 0 10 14" data-alien-symbol>
+                      <use href={`#txg-${t.words[0]?.[0] ?? 0}`} />
+                    </svg>
+                  ) : (
+                    <span class="element__symbol">{t.symbol}</span>
+                  )}
                 </span>
               )}
               <span class="slide__who">
@@ -128,8 +203,6 @@ const items = content.items.map((t, i) => ({
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     section.style.setProperty('--tx-interval', `${interval}ms`);
     let current = 0;
-    let timer: number | undefined;
-    let paused = false;
 
     const select = (index: number) => {
       current = (index + slides.length) % slides.length;
@@ -148,31 +221,42 @@ const items = content.items.map((t, i) => ({
       if (code) code.textContent = slides[current]?.dataset.code ?? '';
     };
 
-    const start = () => {
-      window.clearInterval(timer);
-      if (reducedMotion || paused || slides.length < 2) return;
-      timer = window.setInterval(() => select(current + 1), interval);
-    };
+    // The next transmission starts when the progress bar of the current one is full.
+    // The bar is the only clock: pausing it (CSS) pauses the rotation too, with no drift on resume.
+    if (!reducedMotion && slides.length > 1) {
+      segs.forEach((s, i) =>
+        s.querySelector('.seg__fill')?.addEventListener('animationend', () => {
+          if (i === current) select(current + 1);
+        }),
+      );
+    }
 
-    segs.forEach((s, i) =>
-      s.addEventListener('click', () => {
-        select(i);
-        start();
-      }),
-    );
+    segs.forEach((s, i) => s.addEventListener('click', () => select(i)));
+
     // Pause while the visitor reads (mouse over or keyboard focus inside)
-    const pause = (value: boolean) => {
-      paused = value;
-      section.classList.toggle('is-paused', value);
-      if (value) window.clearInterval(timer);
-      else start();
-    };
+    const pause = (value: boolean) => section.classList.toggle('is-paused', value);
     section.addEventListener('pointerenter', () => pause(true));
     section.addEventListener('pointerleave', () => pause(false));
     section.addEventListener('focusin', () => pause(true));
     section.addEventListener('focusout', () => pause(false));
 
-    start();
+    // Alien signal: a few glyphs morph into others all the time (only while that slide is on screen)
+    const glyphCount = Number(section.querySelector<SVGElement>('[data-glyph-count]')?.dataset.glyphCount ?? 0);
+    const alienSlides = slides.filter((s) => s.querySelector('[data-alien]'));
+    if (glyphCount && alienSlides.length && !reducedMotion) {
+      let visible = false;
+      new IntersectionObserver(([entry]) => (visible = !!entry?.isIntersecting)).observe(section);
+      window.setInterval(() => {
+        if (!visible || document.hidden) return;
+        for (const slide of alienSlides) {
+          if (!slide.classList.contains('is-active')) continue;
+          const uses = slide.querySelectorAll<SVGUseElement>('[data-alien] use, [data-alien-symbol] use');
+          uses.forEach((use) => {
+            if (Math.random() < 0.14) use.setAttribute('href', `#txg-${Math.floor(Math.random() * glyphCount)}`);
+          });
+        }
+      }, 110);
+    }
   }
 </script>
 
@@ -405,6 +489,84 @@ const items = content.items.map((t, i) => ({
 
   .slide__role.is-placeholder {
     color: var(--text-faint);
+  }
+
+  /* ---------- Alien signal (undecipherable transmission) ---------- */
+
+  .glyph-defs {
+    position: absolute;
+    overflow: hidden;
+  }
+
+  .glyph {
+    display: inline-block;
+    width: 0.56em;
+    height: 0.82em;
+    margin-right: 0.1em;
+    vertical-align: -0.06em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    overflow: visible;
+  }
+
+  .glyph-word {
+    white-space: nowrap;
+  }
+
+  .slide__text--alien {
+    color: color-mix(in srgb, var(--success) 75%, var(--text-faint));
+    text-shadow: none;
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--success) 35%, transparent));
+  }
+
+  .slide--alien .slide__mark {
+    color: var(--success);
+  }
+
+  .slide--alien .slide__wave {
+    background: radial-gradient(150px 60px at 50% 50%, color-mix(in srgb, var(--success) 14%, transparent), transparent);
+  }
+
+  .slide--alien .slide__wave span {
+    background: var(--success);
+    /* Irregular, glitchy signal instead of a smooth voice */
+    animation: wave-alien 0.42s steps(3, jump-none) infinite alternate;
+  }
+
+  .slide--alien .slide__wave .is-bright {
+    background: var(--text);
+  }
+
+  @keyframes wave-alien {
+    0% {
+      transform: scaleY(0.15);
+    }
+    40% {
+      transform: scaleY(1);
+    }
+    70% {
+      transform: scaleY(0.45);
+    }
+    100% {
+      transform: scaleY(0.85);
+    }
+  }
+
+  .element--alien {
+    border-style: dashed;
+    border-color: var(--success);
+    background: color-mix(in srgb, var(--success) 8%, transparent);
+    color: var(--success);
+  }
+
+  .element__glyph {
+    width: 18px;
+    height: 26px;
+    margin: 4px 0 0;
+    stroke-width: 1.3;
   }
 
   /* ---------- Segments ---------- */

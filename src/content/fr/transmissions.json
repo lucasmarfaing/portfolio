@@ -5,6 +5,7 @@
   "emitter": "Émetteur",
   "photoPlaceholder": "[photo]",
   "segmentLabel": "Transmission {n}",
+  "alienLabel": "Transmission indéchiffrable : signal d’origine inconnue",
   "intervalSeconds": 7,
   "items": [
 
@@ -14,6 +15,14 @@
       "role": "Developpeur mobile - ADN",
       "relation": "Ancien collègue",
       "quote": "J'ai passé mes meilleures années de travail avec Lucas. Des rigolades aux migraines pour corriger un bug, un réel plaisir !"
+    },
+    {
+      "freq": "1420.40 MHz",
+      "name": "Émetteur inconnu",
+      "role": "Origine : hors du système solaire",
+      "relation": "Signal non identifié",
+      "quote": "Nous avons capté ton portfolio depuis l'autre bout de la galaxie. Ton interface est remarquable, envoie-nous ton dossier pilote.",
+      "alien": true
     }
 
   ]

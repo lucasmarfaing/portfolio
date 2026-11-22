@@ -5,15 +5,9 @@
   "emitter": "Sender",
   "photoPlaceholder": "[photo]",
   "segmentLabel": "Transmission {n}",
+  "alienLabel": "Undecipherable transmission: signal of unknown origin",
   "intervalSeconds": 7,
   "items": [
-    {
-      "freq": "142.80 MHz",
-      "name": "[First Last]",
-      "role": "[Position · Company]",
-      "relation": "Manager",
-      "quote": "[Quote from a manager: 2 to 3 sentences about how you work and what you brought to the team.]"
-    },
     {
       "freq": "118.35 MHz",
       "name": "Thibaut Huguet",
@@ -22,11 +16,12 @@
       "quote": "I spent my best working years with Lucas. From the laughs to the headaches over fixing a bug, a real pleasure!"
     },
     {
-      "freq": "127.05 MHz",
-      "name": "[First Last]",
-      "role": "[Position · Company]",
-      "relation": "Client",
-      "quote": "[Quote from a client or designer: the result delivered and the collaboration.]"
+      "freq": "1420.40 MHz",
+      "name": "Unknown sender",
+      "role": "Origin: outside the solar system",
+      "relation": "Unidentified signal",
+      "quote": "We picked up your portfolio from the far side of the galaxy. Your interface is remarkable, send us your pilot file.",
+      "alien": true
     }
   ]
 }

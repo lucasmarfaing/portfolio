@@ -293,6 +293,8 @@ const transmissionsSchema = z.object({
   emitter: z.string(),
   photoPlaceholder: z.string(),
   segmentLabel: z.string(),
+  /** Read by screen readers instead of an undecipherable (alien) transmission */
+  alienLabel: z.string().min(1),
   intervalSeconds: z.number().min(3).max(30),
   items: z
     .array(
@@ -306,6 +308,11 @@ const transmissionsSchema = z.object({
         photo: z.string().startsWith('/').optional(),
         /** Optional element symbol replacing the automatic initials, e.g. "Th" */
         symbol: z.string().min(1).max(3).optional(),
+        /**
+         * Undecipherable signal: the quote is never shown, only its shape (word lengths),
+         * written with constantly morphing alien glyphs.
+         */
+        alien: z.boolean().optional(),
       }),
     )
     .min(1),
