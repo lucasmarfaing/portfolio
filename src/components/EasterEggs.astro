@@ -1,0 +1,2068 @@
+---
+/**
+ * The four easter eggs of the V6 design ("Easter eggs" artboards):
+ *  01 Launch code — Konami code (↑ ↑ ↓ ↓ ← → ← → B A), or 7 taps on the LM-26 logo on mobile
+ *  02 Secret call sign — words typed in the contact form's "call sign" field (houston, pikachu, jarvis, dr pepper)
+ *  03 Refuel — click on the fuel gauge of the hero
+ *  04 HUD mode — J three times, "jarvis" in the contact form, or shaking the phone
+ * Texts live in src/content/{lang}/eggs.json. A text in [brackets] is a placeholder and is never shown.
+ */
+import { fill, type EggsContent } from '@/lib/content';
+
+interface Props {
+  content: EggsContent;
+  callsign: string;
+  /** Live figures for the HUD annotations ({stars}, {missions}) */
+  counts: Record<string, number>;
+}
+
+const { content, callsign, counts } = Astro.props;
+const { konami, radio, fuel, hud } = content;
+const isPlaceholder = (text: string) => text.trim().startsWith('[');
+const showHint = !isPlaceholder(konami.hint);
+
+const hudSections = Object.entries(hud.sections)
+  .map(([id, rows]) => ({
+    id,
+    rows: rows.filter((r) => !isPlaceholder(r.value)).map((r) => ({ label: r.label, value: fill(r.value, counts) })),
+  }))
+  .filter((s) => s.rows.length > 0);
+
+// What the browser script needs (the rest is already in the markup below)
+const data = {
+  callsign,
+  konami: {
+    status: konami.status,
+    statusShort: konami.statusShort,
+    announce: konami.announce,
+    trip: konami.trip,
+    units: konami.units,
+    destinations: konami.destinations,
+  },
+  radio: {
+    seconds: radio.seconds,
+    statusPriority: radio.statusPriority,
+    statusLinked: radio.statusLinked,
+    words: radio.words.map((w) => ({
+      ...w,
+      lines: w.lines.filter((l) => !isPlaceholder(l)).map((l) => fill(l, { callsign })),
+    })),
+  },
+  fuel,
+  hud: {
+    announceOn: hud.announceOn,
+    announceOff: hud.announceOff,
+    home: hud.home,
+    altitudeUnit: hud.altitudeUnit,
+    voice: hud.voice,
+  },
+};
+const json = JSON.stringify(data).replace(/</g, '\\u003c');
+
+// Arc-reactor style rings, drawn once (original artwork)
+const ticks = Array.from({ length: 60 }, (_, i) => i * 6);
+---
+
+<script type="application/json" data-egg-data set:html={json} />
+<div class="sr-only" aria-live="polite" data-egg-live></div>
+
+<!-- ============ 01 · Launch code ============ -->
+<div class="egg-progress" data-egg-progress aria-hidden="true">
+  {Array.from({ length: 10 }, () => <span />)}
+</div>
+
+<div class="egg-launch" data-egg-launch hidden aria-hidden="true">
+  <span class="egg-launch__t">{konami.countdown}</span>
+  <span class="egg-launch__num" data-egg-count>3</span>
+  <span class="egg-launch__label">{konami.ignition}</span>
+  <span class="egg-launch__bar"><span data-egg-count-bar></span></span>
+</div>
+
+<canvas class="egg-warp" data-egg-warp hidden aria-hidden="true"></canvas>
+<div class="egg-flash" data-egg-flash aria-hidden="true"></div>
+
+<dialog class="egg-card" data-egg-card aria-labelledby="egg-card-title">
+  <div class="egg-card__stamp"><span>{konami.stamp}</span><span>{konami.level}</span></div>
+  <div class="egg-card__body">
+    <p class="egg-card__title" id="egg-card-title">{konami.title}</p>
+    <p class="egg-card__text" data-egg-trip></p>
+    <dl class="egg-card__data">
+      <div><dt>{konami.labels.destination}</dt><dd data-egg-trip-star></dd></div>
+      <div><dt>{konami.labels.distance}</dt><dd data-egg-trip-ly></dd></div>
+      <div><dt>{konami.labels.duration}</dt><dd data-egg-trip-years></dd></div>
+    </dl>
+    {showHint && <p class="egg-card__hint">{konami.hint}</p>}
+    <div class="egg-card__foot">
+      <span class="egg-card__ref">{konami.labels.ref} · <span data-egg-ref></span></span>
+      <button type="button" class="egg-card__close" data-egg-card-close>{konami.close}</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ============ 02 · Secret call sign: cloned into the contact console ============ -->
+<template data-egg-radio-tpl>
+  <div class="egg-radio" aria-hidden="true">
+    <div class="egg-radio__scan"><span class="egg-radio__scanline"></span>{radio.intercept}</div>
+    <div class="egg-radio__log" data-egg-radio-log></div>
+    <svg class="egg-radio__bolt" viewBox="0 0 120 200" aria-hidden="true">
+      <path d="M70 4 18 112h38l-14 84 60-120H62L82 4z"></path>
+    </svg>
+  </div>
+</template>
+
+<!-- ============ 03 · Refuel: the can (original design, no brand) ============ -->
+<template data-egg-can-tpl>
+  <svg class="egg-can" width="40" height="70" viewBox="0 0 64 112" fill="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="egg-can-shine" x1="0" x2="1">
+        <stop offset="0" stop-color="#000" stop-opacity=".35"></stop>
+        <stop offset=".45" stop-color="#fff" stop-opacity=".18"></stop>
+        <stop offset="1" stop-color="#000" stop-opacity=".4"></stop>
+      </linearGradient>
+    </defs>
+    <rect x="6" y="10" width="52" height="94" rx="10" fill="#8E1B22"></rect>
+    <rect x="6" y="10" width="52" height="94" rx="10" fill="url(#egg-can-shine)"></rect>
+    <rect x="10" y="4" width="44" height="10" rx="4" fill="#B8BCC8"></rect>
+    <rect x="24" y="1" width="16" height="5" rx="2" fill="#D6D9E2"></rect>
+    <rect x="6" y="44" width="52" height="26" fill="#05060A" opacity=".55"></rect>
+    <text x="32" y="61" text-anchor="middle" font-family="Geist Mono Variable, monospace" font-size="8.5" letter-spacing="1" fill="#FF7364">FUEL·23</text>
+  </svg>
+</template>
+
+<!-- ============ 04 · HUD mode: a full-screen heads-up display over the whole page ============ -->
+<div class="egg-hud" data-egg-hud aria-hidden="true">
+  <div class="egg-hud__vignette"></div>
+  <div class="egg-hud__lines"></div>
+
+  <span class="egg-hud__corner egg-hud__corner--tl"></span>
+  <span class="egg-hud__corner egg-hud__corner--tr"></span>
+  <span class="egg-hud__corner egg-hud__corner--bl"></span>
+  <span class="egg-hud__corner egg-hud__corner--br"></span>
+
+  <div class="egg-hud__top">
+    <span class="egg-hud__sys"><span class="egg-hud__dot"></span>{hud.system}</span>
+    <span class="egg-hud__clock" data-egg-hud-clock>00:00:00</span>
+  </div>
+
+  <div class="egg-hud__target">
+    <span>{hud.target}</span>
+    <strong data-egg-hud-section>{hud.home}</strong>
+  </div>
+
+  <div class="egg-hud__ruler">
+    <span class="egg-hud__ruler-label">{hud.altitude}</span>
+    <span class="egg-hud__ruler-scale" data-egg-hud-scale></span>
+    <strong data-egg-hud-alt>0</strong>
+  </div>
+
+  <ul class="egg-hud__gauges">
+    {
+      hud.readouts.map((r) => (
+        <li class:list={['egg-gauge', { 'is-alert': r.alert }]}>
+          <span class="egg-gauge__head">
+            <span>{r.label}</span>
+            <strong>{r.value}</strong>
+          </span>
+          <span class="egg-gauge__bar">
+            <span style={`width: ${r.level}%`} />
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+
+  <svg class="egg-hud__reactor" viewBox="0 0 200 200">
+    <g class="egg-r egg-r--slow">
+      {ticks.map((deg) => <line x1="100" y1="6" x2="100" y2={deg % 30 === 0 ? 18 : 12} transform={`rotate(${deg} 100 100)`} />)}
+    </g>
+    <circle class="egg-r egg-r--fast" cx="100" cy="100" r="78" stroke-dasharray="60 18 8 18" stroke-width="3"></circle>
+    <circle class="egg-r egg-r--rev" cx="100" cy="100" r="62" stroke-dasharray="2 6" stroke-width="6"></circle>
+    <circle cx="100" cy="100" r="46" stroke-width="1"></circle>
+    <circle class="egg-r egg-r--slow" cx="100" cy="100" r="38" stroke-dasharray="40 20" stroke-width="2"></circle>
+    <circle class="egg-hud__core" cx="100" cy="100" r="18"></circle>
+  </svg>
+
+  <div class="egg-hud__voice">
+    <span class="egg-hud__wave">{Array.from({ length: 24 }, (_, i) => <span style={`animation-delay: ${(i * 53) % 700}ms`} />)}</span>
+    <p data-egg-hud-voice></p>
+  </div>
+
+  <div class="egg-hud__reticle" data-egg-hud-reticle>
+    <span class="egg-hud__reticle-ring"></span>
+    <span class="egg-hud__reticle-ring egg-hud__reticle-ring--dashed"></span>
+    <span class="egg-hud__reticle-xy" data-egg-hud-xy></span>
+  </div>
+
+  <div class="egg-hud__boot">
+    <svg class="egg-hud__boot-rings" viewBox="0 0 200 200">
+      <circle class="egg-r egg-r--fast" cx="100" cy="100" r="90" stroke-dasharray="120 30 10 30" stroke-width="2"></circle>
+      <circle class="egg-r egg-r--rev" cx="100" cy="100" r="70" stroke-dasharray="3 7" stroke-width="8"></circle>
+      <circle class="egg-r egg-r--slow" cx="100" cy="100" r="50" stroke-dasharray="70 20" stroke-width="2"></circle>
+      <circle class="egg-hud__core" cx="100" cy="100" r="22"></circle>
+    </svg>
+    <span class="egg-hud__boot-text">{hud.boot}</span>
+    <span class="egg-hud__boot-bar"><span></span></span>
+  </div>
+</div>
+<button type="button" class="egg-hud__exit" data-egg-hud-exit>
+  <span class="egg-hud__exit-keys">{hud.exit}</span>
+  <span class="egg-hud__exit-touch">{hud.exitTouch}</span>
+</button>
+
+<template data-egg-hud-target>
+  <div class="egg-target" aria-hidden="true">
+    <span class="egg-target__ring egg-target__ring--dashed"></span>
+    <span class="egg-target__ring"></span>
+    <span class="egg-target__cross"></span>
+    <span class="egg-tag egg-tag--pilot"><span>{hud.pilot}</span><strong>{hud.pilotValue}</strong></span>
+    <span class="egg-tag egg-tag--coffee"><span>{hud.coffee}</span><strong class="is-alert">{hud.coffeeValue}</strong></span>
+    <span class="egg-tag egg-tag--state"><span>{hud.state}</span><strong>{hud.stateValue}</strong></span>
+  </div>
+</template>
+
+{
+  hudSections.map((s) => (
+    <template data-egg-hud-section={s.id}>
+      <div class="egg-note" aria-hidden="true">
+        <span class="egg-note__title">{hud.analysis}</span>
+        {s.rows.map((r) => (
+          <span class="egg-note__row">
+            <span class="egg-note__line" />
+            <span class="egg-note__label">{r.label}</span>
+            <span class="egg-note__value">{r.value}</span>
+          </span>
+        ))}
+      </div>
+    </template>
+  ))
+}
+
+<script>
+  type Word = { match: string[]; lines: string[]; badge?: string; effect?: 'bolt' | 'hud' | 'fuel' };
+  type EggData = {
+    callsign: string;
+    konami: {
+      status: string;
+      statusShort: string;
+      announce: string;
+      trip: string;
+      units: { ly: string; years: string };
+      destinations: { name: string; code: string; ly: number }[];
+    };
+    radio: { seconds: number; statusPriority: string; statusLinked: string; words: Word[] };
+    fuel: { empty: string; refilled: string };
+    hud: { announceOn: string; announceOff: string; home: string; altitudeUnit: string; voice: string[] };
+  };
+
+  const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel);
+  const data = JSON.parse($('[data-egg-data]')?.textContent ?? '{}') as EggData;
+  const root = document.documentElement;
+  const lang = root.lang || 'fr';
+  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+  const live = $('[data-egg-live]');
+  const announce = (text: string) => {
+    if (!live) return;
+    live.textContent = '';
+    setTimeout(() => (live.textContent = text), 60);
+  };
+  const isTyping = (target: EventTarget | null) =>
+    target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+  const fillText = (text: string, values: Record<string, string>) => text.replace(/\{(\w+)\}/g, (m, k: string) => values[k] ?? m);
+
+  // ================= 01 · Launch code =================
+
+  const SEQUENCE = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a'];
+  const progress = $('[data-egg-progress]');
+  const segments = progress ? [...progress.children] : [];
+  const launchEl = $('[data-egg-launch]');
+  const countEl = $('[data-egg-count]');
+  const countBar = $('[data-egg-count-bar]');
+  const warp = $<HTMLCanvasElement>('[data-egg-warp]');
+  const flash = $('[data-egg-flash]');
+  const card = $<HTMLDialogElement>('[data-egg-card]');
+  let konamiPos = 0;
+  let progressTimer = 0;
+  let launching = false;
+
+  const showProgress = () => {
+    segments.forEach((s, i) => s.classList.toggle('is-on', i < konamiPos));
+    progress?.classList.toggle('is-visible', konamiPos > 0);
+    clearTimeout(progressTimer);
+    progressTimer = window.setTimeout(() => {
+      konamiPos = 0;
+      progress?.classList.remove('is-visible');
+    }, 2500);
+  };
+
+  /** Back to an empty sequence and an empty countdown bar, without animating the reset */
+  const resetLaunch = () => {
+    konamiPos = 0;
+    clearTimeout(progressTimer);
+    progress?.classList.remove('is-visible');
+    segments.forEach((s) => s.classList.remove('is-on'));
+    if (countBar) {
+      countBar.style.transition = 'none';
+      countBar.style.width = '0%';
+      void countBar.offsetWidth;
+      countBar.style.transition = '';
+    }
+  };
+
+  /** Header status reads "Launch sequence" during the countdown */
+  const setHeaderAlert = (on: boolean) => {
+    const status = $('.site-header .status');
+    const long = status && $('.status__long', status);
+    const short = status && $('.status__short', status);
+    if (!status || !long || !short) return;
+    if (on) {
+      long.dataset.eggSaved = long.textContent ?? '';
+      short.dataset.eggSaved = short.textContent ?? '';
+      status.dataset.eggAlert = String(status.classList.contains('is-alert'));
+      long.textContent = data.konami.status;
+      short.textContent = data.konami.statusShort;
+      status.classList.add('is-alert');
+    } else {
+      long.textContent = long.dataset.eggSaved ?? long.textContent;
+      short.textContent = short.dataset.eggSaved ?? short.textContent;
+      status.classList.toggle('is-alert', status.dataset.eggAlert === 'true');
+    }
+  };
+
+  /** Stars stretching into light streaks from the center */
+  const runWarp = (duration: number) =>
+    new Promise<void>((resolve) => {
+      if (!warp) return resolve();
+      const ctx = warp.getContext('2d');
+      if (!ctx) return resolve();
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      warp.width = w * dpr;
+      warp.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      warp.hidden = false;
+      const accent = getComputedStyle(root).getPropertyValue('--accent-alt').trim() || '#FF7364';
+      const max = Math.hypot(w, h) / 2;
+      const stars = Array.from({ length: 260 }, () => ({
+        angle: Math.random() * Math.PI * 2,
+        dist: Math.random() * max * 0.6 + 4,
+        color: Math.random() < 0.25 ? accent : '#FFFFFF',
+      }));
+      const start = performance.now();
+      let last = start;
+      const frame = (now: number) => {
+        const t = Math.min(1, (now - start) / duration);
+        const dt = Math.min(50, now - last);
+        last = now;
+        ctx.fillStyle = `rgba(5, 6, 10, ${0.35 - t * 0.2})`;
+        ctx.fillRect(0, 0, w, h);
+        const speed = 0.0015 + t * t * 0.03;
+        for (const s of stars) {
+          const from = s.dist;
+          s.dist += s.dist * speed * dt + 0.2 * dt;
+          if (s.dist > max * 1.2) s.dist = Math.random() * 20 + 4;
+          const cos = Math.cos(s.angle);
+          const sin = Math.sin(s.angle);
+          ctx.strokeStyle = s.color;
+          ctx.globalAlpha = Math.min(1, s.dist / 120);
+          ctx.lineWidth = 1 + t * 1.5;
+          ctx.beginPath();
+          ctx.moveTo(w / 2 + cos * from, h / 2 + sin * from);
+          ctx.lineTo(w / 2 + cos * s.dist, h / 2 + sin * s.dist);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        if (t < 1) requestAnimationFrame(frame);
+        else resolve();
+      };
+      ctx.fillStyle = '#05060A';
+      ctx.fillRect(0, 0, w, h);
+      requestAnimationFrame(frame);
+    });
+
+  /** A random real star; the flight time is computed at Voyager 1's speed (about 17 km/s) */
+  const VOYAGER_KM_S = 17;
+  const KM_PER_LY = 9.4607e12;
+  const SECONDS_PER_YEAR = 31_557_600;
+  const fillTrip = () => {
+    const list = data.konami.destinations;
+    const dest = list[Math.floor(Math.random() * list.length)]!;
+    const years = Math.round((dest.ly * KM_PER_LY) / VOYAGER_KM_S / SECONDS_PER_YEAR / 100) * 100;
+    const ly = dest.ly.toLocaleString(lang);
+    const yearsText = years.toLocaleString(lang);
+    const set = (sel: string, text: string) => {
+      const el = $(sel);
+      if (el) el.textContent = text;
+    };
+    set('[data-egg-trip]', fillText(data.konami.trip, { star: dest.name, ly, years: yearsText }));
+    set('[data-egg-trip-star]', dest.name.charAt(0).toUpperCase() + dest.name.slice(1));
+    set('[data-egg-trip-ly]', `${ly} ${data.konami.units.ly}`);
+    set('[data-egg-trip-years]', `≈ ${yearsText} ${data.konami.units.years}`);
+    const stamp = new Date();
+    const day = `${String(stamp.getMonth() + 1).padStart(2, '0')}${String(stamp.getDate()).padStart(2, '0')}`;
+    set('[data-egg-ref]', `${data.callsign}/${dest.code}-${day}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`);
+  };
+
+  const openCard = () => {
+    if (!card || card.open) return;
+    fillTrip();
+    card.showModal();
+    announce(data.konami.announce);
+  };
+
+  const launch = async () => {
+    if (launching || card?.open) return;
+    launching = true;
+    resetLaunch();
+    if (reduced() || !launchEl || !countEl || !countBar) {
+      openCard();
+      launching = false;
+      return;
+    }
+    setHeaderAlert(true);
+    launchEl.hidden = false;
+    for (let n = 3; n >= 1; n--) {
+      countEl.textContent = String(n);
+      countEl.classList.remove('is-tick');
+      void countEl.offsetWidth; // restart the "pop" animation
+      countEl.classList.add('is-tick');
+      countBar.style.width = `${((4 - n) / 3) * 100}%`;
+      await wait(850);
+    }
+    launchEl.hidden = true;
+    await runWarp(1800);
+    flash?.animate([{ opacity: 0 }, { opacity: 1, offset: 0.25 }, { opacity: 0 }], { duration: 700, easing: 'ease-out' });
+    await wait(150);
+    if (warp) warp.hidden = true;
+    setHeaderAlert(false);
+    resetLaunch();
+    openCard();
+    launching = false;
+  };
+
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target) || launching || card?.open) return;
+    const key = e.key.toLowerCase();
+    if (key === SEQUENCE[konamiPos]) {
+      konamiPos++;
+      showProgress();
+      if (konamiPos === SEQUENCE.length) launch();
+    } else if (konamiPos > 0) {
+      // "↑ ↑ ↑" keeps the first two ups
+      konamiPos = key === 'arrowup' ? (konamiPos === 2 ? 2 : 1) : 0;
+      showProgress();
+    }
+  });
+
+  // Mobile: 7 quick taps on the LM-26 logo
+  let taps = 0;
+  let tapTimer = 0;
+  $('.site-header .callsign')?.addEventListener('click', () => {
+    taps++;
+    clearTimeout(tapTimer);
+    tapTimer = window.setTimeout(() => (taps = 0), 900);
+    if (taps >= 7) {
+      taps = 0;
+      launch();
+    }
+  });
+
+  $('[data-egg-card-close]')?.addEventListener('click', () => card?.close());
+  // Clicking outside the card closes it
+  card?.addEventListener('click', (e) => {
+    if (e.target === card) card.close();
+  });
+  card?.addEventListener('close', resetLaunch);
+
+  // ================= 03 · Refuel =================
+
+  const fuelBtn = $<HTMLButtonElement>('[data-egg-fuel]');
+  const fuelValue = $('[data-egg-fuel-value]');
+  const fuelStat = fuelBtn?.closest<HTMLElement>('.stat--fuel') ?? fuelBtn?.parentElement ?? null;
+  const bars = fuelBtn ? [...fuelBtn.querySelectorAll<HTMLElement>('.fuel__bars > span')] : [];
+  let refuelling = false;
+
+  const fuelMessage = (text: string, tone: 'alert' | 'ok') => {
+    if (!fuelStat) return null;
+    fuelStat.querySelector('.egg-fuel-msg')?.remove();
+    const msg = document.createElement('span');
+    msg.className = `egg-fuel-msg is-${tone}`;
+    msg.setAttribute('aria-hidden', 'true');
+    msg.textContent = text;
+    fuelStat.append(msg);
+    return msg;
+  };
+
+  const countTo = (from: number, to: number, ms: number) =>
+    new Promise<void>((resolve) => {
+      if (!fuelValue) return resolve();
+      const start = performance.now();
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / ms);
+        fuelValue.textContent = `${Math.round(from + (to - from) * t)}%`;
+        if (t < 1) requestAnimationFrame(step);
+        else resolve();
+      };
+      requestAnimationFrame(step);
+    });
+
+  /** The whole site "loses power" for a second */
+  const slowDown = async () => {
+    const animations = document.getAnimations();
+    animations.forEach((a) => (a.playbackRate = 0.25));
+    await wait(1000);
+    animations.forEach((a) => (a.playbackRate = 1));
+  };
+
+  const dropCan = async () => {
+    const tpl = $<HTMLTemplateElement>('[data-egg-can-tpl]');
+    if (!tpl || !fuelBtn) return;
+    const can = tpl.content.firstElementChild!.cloneNode(true) as SVGSVGElement;
+    const rect = fuelBtn.getBoundingClientRect();
+    const x = Math.min(window.innerWidth - 50, rect.right + 14);
+    const y = rect.top + rect.height / 2 - 70;
+    can.style.left = `${x}px`;
+    can.style.top = `${y}px`;
+    document.body.append(can);
+    const fall = y + 90;
+    await can.animate(
+      [
+        { transform: `translateY(${-fall}px) rotate(-25deg)` },
+        { transform: 'translateY(0) rotate(8deg)', offset: 0.7, easing: 'ease-out' },
+        { transform: 'translateY(-16px) rotate(-4deg)', offset: 0.85, easing: 'ease-in' },
+        { transform: 'translateY(0) rotate(0)' },
+      ],
+      { duration: 1100, easing: 'cubic-bezier(.5,0,.75,0)' },
+    ).finished;
+    await wait(500);
+    await can.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(6px) scale(.9)' }], { duration: 400, fill: 'forwards' }).finished;
+    can.remove();
+  };
+
+  const bubbles = () => {
+    if (!fuelStat || !fuelBtn) return;
+    const statRect = fuelStat.getBoundingClientRect();
+    const rect = fuelBtn.getBoundingClientRect();
+    for (let i = 0; i < 10; i++) {
+      const b = document.createElement('span');
+      b.className = 'egg-bubble';
+      const size = 4 + (i % 3) * 2;
+      b.style.width = b.style.height = `${size}px`;
+      b.style.left = `${rect.left - statRect.left + Math.random() * rect.width}px`;
+      b.style.top = `${rect.top - statRect.top + rect.height / 2}px`;
+      fuelStat.append(b);
+      b.animate(
+        [
+          { transform: 'translateY(0)', opacity: 0.9 },
+          { transform: `translateY(-${40 + Math.random() * 30}px)`, opacity: 0 },
+        ],
+        { duration: 1400 + Math.random() * 600, delay: i * 140, easing: 'ease-in', fill: 'backwards' },
+      ).finished.then(() => b.remove());
+    }
+  };
+
+  const refuel = async () => {
+    if (refuelling || !fuelBtn || !fuelValue) return;
+    refuelling = true;
+    const quick = reduced();
+    const startValue = parseInt(fuelValue.textContent ?? '', 10) || 100;
+
+    // 1. Running dry, bar after bar
+    for (let i = bars.length - 1; i >= 0; i--) {
+      bars[i]!.classList.add('egg-off');
+      if (!quick) await wait(160);
+    }
+    if (!quick) await countTo(startValue, 0, 300);
+    fuelValue.textContent = '0%';
+    fuelValue.classList.add('egg-empty');
+    fuelMessage(data.fuel.empty, 'alert');
+    announce(data.fuel.empty.replace(/^\W+/, ''));
+    if (!quick) await slowDown();
+
+    // 2. A can falls from the top of the screen
+    if (!quick) await dropCan();
+
+    // 3. Refilled with bubbles
+    fuelValue.classList.remove('egg-empty');
+    if (!quick) bubbles();
+    for (let i = 0; i < bars.length; i++) {
+      bars[i]!.classList.remove('egg-off');
+      if (!quick) await wait(180);
+    }
+    if (!quick) await countTo(0, 100, 400);
+    fuelValue.textContent = '100%';
+    bars.at(-1)?.classList.remove('blink');
+    const msg = fuelMessage(data.fuel.refilled, 'ok');
+    announce(data.fuel.refilled);
+    await wait(3000);
+    msg?.classList.add('is-leaving');
+    await wait(400);
+    msg?.remove();
+    refuelling = false;
+  };
+
+  fuelBtn?.setAttribute('aria-label', `${fuelBtn.closest('.stat')?.querySelector('dt')?.textContent?.trim() ?? ''} ${fuelValue?.textContent ?? ''}`.trim());
+  fuelBtn?.addEventListener('click', () => refuel());
+
+  // ================= 04 · HUD mode =================
+
+  const hudExit = $<HTMLButtonElement>('[data-egg-hud-exit]');
+  const clockEl = $('[data-egg-hud-clock]');
+  const altEl = $('[data-egg-hud-alt]');
+  const scaleEl = $('[data-egg-hud-scale]');
+  const sectionEl = $('[data-egg-hud-section]');
+  const voiceEl = $('[data-egg-hud-voice]');
+  const reticle = $('[data-egg-hud-reticle]');
+  const xyEl = $('[data-egg-hud-xy]');
+  let hudBuilt = false;
+  let hudTimers: number[] = [];
+  let hudFrame = 0;
+  let sectionObserver: IntersectionObserver | null = null;
+  const pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2, rx: window.innerWidth / 2, ry: window.innerHeight / 2 };
+
+  const buildHud = () => {
+    if (hudBuilt) return;
+    hudBuilt = true;
+    const target = $<HTMLTemplateElement>('[data-egg-hud-target]');
+    const orbit = $('.hero .orbit');
+    if (target && orbit) orbit.append(target.content.cloneNode(true));
+    document.querySelectorAll<HTMLTemplateElement>('template[data-egg-hud-section]').forEach((tpl) => {
+      const section = document.getElementById(tpl.dataset.eggHudSection ?? '');
+      if (section) section.append(tpl.content.cloneNode(true));
+    });
+  };
+
+  const sectionName = (id: string) =>
+    id === 'top' ? data.hud.home : ($(`[data-nav="${id}"] .site-nav__label`)?.textContent?.trim() ?? id);
+
+  /** The assistant "speaks" its lines in turn, typed letter by letter */
+  const speak = (index: number) => {
+    if (!voiceEl) return;
+    const line = data.hud.voice[index % data.hud.voice.length]!;
+    voiceEl.textContent = '';
+    let i = 0;
+    const type = () => {
+      voiceEl.textContent = line.slice(0, ++i);
+      if (i < line.length) hudTimers.push(window.setTimeout(type, reduced() ? 0 : 28));
+      else hudTimers.push(window.setTimeout(() => speak(index + 1), 4200));
+    };
+    type();
+  };
+
+  const tick = () => {
+    if (clockEl) clockEl.textContent = new Date().toLocaleTimeString(lang, { hour12: false });
+  };
+
+  const frame = () => {
+    const y = window.scrollY;
+    if (altEl) altEl.textContent = `${Math.round(y).toLocaleString(lang)} ${data.hud.altitudeUnit}`;
+    if (scaleEl) scaleEl.style.backgroundPositionY = `${-y * 0.5}px`;
+    if (reticle) {
+      pointer.rx += (pointer.x - pointer.rx) * 0.18;
+      pointer.ry += (pointer.y - pointer.ry) * 0.18;
+      reticle.style.transform = `translate(${pointer.rx}px, ${pointer.ry}px)`;
+      if (xyEl) xyEl.textContent = `X ${String(Math.round(pointer.x)).padStart(4, '0')} · Y ${String(Math.round(pointer.y + y)).padStart(5, '0')}`;
+    }
+    hudFrame = requestAnimationFrame(frame);
+  };
+
+  const onPointer = (e: PointerEvent) => {
+    pointer.x = e.clientX;
+    pointer.y = e.clientY;
+  };
+
+  const startHudLoops = () => {
+    tick();
+    hudTimers.push(window.setInterval(tick, 1000));
+    hudFrame = requestAnimationFrame(frame);
+    window.addEventListener('pointermove', onPointer, { passive: true });
+    hudTimers.push(window.setTimeout(() => speak(0), reduced() ? 0 : 1900));
+    sectionObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && sectionEl) sectionEl.textContent = sectionName(entry.target.id);
+        }
+      },
+      { rootMargin: '-45% 0px -50% 0px' },
+    );
+    document.querySelectorAll('#top, main > section[id]').forEach((s) => sectionObserver?.observe(s));
+  };
+
+  const stopHudLoops = () => {
+    hudTimers.forEach((t) => (clearTimeout(t), clearInterval(t)));
+    hudTimers = [];
+    cancelAnimationFrame(hudFrame);
+    window.removeEventListener('pointermove', onPointer);
+    sectionObserver?.disconnect();
+    sectionObserver = null;
+    if (voiceEl) voiceEl.textContent = '';
+  };
+
+  const setHud = (on: boolean) => {
+    if (on === root.classList.contains('egg-hud-on')) return;
+    // Colors fade into (or out of) the HUD palette instead of switching at once
+    root.classList.add('egg-hud-switch');
+    setTimeout(() => root.classList.remove('egg-hud-switch'), 900);
+    if (on) {
+      buildHud();
+      root.classList.add('egg-hud-on', 'egg-hud-init');
+      setTimeout(() => root.classList.remove('egg-hud-init'), reduced() ? 300 : 1900);
+      startHudLoops();
+    } else {
+      root.classList.remove('egg-hud-on', 'egg-hud-init');
+      stopHudLoops();
+    }
+    announce(on ? data.hud.announceOn : data.hud.announceOff);
+  };
+  const toggleHud = () => setHud(!root.classList.contains('egg-hud-on'));
+
+  let jPresses: number[] = [];
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+    if (e.key === 'Escape' && root.classList.contains('egg-hud-on') && !card?.open) {
+      setHud(false);
+      return;
+    }
+    if (e.key.toLowerCase() !== 'j' || e.repeat) return;
+    const now = performance.now();
+    // Less than a second between each press
+    if (now - (jPresses.at(-1) ?? 0) > 1000) jPresses = [];
+    jPresses.push(now);
+    if (jPresses.length >= 3) {
+      jPresses = [];
+      toggleHud();
+    }
+  });
+  hudExit?.addEventListener('click', () => setHud(false));
+
+  // Mobile: shake the phone (where motion is available without a permission prompt)
+  const Motion = window.DeviceMotionEvent as unknown as { requestPermission?: unknown } | undefined;
+  if (Motion && typeof Motion.requestPermission !== 'function' && window.matchMedia('(hover: none)').matches) {
+    let shakes: number[] = [];
+    let lastToggle = 0;
+    window.addEventListener('devicemotion', (e) => {
+      const a = e.accelerationIncludingGravity;
+      if (!a || a.x === null || a.y === null || a.z === null) return;
+      const force = Math.hypot(a.x, a.y, a.z);
+      const now = performance.now();
+      if (force < 25 || now - lastToggle < 2000) return;
+      shakes = [...shakes.filter((t) => now - t < 900), now];
+      if (shakes.length >= 3) {
+        shakes = [];
+        lastToggle = now;
+        toggleHud();
+      }
+    });
+  }
+
+  // ================= 02 · Secret call sign =================
+
+  const normalize = (text: string) =>
+    text
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ');
+
+  const radioTpl = $<HTMLTemplateElement>('[data-egg-radio-tpl]');
+
+  for (const consoleEl of document.querySelectorAll<HTMLElement>('[data-console]')) {
+    const input = $<HTMLInputElement>('input[name="name"]', consoleEl);
+    const status = $('[data-status]', consoleEl);
+    const statusLabel = $('[data-status-label]', consoleEl);
+    if (!input || !status || !statusLabel || !radioTpl) continue;
+    let lastWord: Word | null = null;
+    let busy = false;
+
+    const setStatus = (state: string, label: string) => {
+      status.dataset.state = state;
+      statusLabel.textContent = label;
+    };
+
+    const respond = async (word: Word) => {
+      busy = true;
+      const quick = reduced();
+      const overlay = radioTpl.content.firstElementChild!.cloneNode(true) as HTMLElement;
+      const log = $('[data-egg-radio-log]', overlay)!;
+      // Covers the form, under the console's title bar
+      overlay.style.top = `${consoleEl.firstElementChild instanceof HTMLElement ? consoleEl.firstElementChild.offsetHeight : 45}px`;
+      if (word.effect === 'bolt') overlay.classList.add('is-bolt');
+
+      // 1. Interception: red status, the console shakes, a scan line runs
+      setStatus('egg-alert', data.radio.statusPriority);
+      consoleEl.classList.add('egg-shake');
+      await wait(quick ? 0 : 500);
+      consoleEl.classList.remove('egg-shake');
+      consoleEl.append(overlay);
+      await wait(quick ? 300 : 1300);
+
+      // 2. The answer, line by line, like a radio
+      overlay.classList.add('is-linked');
+      setStatus('sent', data.radio.statusLinked);
+      announce([...word.lines, word.badge ?? ''].join(' '));
+      for (const text of word.lines) {
+        const line = document.createElement('p');
+        line.className = 'egg-radio__line';
+        line.textContent = `> ${text}`;
+        log.append(line);
+        await wait(quick ? 0 : 650);
+      }
+      if (word.badge) {
+        const badge = document.createElement('span');
+        badge.className = 'egg-radio__badge';
+        badge.textContent = word.badge;
+        log.append(badge);
+      }
+      if (word.effect === 'hud') setHud(true);
+
+      // 3. Back to normal: the form stays usable, nothing is sent
+      await wait(data.radio.seconds * 1000);
+      overlay.classList.add('is-leaving');
+      await wait(300);
+      overlay.remove();
+      setStatus('open', status.dataset.open ?? '');
+      busy = false;
+      if (word.effect === 'fuel' && fuelBtn) {
+        fuelBtn.scrollIntoView({ behavior: quick ? 'auto' : 'smooth', block: 'center' });
+        await wait(quick ? 0 : 900);
+        refuel();
+      }
+    };
+
+    input.addEventListener('input', () => {
+      const value = normalize(input.value);
+      const word = data.radio.words.find((w) => w.match.some((m) => normalize(m) === value)) ?? null;
+      if (word && word !== lastWord && !busy && status.dataset.state !== 'sending') respond(word);
+      lastWord = word;
+    });
+  }
+</script>
+
+<style is:global>
+  /* ---------- 01 · Launch code ---------- */
+
+  .egg-progress {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    z-index: 900;
+    display: flex;
+    gap: 5px;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .egg-progress.is-visible {
+    opacity: 1;
+  }
+
+  .egg-progress span {
+    width: 18px;
+    height: 4px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--text) 12%, transparent);
+    transition: background-color 0.15s;
+  }
+
+  .egg-progress span.is-on {
+    background: var(--accent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+
+  .egg-launch {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: radial-gradient(600px 460px at 50% 50%, color-mix(in srgb, var(--accent) 18%, transparent), transparent),
+      color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .egg-launch[hidden],
+  .egg-warp[hidden] {
+    display: none;
+  }
+
+  .egg-launch__t {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    color: var(--accent-alt);
+  }
+
+  .egg-launch__num {
+    font-size: clamp(160px, 28vw, 340px);
+    font-weight: 700;
+    line-height: 0.85;
+    letter-spacing: -0.06em;
+    color: var(--text);
+    animation: egg-shake 0.25s linear infinite;
+  }
+
+  .egg-launch__num.is-tick {
+    animation:
+      egg-pop 0.35s ease-out,
+      egg-shake 0.25s linear infinite;
+  }
+
+  .egg-launch__label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .egg-launch__bar {
+    width: min(420px, 70vw);
+    height: 4px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--text) 10%, transparent);
+  }
+
+  .egg-launch__bar span {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.8s linear;
+  }
+
+  .egg-warp {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    width: 100%;
+    height: 100%;
+    background: #05060a;
+  }
+
+  .egg-flash {
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .egg-card {
+    width: min(480px, calc(100% - 32px));
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 14px;
+    background: linear-gradient(160deg, var(--surface-raised), var(--surface) 60%);
+    color: var(--text);
+    box-shadow: 0 0 60px -10px color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+
+  .egg-card[open] {
+    animation: egg-card-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  }
+
+  .egg-card::backdrop {
+    background: color-mix(in srgb, #05060a 70%, transparent);
+    backdrop-filter: blur(4px);
+  }
+
+  .egg-card__stamp {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .egg-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 22px 20px 18px;
+  }
+
+  .egg-card__title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .egg-card__text {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-soft);
+  }
+
+  .egg-card__data {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+  }
+
+  .egg-card__data > div {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    border-left: 1px solid var(--line-strong);
+  }
+
+  .egg-card__data > div:first-child {
+    border-left: 0;
+  }
+
+  .egg-card__data dt {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .egg-card__data dd {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .egg-card__hint {
+    margin: 0;
+    padding-left: 12px;
+    border-left: 2px solid var(--accent);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .egg-card__foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line-strong);
+  }
+
+  .egg-card__ref {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .egg-card__ref span {
+    color: var(--accent-alt);
+  }
+
+  .egg-card__close {
+    min-height: 44px;
+    padding: 10px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .egg-card__close:hover {
+    border-color: var(--accent);
+  }
+
+  @media (max-width: 480px) {
+    .egg-card__data {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .egg-card__data > div {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: baseline;
+      border-left: 0;
+      border-top: 1px solid var(--line-strong);
+    }
+
+    .egg-card__data > div:first-child {
+      border-top: 0;
+    }
+  }
+
+  /* ---------- 02 · Secret call sign ---------- */
+
+  [data-console] [data-status][data-state='egg-alert'] {
+    color: var(--accent);
+  }
+
+  [data-console] [data-status][data-state='egg-alert'] > span:first-child {
+    animation: blink-hard 0.8s steps(1) infinite;
+  }
+
+  .egg-shake {
+    animation: egg-shake 0.25s linear infinite;
+  }
+
+  .egg-radio {
+    position: absolute;
+    inset: 45px 0 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    padding: 24px 22px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    animation: egg-fade 0.25s ease-out;
+  }
+
+  .egg-radio.is-leaving {
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .egg-radio__scan {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 140px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: repeating-linear-gradient(0deg, color-mix(in srgb, var(--accent) 9%, transparent) 0 1px, transparent 1px 4px);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-alt);
+  }
+
+  .egg-radio__scanline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 24px;
+    background: linear-gradient(transparent, color-mix(in srgb, var(--accent) 28%, transparent), transparent);
+    animation: egg-scan 1.2s linear infinite;
+  }
+
+  .egg-radio.is-linked .egg-radio__scan {
+    display: none;
+  }
+
+  .egg-radio__log {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text-soft);
+  }
+
+  .egg-radio__line {
+    margin: 0;
+    animation: egg-type 0.6s steps(28) both;
+  }
+
+  .egg-radio__line:first-child {
+    color: var(--text);
+  }
+
+  .egg-radio__badge {
+    margin-top: 14px;
+    padding: 7px 11px;
+    border-radius: 6px;
+    background: var(--success);
+    color: var(--on-accent);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    animation: egg-pop 0.35s ease-out;
+  }
+
+  .egg-radio__bolt {
+    display: none;
+  }
+
+  .egg-radio.is-bolt.is-linked .egg-radio__bolt {
+    position: absolute;
+    right: 8%;
+    top: 50%;
+    display: block;
+    width: 110px;
+    height: auto;
+    fill: #ffd43b;
+    filter: drop-shadow(0 0 18px rgb(255 212 59 / 0.8));
+    transform: translateY(-50%) rotate(12deg);
+    animation: egg-bolt 0.9s steps(1) 2;
+  }
+
+  .egg-radio.is-bolt.is-linked {
+    box-shadow: inset 0 0 0 1px rgb(255 212 59 / 0.6), inset 0 0 60px rgb(255 212 59 / 0.12);
+  }
+
+  /* ---------- 03 · Refuel ---------- */
+
+  .fuel__bars > span.egg-off {
+    background: color-mix(in srgb, var(--text) 10%, transparent) !important;
+    transition: background-color 0.15s;
+  }
+
+  .egg-empty {
+    color: var(--accent);
+    animation: blink-hard 0.8s steps(1) infinite;
+  }
+
+  .egg-fuel-msg {
+    position: absolute;
+    left: 32px;
+    bottom: calc(100% - 4px);
+    z-index: 3;
+    padding: 7px 11px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid currentColor;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    animation: egg-pop 0.3s ease-out;
+    pointer-events: none;
+  }
+
+  @media (max-width: 1099px) {
+    .egg-fuel-msg {
+      left: auto;
+      right: var(--gutter);
+    }
+  }
+
+  .egg-fuel-msg.is-alert {
+    color: var(--accent);
+  }
+
+  .egg-fuel-msg.is-ok {
+    color: var(--success);
+  }
+
+  .egg-fuel-msg.is-leaving {
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  .egg-can {
+    position: fixed;
+    z-index: 950;
+    pointer-events: none;
+    filter: drop-shadow(0 8px 14px rgb(0 0 0 / 0.5));
+  }
+
+  .egg-bubble {
+    position: absolute;
+    border: 1px solid color-mix(in srgb, var(--accent-alt) 80%, transparent);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* ---------- 04 · HUD mode ---------- */
+
+  /* The whole site switches to a holographic cyan palette (overrides src/content/theme.json) */
+  html.egg-hud-on[data-theme] {
+    color-scheme: dark;
+    --hud: #5fe3e0;
+    --hud-amber: #ffc857;
+    --bg: #020a12;
+    --bg-glow: #06222e;
+    --surface: #04131d;
+    --surface-raised: #072333;
+    --text: #d6fbff;
+    --text-soft: #94e4ee;
+    --text-subtle: #74cdd9;
+    --text-muted: #5eb3c1;
+    --text-faint: #3f8794;
+    --accent: #5fe3e0;
+    --accent-alt: #8cf4f1;
+    --accent-soft: #06303a;
+    --on-accent: #02121a;
+    --success: #7cffc4;
+    --warning: #ffc857;
+    --planet-core: #5fe3e0;
+    --planet-mid: #0d5263;
+    --planet-edge: #031a26;
+    --earth-core: #0b3a4a;
+    --earth-mid: #062431;
+    --earth-edge: #02121a;
+    --earth-land: #5fe3e0;
+    --earth-text: #8cf4f1;
+    --redacted: #1d5763;
+    --redacted-bg: #0a2a35;
+    --star-blue: #5fe3e0;
+    --map-core: #04202c;
+    --map-edge: #020a12;
+    --horizon-core: #06303d;
+    --horizon-mid: #031620;
+  }
+
+  html.egg-hud-switch *,
+  html.egg-hud-switch *::before,
+  html.egg-hud-switch *::after {
+    transition:
+      background-color 0.8s,
+      color 0.8s,
+      border-color 0.8s,
+      fill 0.8s,
+      filter 0.8s !important;
+  }
+
+  /* Photos and screenshots turn into holograms */
+  .egg-hud-on main img {
+    filter: grayscale(1) sepia(1) hue-rotate(140deg) saturate(2.4) brightness(0.95) contrast(1.1);
+  }
+
+  .egg-hud-on main h1,
+  .egg-hud-on main h2 {
+    text-shadow: 0 0 24px color-mix(in srgb, var(--hud) 45%, transparent);
+  }
+
+  .egg-hud,
+  .egg-hud__exit,
+  .egg-target,
+  .egg-note {
+    display: none;
+  }
+
+  .egg-hud-on .egg-hud {
+    position: fixed;
+    inset: 0;
+    z-index: 800;
+    display: block;
+    color: var(--hud);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    pointer-events: none;
+    animation: egg-fade 0.5s ease-out;
+  }
+
+  .egg-hud svg {
+    fill: none;
+    stroke: currentColor;
+  }
+
+  .egg-hud__vignette {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at center, transparent 55%, color-mix(in srgb, var(--hud) 12%, transparent) 100%),
+      repeating-linear-gradient(0deg, color-mix(in srgb, var(--hud) 5%, transparent) 0 1px, transparent 1px 3px);
+  }
+
+  /* Hexagon-ish grid fading towards the center */
+  .egg-hud__lines {
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(60deg, color-mix(in srgb, var(--hud) 6%, transparent) 0 1px, transparent 1px 46px),
+      repeating-linear-gradient(-60deg, color-mix(in srgb, var(--hud) 6%, transparent) 0 1px, transparent 1px 46px);
+    mask-image: radial-gradient(ellipse at center, transparent 35%, black 100%);
+    -webkit-mask-image: radial-gradient(ellipse at center, transparent 35%, black 100%);
+  }
+
+  .egg-hud__corner {
+    position: absolute;
+    width: 46px;
+    height: 46px;
+    border: 0 solid var(--hud);
+    filter: drop-shadow(0 0 6px var(--hud));
+  }
+
+  .egg-hud__corner--tl {
+    top: calc(var(--header-h) + 12px);
+    left: 12px;
+    border-width: 2px 0 0 2px;
+  }
+
+  .egg-hud__corner--tr {
+    top: calc(var(--header-h) + 12px);
+    right: 12px;
+    border-width: 2px 2px 0 0;
+  }
+
+  .egg-hud__corner--bl {
+    bottom: 12px;
+    left: 12px;
+    border-width: 0 0 2px 2px;
+  }
+
+  .egg-hud__corner--br {
+    bottom: 12px;
+    right: 12px;
+    border-width: 0 2px 2px 0;
+  }
+
+  .egg-hud__top {
+    position: absolute;
+    top: calc(var(--header-h) + 22px);
+    left: 70px;
+    display: flex;
+    gap: 24px;
+  }
+
+  .egg-hud__sys {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .egg-hud__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--hud);
+    box-shadow: 0 0 10px var(--hud);
+    animation: blink-hard 1.4s steps(1) infinite;
+  }
+
+  .egg-hud__clock {
+    color: var(--text);
+  }
+
+  .egg-hud__target {
+    position: absolute;
+    top: calc(var(--header-h) + 22px);
+    right: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .egg-hud__target strong {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    text-shadow: 0 0 12px color-mix(in srgb, var(--hud) 60%, transparent);
+  }
+
+  /* Altitude ruler on the left edge, scrolling with the page */
+  .egg-hud__ruler {
+    position: absolute;
+    left: 22px;
+    top: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transform: translateY(-50%);
+  }
+
+  .egg-hud__ruler-scale {
+    width: 26px;
+    height: 220px;
+    border-left: 1px solid var(--hud);
+    background-image:
+      repeating-linear-gradient(180deg, var(--hud) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(180deg, color-mix(in srgb, var(--hud) 60%, transparent) 0 1px, transparent 1px 8px);
+    background-size:
+      100% 40px,
+      45% 8px;
+    background-repeat: repeat-y;
+    mask-image: linear-gradient(transparent, black 20%, black 80%, transparent);
+    -webkit-mask-image: linear-gradient(transparent, black 20%, black 80%, transparent);
+  }
+
+  .egg-hud__ruler strong {
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  /* Gauges on the right edge */
+  .egg-hud__gauges {
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 220px;
+    margin: 0;
+    padding: 14px;
+    list-style: none;
+    border-right: 2px solid var(--hud);
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--hud) 8%, transparent));
+    transform: translateY(-50%);
+  }
+
+  .egg-gauge {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .egg-gauge__head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 10px;
+  }
+
+  .egg-gauge__head strong {
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .egg-gauge__bar {
+    height: 4px;
+    background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--hud) 18%, transparent) 0 6px, transparent 6px 8px);
+  }
+
+  .egg-gauge__bar span {
+    display: block;
+    height: 100%;
+    background: repeating-linear-gradient(90deg, var(--hud) 0 6px, transparent 6px 8px);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--hud) 60%, transparent);
+    animation: egg-grow 1.2s ease-out both;
+    transform-origin: left;
+  }
+
+  .egg-gauge.is-alert,
+  .egg-gauge.is-alert strong {
+    color: var(--hud-amber);
+  }
+
+  .egg-gauge.is-alert .egg-gauge__bar span {
+    background: repeating-linear-gradient(90deg, var(--hud-amber) 0 6px, transparent 6px 8px);
+    animation:
+      egg-grow 1.2s ease-out both,
+      blink-hard 1s steps(1) 1.2s infinite;
+  }
+
+  /* Reactor rings, bottom left */
+  .egg-hud__reactor {
+    position: absolute;
+    left: 28px;
+    bottom: 28px;
+    width: 130px;
+    height: 130px;
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--hud) 70%, transparent));
+  }
+
+  .egg-hud__reactor line {
+    stroke-width: 1.5;
+  }
+
+  .egg-r {
+    transform-origin: 100px 100px;
+    transform-box: view-box;
+  }
+
+  .egg-r--slow {
+    animation: spin 24s linear infinite;
+  }
+
+  .egg-r--fast {
+    animation: spin 6s linear infinite;
+  }
+
+  .egg-r--rev {
+    animation: spin 10s linear infinite reverse;
+  }
+
+  .egg-hud__core {
+    fill: color-mix(in srgb, var(--hud) 35%, transparent);
+    stroke-width: 2;
+    animation: egg-pulse 2.4s ease-in-out infinite;
+  }
+
+  /* The assistant's voice, bottom center */
+  .egg-hud__voice {
+    position: absolute;
+    left: 50%;
+    bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: min(620px, calc(100% - 340px));
+    transform: translateX(-50%);
+    text-align: center;
+  }
+
+  .egg-hud__wave {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 26px;
+  }
+
+  .egg-hud__wave span {
+    width: 3px;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--hud);
+    box-shadow: 0 0 6px var(--hud);
+    animation: egg-wave 0.7s ease-in-out infinite alternate;
+  }
+
+  .egg-hud__voice p {
+    min-height: 1.5em;
+    margin: 0;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: none;
+    color: var(--text);
+  }
+
+  /* Reticle following the mouse */
+  .egg-hud__reticle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .egg-hud__reticle-ring {
+    position: absolute;
+    left: -22px;
+    top: -22px;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--hud);
+    border-radius: 50%;
+    box-shadow: 0 0 10px color-mix(in srgb, var(--hud) 50%, transparent);
+  }
+
+  .egg-hud__reticle-ring--dashed {
+    left: -34px;
+    top: -34px;
+    width: 68px;
+    height: 68px;
+    border-style: dashed;
+    box-shadow: none;
+    opacity: 0.7;
+    animation: spin 5s linear infinite;
+  }
+
+  .egg-hud__reticle-xy {
+    position: absolute;
+    left: 40px;
+    top: 14px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  @media (hover: none) {
+    .egg-hud__reticle {
+      display: none;
+    }
+  }
+
+  /* Boot sequence */
+  .egg-hud__boot {
+    display: none;
+  }
+
+  .egg-hud-init .egg-hud__boot {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: radial-gradient(circle at center, color-mix(in srgb, var(--bg) 70%, transparent), color-mix(in srgb, var(--bg) 92%, transparent));
+    animation: egg-boot-out 1.9s ease-in forwards;
+  }
+
+  .egg-hud__boot-rings {
+    width: min(300px, 60vw);
+    height: auto;
+    filter: drop-shadow(0 0 14px var(--hud));
+    animation: egg-boot-rings 1.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
+
+  .egg-hud__boot-text {
+    font-size: 12px;
+    letter-spacing: 0.24em;
+  }
+
+  .egg-hud__boot-bar {
+    width: min(300px, 60vw);
+    height: 2px;
+    background: color-mix(in srgb, var(--hud) 20%, transparent);
+  }
+
+  .egg-hud__boot-bar span {
+    display: block;
+    height: 100%;
+    background: var(--hud);
+    box-shadow: 0 0 10px var(--hud);
+    animation: egg-grow 1.4s ease-out both;
+    transform-origin: left;
+  }
+
+  /* Exit button */
+  .egg-hud-on .egg-hud__exit {
+    position: fixed;
+    right: 70px;
+    bottom: 22px;
+    z-index: 801;
+    display: block;
+    min-height: 44px;
+    padding: 10px 14px;
+    border: 1px solid color-mix(in srgb, var(--hud) 50%, transparent);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
+    color: var(--hud);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .egg-hud__exit-touch {
+    display: none;
+  }
+
+  @media (hover: none) {
+    .egg-hud__exit-keys {
+      display: none;
+    }
+
+    .egg-hud__exit-touch {
+      display: inline;
+    }
+  }
+
+  /* Target around the portrait */
+  .egg-hud-on .egg-target {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: block;
+    color: var(--hud);
+    pointer-events: none;
+    animation: egg-fade 0.6s ease-out 1.2s both;
+  }
+
+  .egg-target__ring {
+    position: absolute;
+    left: 50%;
+    top: 39%;
+    width: 22%;
+    aspect-ratio: 1;
+    border: 1.5px solid var(--hud);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--hud) 40%, transparent);
+  }
+
+  .egg-target__ring--dashed {
+    width: 34%;
+    border-style: dashed;
+    box-shadow: none;
+    opacity: 0.8;
+    animation: egg-spin-center 8s linear infinite;
+  }
+
+  .egg-target__cross {
+    position: absolute;
+    left: 50%;
+    top: 39%;
+    width: 46%;
+    height: 1px;
+    background: linear-gradient(90deg, var(--hud) 0 30%, transparent 30% 70%, var(--hud) 70%);
+    transform: translate(-50%, -50%);
+    opacity: 0.6;
+  }
+
+  .egg-tag {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 8px;
+    border-left: 2px solid var(--hud);
+    background: color-mix(in srgb, var(--bg) 75%, transparent);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--hud);
+  }
+
+  .egg-tag strong {
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .egg-tag strong.is-alert {
+    color: var(--hud-amber);
+  }
+
+  .egg-tag--pilot {
+    left: 2%;
+    top: 14%;
+  }
+
+  .egg-tag--coffee {
+    right: 0;
+    top: 26%;
+    align-items: flex-end;
+    border-left: 0;
+    border-right: 2px solid var(--hud);
+  }
+
+  .egg-tag--state {
+    left: 4%;
+    bottom: 26%;
+  }
+
+  /* Analysis notes on the sections */
+  .egg-hud-on .egg-note {
+    position: absolute;
+    top: 16px;
+    right: max(70px, calc((100% - var(--max-w)) / 2 + var(--gutter)));
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 14px;
+    border: 1px solid color-mix(in srgb, var(--hud) 35%, transparent);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    pointer-events: none;
+    animation: egg-fade 0.6s ease-out;
+  }
+
+  .egg-note__title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--hud);
+    opacity: 0.7;
+  }
+
+  .egg-note__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .egg-note__line {
+    width: 20px;
+    height: 1px;
+    background: var(--hud);
+  }
+
+  .egg-note__label {
+    color: var(--hud);
+  }
+
+  .egg-note__value {
+    color: var(--text);
+  }
+
+  /* Small screens: keep the frame, the target and the voice */
+  @media (max-width: 1099px) {
+    .egg-hud__ruler,
+    .egg-hud__gauges,
+    .egg-hud__target {
+      display: none;
+    }
+
+    .egg-hud__top {
+      left: 24px;
+      right: 24px;
+      justify-content: space-between;
+      font-size: 10px;
+    }
+
+    .egg-hud__reactor {
+      left: 18px;
+      bottom: 80px;
+      width: 70px;
+      height: 70px;
+    }
+
+    .egg-hud__voice {
+      bottom: 84px;
+      left: 100px;
+      right: 18px;
+      width: auto;
+      align-items: flex-start;
+      transform: none;
+      text-align: left;
+    }
+
+    .egg-hud-on .egg-hud__exit {
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+    }
+
+    .egg-hud-on .egg-note {
+      right: 16px;
+    }
+  }
+
+  /* ---------- Shared animations ---------- */
+
+  @keyframes egg-shake {
+    25% {
+      transform: translate(1px, -1px);
+    }
+    75% {
+      transform: translate(-1px, 1px);
+    }
+  }
+
+  @keyframes egg-pop {
+    from {
+      transform: scale(0.85);
+      opacity: 0;
+    }
+  }
+
+  @keyframes egg-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes egg-scan {
+    from {
+      top: 0;
+    }
+    to {
+      top: 100%;
+    }
+  }
+
+  @keyframes egg-type {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  @keyframes egg-bolt {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    20%,
+    60% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes egg-spin-center {
+    to {
+      transform: translate(-50%, -50%) rotate(360deg);
+    }
+  }
+
+  @keyframes egg-card-in {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+  }
+
+  @keyframes egg-grow {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes egg-pulse {
+    50% {
+      fill-opacity: 0.4;
+      stroke-opacity: 0.6;
+    }
+  }
+
+  @keyframes egg-wave {
+    from {
+      transform: scaleY(0.15);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+
+  @keyframes egg-boot-rings {
+    from {
+      transform: scale(0.4) rotate(-90deg);
+      opacity: 0;
+    }
+    35% {
+      transform: scale(1) rotate(0);
+      opacity: 1;
+    }
+    80% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    to {
+      transform: scale(2.2);
+      opacity: 0;
+    }
+  }
+
+  @keyframes egg-boot-out {
+    0%,
+    75% {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes blink-hard {
+    50% {
+      opacity: 0;
+    }
+  }
+</style>

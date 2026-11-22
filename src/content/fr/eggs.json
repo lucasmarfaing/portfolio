@@ -1,0 +1,99 @@
+{
+  "konami": {
+    "status": "Séquence de lancement",
+    "statusShort": "Lancement",
+    "countdown": "T —",
+    "ignition": "Moteurs · allumage",
+    "stamp": "Déclassifié",
+    "level": "Niveau omega",
+    "title": "Bienvenue à bord, pilote.",
+    "trip": "Tu es en route vers {star}, à {ly} années-lumière. À la vitesse de Voyager 1, l’objet le plus rapide à avoir quitté le Système solaire, ce voyage durera environ {years} ans. Prévois des snacks.",
+    "labels": { "destination": "Destination", "distance": "Distance", "duration": "Durée de vol", "ref": "Réf. mission" },
+    "units": { "ly": "al", "years": "ans" },
+    "destinations": [
+      { "name": "Proxima du Centaure", "code": "PRXC", "ly": 4.24 },
+      { "name": "Alpha du Centaure", "code": "ACEN", "ly": 4.37 },
+      { "name": "l’étoile de Barnard", "code": "BRND", "ly": 5.96 },
+      { "name": "Sirius", "code": "SIRI", "ly": 8.6 },
+      { "name": "Epsilon Eridani", "code": "EERI", "ly": 10.5 },
+      { "name": "Véga", "code": "VEGA", "ly": 25 },
+      { "name": "TRAPPIST-1", "code": "TRAP", "ly": 40.7 }
+    ],
+    "hint": "[Ton indice : un mot, une image floutée, une date…]",
+    "close": "Retour · Échap",
+    "announce": "Code de lancement accepté. Fiche déclassifiée ouverte."
+  },
+  "radio": {
+    "intercept": "Interception…",
+    "statusPriority": "Signal prioritaire",
+    "statusLinked": "Liaison établie",
+    "seconds": 6,
+    "words": [
+      {
+        "match": ["houston"],
+        "lines": [
+          "Houston, ici {callsign}.",
+          "On vous reçoit 5 sur 5.",
+          "Aucun problème à signaler… pour l’instant.",
+          "Code de réduction café : 0 %"
+        ],
+        "badge": "Badge débloqué · Contrôleur au sol"
+      },
+      { "match": ["pikachu"], "lines": ["Pika ?", "Pika… PIKAAA !"], "effect": "bolt" },
+      { "match": ["jarvis"], "lines": ["À votre service.", "Affichage tête haute activé."], "effect": "hud" },
+      {
+        "match": ["dr pepper", "drpepper", "dr. pepper"],
+        "lines": ["Demande de ravitaillement reçue.", "Une canette est en route vers la jauge."],
+        "effect": "fuel"
+      }
+    ]
+  },
+  "fuel": {
+    "empty": "⚠ Réservoir vide",
+    "refilled": "Plein refait · +1 canette"
+  },
+  "hud": {
+    "boot": "Initialisation de l’affichage tête haute",
+    "system": "Assistant de bord · en ligne",
+    "home": "Base",
+    "target": "Cible",
+    "altitude": "Altitude",
+    "altitudeUnit": "m",
+    "readouts": [
+      { "label": "Puissance", "value": "400 %", "level": 100 },
+      { "label": "Imagination", "value": "Illimitée", "level": 100 },
+      { "label": "Pieds sur terre", "value": "Stable", "level": 74 },
+      { "label": "Café", "value": "Critique", "level": 12, "alert": true }
+    ],
+    "voice": [
+      "Bonjour, monsieur. Tous les systèmes sont en ligne.",
+      "Analyse du pilote : rêveur, mais les pieds sur terre.",
+      "Niveau de café critique. J’ai prévenu la base.",
+      "Je vous suggère d’ouvrir un canal de communication.",
+      "Pour quitter l’affichage, appuyez trois fois sur J."
+    ],
+    "pilot": "Pilote identifié",
+    "pilotValue": "L. Marfaing · 98,7 %",
+    "coffee": "Niveau de café",
+    "coffeeValue": "Critique",
+    "state": "État",
+    "stateValue": "Rêveur · pieds sur terre",
+    "analysis": "Analyse",
+    "exit": "HUD actif · J ×3 pour quitter",
+    "exitTouch": "HUD actif · toucher pour quitter",
+    "announceOn": "Mode HUD activé",
+    "announceOff": "Mode HUD désactivé",
+    "sections": {
+      "inventaire": [
+        { "label": "Étoiles", "value": "{stars}" },
+        { "label": "Favorite", "value": "[à toi de dire]" }
+      ],
+      "missions": [
+        { "label": "Missions", "value": "{missions}" },
+        { "label": "Bugs écrasés", "value": "[n]" },
+        { "label": "Temps en prod", "value": "[n] jours" }
+      ],
+      "contact": [{ "label": "Temps de réponse", "value": "[estimation]" }]
+    }
+  }
+}

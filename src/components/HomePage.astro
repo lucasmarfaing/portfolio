@@ -8,6 +8,7 @@ import Inventory from '@/sections/Inventory.astro';
 import Missions from '@/sections/Missions.astro';
 import Transmissions from '@/sections/Transmissions.astro';
 import Contact from '@/sections/Contact.astro';
+import EasterEggs from '@/components/EasterEggs.astro';
 import { getContent, type Locale } from '@/lib/content';
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
 }
 
 const { lang } = Astro.props;
-const { site, hero, crew, trajectory, inventory, sky, missions, transmissions, contact } = getContent(lang);
+const { site, hero, crew, trajectory, inventory, sky, missions, transmissions, contact, eggs } = getContent(lang);
 ---
 
 <BaseLayout lang={lang} title={site.meta.title} description={site.meta.description}>
@@ -29,4 +30,6 @@ const { site, hero, crew, trajectory, inventory, sky, missions, transmissions, c
     <Transmissions content={transmissions} />
     <Contact content={contact} callsign={site.callsign} />
   </main>
+  <EasterEggs content={eggs} callsign={site.callsign} counts={{ stars: sky.stars.length, missions: missions.missions.length }} />
+
 </BaseLayout>

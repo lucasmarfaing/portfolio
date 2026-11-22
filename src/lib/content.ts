@@ -18,6 +18,8 @@ import frContact from '@/content/fr/contact.json';
 import enContact from '@/content/en/contact.json';
 import frNotFound from '@/content/fr/notfound.json';
 import enNotFound from '@/content/en/notfound.json';
+import frEggs from '@/content/fr/eggs.json';
+import enEggs from '@/content/en/eggs.json';
 
 export const locales = ['fr', 'en'] as const;
 export type Locale = (typeof locales)[number];
@@ -388,6 +390,79 @@ const notFoundSchema = z.object({
   coords: z.string(),
 });
 
+/** Easter eggs: hidden texts. A value in [brackets] is a placeholder and is not shown. */
+const eggsSchema = z.object({
+  konami: z.object({
+    status: z.string(),
+    statusShort: z.string(),
+    countdown: z.string(),
+    ignition: z.string(),
+    stamp: z.string(),
+    level: z.string(),
+    title: z.string().min(1),
+    /** {star}, {ly} and {years} are filled in with a random destination */
+    trip: z.string(),
+    labels: z.object({ destination: z.string(), distance: z.string(), duration: z.string(), ref: z.string() }),
+    units: z.object({ ly: z.string(), years: z.string() }),
+    /** Real stars: distance in light-years; the duration is computed at Voyager 1's speed (17 km/s) */
+    destinations: z
+      .array(z.object({ name: z.string().min(1), code: z.string().regex(/^[A-Z0-9]{2,5}$/), ly: z.number().positive() }))
+      .min(1),
+    hint: z.string(),
+    close: z.string(),
+    announce: z.string(),
+  }),
+  radio: z.object({
+    intercept: z.string(),
+    statusPriority: z.string(),
+    statusLinked: z.string(),
+    seconds: z.number().min(2).max(30),
+    /** Words typed in the contact "call sign" field (matched without accents or capitals) */
+    words: z
+      .array(
+        z.object({
+          match: z.array(z.string().min(1)).min(1),
+          lines: z.array(z.string()).min(1),
+          badge: z.string().optional(),
+          effect: z.enum(['bolt', 'hud', 'fuel']).optional(),
+        }),
+      )
+      .min(1),
+  }),
+  fuel: z.object({
+    empty: z.string(),
+    refilled: z.string(),
+  }),
+  hud: z.object({
+    boot: z.string(),
+    system: z.string(),
+    home: z.string(),
+    target: z.string(),
+    altitude: z.string(),
+    altitudeUnit: z.string(),
+    /** Gauges on the right edge; level 0-100 fills the bar */
+    readouts: z
+      .array(z.object({ label: z.string(), value: z.string(), level: z.number().min(0).max(100), alert: z.boolean().optional() }))
+      .max(6),
+    /** Lines "spoken" by the assistant at the bottom of the screen, in turn */
+    voice: z.array(z.string().min(1)).min(1),
+    pilot: z.string(),
+    pilotValue: z.string(),
+    coffee: z.string(),
+    coffeeValue: z.string(),
+    state: z.string(),
+    stateValue: z.string(),
+    analysis: z.string(),
+    exit: z.string(),
+    exitTouch: z.string(),
+    announceOn: z.string(),
+    announceOff: z.string(),
+    /** Annotations per section id ("missions"…); {stars} and {missions} are counted automatically */
+    sections: z.record(z.string(), z.array(z.object({ label: z.string(), value: z.string() }))),
+  }),
+});
+
+export type EggsContent = z.infer<typeof eggsSchema>;
 export type NotFoundContent = z.infer<typeof notFoundSchema>;
 export type TransmissionsContent = z.infer<typeof transmissionsSchema>;
 export type ContactContent = z.infer<typeof contactSchema>;
@@ -401,7 +476,7 @@ export type CrewContent = z.infer<typeof crewSchema>;
 export type Stat = z.infer<typeof stat>;
 
 type RawLocale = Record<
-  'site' | 'hero' | 'crew' | 'trajectory' | 'inventory' | 'missions' | 'transmissions' | 'contact' | 'notFound',
+  'site' | 'hero' | 'crew' | 'trajectory' | 'inventory' | 'missions' | 'transmissions' | 'contact' | 'notFound' | 'eggs',
   unknown
 >;
 const raw: Record<Locale, RawLocale> = {
@@ -415,6 +490,7 @@ const raw: Record<Locale, RawLocale> = {
     transmissions: frTransmissions,
     contact: frContact,
     notFound: frNotFound,
+    eggs: frEggs,
   },
   en: {
     site: enSite,
@@ -426,6 +502,7 @@ const raw: Record<Locale, RawLocale> = {
     transmissions: enTransmissions,
     contact: enContact,
     notFound: enNotFound,
+    eggs: enEggs,
   },
 };
 
@@ -465,6 +542,7 @@ export function getContent(lang: Locale) {
     transmissions: parse(transmissionsSchema, raw[lang].transmissions, 'transmissions'),
     contact: parse(contactSchema, raw[lang].contact, 'contact'),
     notFound: parse(notFoundSchema, raw[lang].notFound, 'notfound'),
+    eggs: parse(eggsSchema, raw[lang].eggs, 'eggs'),
   };
 }
 

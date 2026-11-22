@@ -1,0 +1,99 @@
+{
+  "konami": {
+    "status": "Launch sequence",
+    "statusShort": "Launch",
+    "countdown": "T —",
+    "ignition": "Engines · ignition",
+    "stamp": "Declassified",
+    "level": "Omega clearance",
+    "title": "Welcome aboard, pilot.",
+    "trip": "You are heading for {star}, {ly} light-years away. At the speed of Voyager 1, the fastest object to leave the Solar System, this trip will take about {years} years. Bring snacks.",
+    "labels": { "destination": "Destination", "distance": "Distance", "duration": "Flight time", "ref": "Mission ref." },
+    "units": { "ly": "ly", "years": "years" },
+    "destinations": [
+      { "name": "Proxima Centauri", "code": "PRXC", "ly": 4.24 },
+      { "name": "Alpha Centauri", "code": "ACEN", "ly": 4.37 },
+      { "name": "Barnard’s Star", "code": "BRND", "ly": 5.96 },
+      { "name": "Sirius", "code": "SIRI", "ly": 8.6 },
+      { "name": "Epsilon Eridani", "code": "EERI", "ly": 10.5 },
+      { "name": "Vega", "code": "VEGA", "ly": 25 },
+      { "name": "TRAPPIST-1", "code": "TRAP", "ly": 40.7 }
+    ],
+    "hint": "[Your hint: a word, a blurred image, a date…]",
+    "close": "Back · Esc",
+    "announce": "Launch code accepted. Declassified file open."
+  },
+  "radio": {
+    "intercept": "Intercepting…",
+    "statusPriority": "Priority signal",
+    "statusLinked": "Link established",
+    "seconds": 6,
+    "words": [
+      {
+        "match": ["houston"],
+        "lines": [
+          "Houston, this is {callsign}.",
+          "We read you loud and clear.",
+          "Nothing to report… for now.",
+          "Coffee discount code: 0%"
+        ],
+        "badge": "Badge unlocked · Ground control"
+      },
+      { "match": ["pikachu"], "lines": ["Pika?", "Pika… PIKAAA!"], "effect": "bolt" },
+      { "match": ["jarvis"], "lines": ["At your service.", "Heads-up display online."], "effect": "hud" },
+      {
+        "match": ["dr pepper", "drpepper", "dr. pepper"],
+        "lines": ["Refuelling request received.", "A can is on its way to the gauge."],
+        "effect": "fuel"
+      }
+    ]
+  },
+  "fuel": {
+    "empty": "⚠ Tank empty",
+    "refilled": "Refuelled · +1 can"
+  },
+  "hud": {
+    "boot": "Heads-up display initialising",
+    "system": "Onboard assistant · online",
+    "home": "Base",
+    "target": "Target",
+    "altitude": "Altitude",
+    "altitudeUnit": "m",
+    "readouts": [
+      { "label": "Power", "value": "400%", "level": 100 },
+      { "label": "Imagination", "value": "Unlimited", "level": 100 },
+      { "label": "Feet on the ground", "value": "Stable", "level": 74 },
+      { "label": "Coffee", "value": "Critical", "level": 12, "alert": true }
+    ],
+    "voice": [
+      "Good morning, sir. All systems are online.",
+      "Pilot analysis: a dreamer, feet on the ground.",
+      "Coffee level critical. I have notified the base.",
+      "May I suggest opening a communication channel?",
+      "To close the display, press J three times."
+    ],
+    "pilot": "Pilot identified",
+    "pilotValue": "L. Marfaing · 98.7%",
+    "coffee": "Coffee level",
+    "coffeeValue": "Critical",
+    "state": "Status",
+    "stateValue": "Dreamer · feet on the ground",
+    "analysis": "Analysis",
+    "exit": "HUD on · J ×3 to exit",
+    "exitTouch": "HUD on · tap to exit",
+    "announceOn": "HUD mode on",
+    "announceOff": "HUD mode off",
+    "sections": {
+      "inventaire": [
+        { "label": "Stars", "value": "{stars}" },
+        { "label": "Favourite", "value": "[your call]" }
+      ],
+      "missions": [
+        { "label": "Missions", "value": "{missions}" },
+        { "label": "Bugs squashed", "value": "[n]" },
+        { "label": "Time in prod", "value": "[n] days" }
+      ],
+      "contact": [{ "label": "Response time", "value": "[estimate]" }]
+    }
+  }
+}
