@@ -7,7 +7,7 @@
     "stamp": "Declassified",
     "level": "Omega clearance",
     "title": "Welcome aboard, pilot.",
-    "trip": "You are heading for {star}, {ly} light-years away. At the speed of Voyager 1, the fastest object to leave the Solar System, this trip will take about {years} years. Bring snacks.",
+    "trip": "You are heading for {star}, {ly} light-years away. At the speed of Voyager 1, the most distant probe humanity has ever sent, this trip will take about {years} years. Bring snacks.",
     "labels": { "destination": "Destination", "distance": "Distance", "duration": "Flight time", "ref": "Mission ref." },
     "units": { "ly": "ly", "years": "years" },
     "destinations": [

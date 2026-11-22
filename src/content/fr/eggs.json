@@ -7,7 +7,7 @@
     "stamp": "Déclassifié",
     "level": "Niveau omega",
     "title": "Bienvenue à bord, pilote.",
-    "trip": "Tu es en route vers {star}, à {ly} années-lumière. À la vitesse de Voyager 1, l’objet le plus rapide à avoir quitté le Système solaire, ce voyage durera environ {years} ans. Prévois des snacks.",
+    "trip": "Tu es en route vers {star}, à {ly} années-lumière. À la vitesse de Voyager 1, la sonde la plus lointaine jamais envoyée par l’humanité, ce voyage durera environ {years} ans. Prévois des snacks.",
     "labels": { "destination": "Destination", "distance": "Distance", "duration": "Durée de vol", "ref": "Réf. mission" },
     "units": { "ly": "al", "years": "ans" },
     "destinations": [
