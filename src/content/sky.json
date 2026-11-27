@@ -1,418 +1,91 @@
 {
   "groups": [
-    { "id": "front", "code": "FR", "color": "red" },
-    { "id": "back", "code": "BK", "color": "blue" },
-    { "id": "tools", "code": "OT", "color": "amber" }
+    { "id": "front", "code": "FR", "color": "red", "side": "left", "label": [58, 222] },
+    { "id": "back", "code": "BK", "color": "blue", "side": "right", "label": [470, 300] },
+    { "id": "quality", "code": "QB", "color": "purple", "side": "left", "label": [322, 582] },
+    { "id": "tools", "code": "OT", "color": "amber", "side": "right", "rated": false, "label": [108, 494] },
+    { "id": "off", "code": "ET", "color": "grey", "side": "right", "extinct": true, "label": [450, 28] }
   ],
   "stars": [
-    {
-      "name": "React",
-      "group": "front",
-      "symbol": "Re",
-      "url": "https://react.dev",
-      "x": 120,
-      "y": 175
-    },
-    {
-      "name": "React Native",
-      "group": "front",
-      "symbol": "Rn",
-      "url": "https://reactnative.dev",
-      "x": 190,
-      "y": 125
-    },
-    {
-      "name": "TypeScript",
-      "group": "front",
-      "symbol": "Ts",
-      "url": "https://www.typescriptlang.org",
-      "x": 262,
-      "y": 152
-    },
-    {
-      "name": "Angular",
-      "group": "front",
-      "symbol": "Ng",
-      "url": "https://angular.dev",
-      "x": 305,
-      "y": 95
-    },
-    {
-      "name": "Angular Signals",
-      "group": "front",
-      "symbol": "Sg",
-      "url": "https://angular.dev/guide/signals",
-      "x": 250,
-      "y": 232
-    },
-    {
-      "name": "Redux",
-      "group": "front",
-      "symbol": "Rx",
-      "url": "https://redux.js.org",
-      "x": 182,
-      "y": 262
-    },
-    {
-      "name": "Zustand",
-      "group": "front",
-      "symbol": "Zu",
-      "url": "https://zustand.docs.pmnd.rs",
-      "x": 128,
-      "y": 330
-    },
-    {
-      "name": "HTML5 / CSS3",
-      "group": "front",
-      "symbol": "Hc",
-      "url": "https://developer.mozilla.org",
-      "x": 222,
-      "y": 322
-    },
-    {
-      "name": "SCSS",
-      "group": "front",
-      "symbol": "Sc",
-      "url": "https://sass-lang.com",
-      "x": 300,
-      "y": 282
-    },
-    {
-      "name": "Node.js",
-      "group": "back",
-      "symbol": "No",
-      "url": "https://nodejs.org",
-      "x": 382,
-      "y": 170
-    },
-    {
-      "name": "Express.js",
-      "group": "back",
-      "symbol": "Ex",
-      "url": "https://expressjs.com",
-      "x": 452,
-      "y": 138,
-      "status": "reserve"
-    },
-    {
-      "name": "Fastify",
-      "group": "back",
-      "symbol": "Fy",
-      "url": "https://fastify.dev",
-      "x": 522,
-      "y": 200
-    },
-    {
-      "name": "C# / .NET",
-      "group": "back",
-      "symbol": "Cs",
-      "url": "https://dotnet.microsoft.com",
-      "x": 502,
-      "y": 282,
-      "status": "reserve"
-    },
-    {
-      "name": "PostgreSQL",
-      "group": "back",
-      "symbol": "Pg",
-      "url": "https://www.postgresql.org",
-      "x": 432,
-      "y": 262
-    },
-    {
-      "name": "MySQL",
-      "group": "back",
-      "symbol": "My",
-      "url": "https://www.mysql.com",
-      "x": 400,
-      "y": 332,
-      "status": "reserve"
-    },
-    {
-      "name": "Redis",
-      "group": "back",
-      "symbol": "Rd",
-      "url": "https://redis.io",
-      "x": 470,
-      "y": 362
-    },
-    {
-      "name": "REST API",
-      "group": "back",
-      "symbol": "Ra",
-      "url": "https://developer.mozilla.org",
-      "x": 545,
-      "y": 330
-    },
-    {
-      "name": "Socket.io",
-      "group": "back",
-      "symbol": "So",
-      "url": "https://socket.io",
-      "x": 420,
-      "y": 410
-    },
-    {
-      "name": "JWT Auth",
-      "group": "back",
-      "symbol": "Jw",
-      "url": "https://jwt.io",
-      "x": 500,
-      "y": 432
-    },
-    {
-      "name": "PHP",
-      "group": "back",
-      "symbol": "Ph",
-      "url": "https://www.php.net",
-      "x": 565,
-      "y": 245,
-      "status": "archived"
-    },
-    {
-      "name": "Java",
-      "group": "back",
-      "symbol": "Jv",
-      "url": "https://dev.java",
-      "x": 566,
-      "y": 405,
-      "status": "archived"
-    },
-    {
-      "name": "SQL Server",
-      "group": "back",
-      "symbol": "Sq",
-      "url": "https://www.microsoft.com/sql-server",
-      "x": 350,
-      "y": 372,
-      "status": "reserve"
-    },
-    {
-      "name": "Figma",
-      "group": "tools",
-      "symbol": "Fg",
-      "url": "https://www.figma.com",
-      "x": 130,
-      "y": 420
-    },
-    {
-      "name": "Git",
-      "group": "tools",
-      "symbol": "Gt",
-      "url": "https://git-scm.com",
-      "x": 195,
-      "y": 395
-    },
-    {
-      "name": "Azure",
-      "group": "tools",
-      "symbol": "Az",
-      "url": "https://azure.microsoft.com",
-      "x": 255,
-      "y": 430
-    },
-    {
-      "name": "VS Code",
-      "group": "tools",
-      "symbol": "Vs",
-      "url": "https://code.visualstudio.com",
-      "x": 320,
-      "y": 405
-    },
-    {
-      "name": "Postman",
-      "group": "tools",
-      "symbol": "Pm",
-      "url": "https://www.postman.com",
-      "x": 360,
-      "y": 470
-    },
-    {
-      "name": "Webpack",
-      "group": "tools",
-      "symbol": "Wp",
-      "url": "https://webpack.js.org",
-      "x": 300,
-      "y": 490
-    },
-    {
-      "name": "Vite",
-      "group": "tools",
-      "symbol": "Vi",
-      "url": "https://vite.dev",
-      "x": 235,
-      "y": 520
-    },
-    {
-      "name": "Vitest",
-      "group": "tools",
-      "symbol": "Vt",
-      "url": "https://vitest.dev",
-      "x": 170,
-      "y": 490
-    },
-    {
-      "name": "Jest",
-      "group": "tools",
-      "symbol": "Je",
-      "url": "https://jestjs.io",
-      "x": 285,
-      "y": 560
-    },
-    {
-      "name": "Cypress",
-      "group": "tools",
-      "symbol": "Cy",
-      "url": "https://www.cypress.io",
-      "x": 350,
-      "y": 540,
-      "status": "reserve"
-    },
-    {
-      "name": "Expo",
-      "group": "tools",
-      "symbol": "Xp",
-      "url": "https://expo.dev",
-      "x": 395,
-      "y": 555
-    }
+    { "name": "React", "group": "front", "symbol": "Re", "star": "Bételgeuse", "url": "https://react.dev", "x": 100, "y": 114, "level": 3, "since": 2020, "lastUsed": "current", "missions": ["portfolio"] },
+    { "name": "React Native", "group": "front", "symbol": "Rn", "star": "Bellatrix", "url": "https://reactnative.dev", "x": 200, "y": 129, "level": 3, "since": 2020, "lastUsed": "current", "missions": ["Gmee"] },
+    { "name": "TypeScript", "group": "front", "symbol": "Ts", "star": "Rigel", "url": "https://www.typescriptlang.org", "x": 235, "y": 323, "level": 3, "since": 2016, "lastUsed": "current", "missions": ["personal", "Ubigreen"] },
+    { "name": "Angular", "group": "front", "symbol": "Ng", "star": "Meissa", "url": "https://angular.dev", "x": 167, "y": 80, "level": 2, "since": 2022, "lastUsed": "current", "missions": ["Ubigreen"] },
+    { "name": "Angular Signals", "group": "front", "symbol": "Sg", "star": "Tabit", "url": "https://angular.dev/guide/signals", "x": 318, "y": 119, "level": 2, "since": 2022, "lastUsed": "current", "missions": ["Ubigreen"] },
+    { "name": "Redux", "group": "front", "symbol": "Rx", "star": "Hatysa", "url": "https://redux.js.org", "x": 166, "y": 292, "level": 2, "since": 2020, "lastUsed": "current", "missions": ["Gmee"] },
+    { "name": "Zustand", "group": "front", "symbol": "Zu", "star": "Mintaka", "url": "https://zustand.docs.pmnd.rs", "x": 187, "y": 209, "level": 3, "since": 2020, "lastUsed": "current", "missions": ["Gmee"] },
+    { "name": "HTML5 / CSS3", "group": "front", "symbol": "Hc", "star": "Alnitak", "url": "https://developer.mozilla.org", "x": 138, "y": 246, "level": 3, "since": 2011, "lastUsed": "current", "missions": ["all"] },
+    { "name": "SCSS", "group": "front", "symbol": "Sc", "star": "Alnilam", "url": "https://sass-lang.com", "x": 163, "y": 229, "level": 3, "since": 2018, "lastUsed": "current", "missions": ["Ubigreen"] },
+    { "name": "Expo", "group": "front", "symbol": "Xp", "star": "Saïph", "url": "https://expo.dev", "x": 125, "y": 343, "level": 3, "since": 2020, "lastUsed": "current", "missions": ["Gmee", "Ubigreen"] },
+    { "name": "Node.js", "group": "back", "symbol": "No", "star": "Dubhe", "url": "https://nodejs.org", "x": 556, "y": 186, "level": 3, "since": 2015, "lastUsed": "current", "missions": ["personal"] },
+    { "name": "Fastify", "group": "back", "symbol": "Fy", "star": "Alioth", "url": "https://fastify.dev", "x": 440, "y": 248, "level": 3, "since": 2023, "lastUsed": "current", "missions": ["personal"] },
+    { "name": "C# / .NET", "group": "back", "symbol": "Cs", "star": "Megrez", "url": "https://dotnet.microsoft.com", "x": 485, "y": 240, "level": 2, "since": 2018, "lastUsed": "current", "missions": ["Ubigreen"] },
+    { "name": "PostgreSQL", "group": "back", "symbol": "Pg", "star": "Phecda", "url": "https://www.postgresql.org", "x": 514, "y": 266, "level": 2, "since": 2020, "lastUsed": "current", "missions": ["Gmee"] },
+    { "name": "Redis", "group": "back", "symbol": "Rd", "star": "Mizar", "url": "https://redis.io", "x": 403, "y": 252, "level": 2, "since": 2023, "lastUsed": "current", "missions": ["Gmee"] },
+    { "name": "REST API", "group": "back", "symbol": "Ra", "star": "Merak", "url": "https://developer.mozilla.org", "x": 572, "y": 230, "level": 3, "since": 2015, "lastUsed": "current", "missions": ["all"] },
+    { "name": "JWT Auth", "group": "back", "symbol": "Jw", "star": "Alkaïd", "url": "https://jwt.io", "x": 360, "y": 292, "level": 2, "since": 2015, "lastUsed": "current", "missions": ["all"] },
+    { "name": "SQL Server", "group": "back", "symbol": "Sq", "star": "Alcor", "url": "https://www.microsoft.com/sql-server", "x": 411, "y": 225, "level": 2, "since": 2018, "lastUsed": "current", "missions": ["Ubigreen"] },
+    { "name": "Webpack", "group": "quality", "symbol": "Wp", "star": "Caph", "url": "https://webpack.js.org", "x": 416, "y": 530, "level": 2, "since": 2019, "lastUsed": "current", "missions": ["Ubigreen"] },
+    { "name": "Vite", "group": "quality", "symbol": "Vi", "star": "Schedar", "url": "https://vite.dev", "x": 373, "y": 566, "level": 3, "since": 2025, "lastUsed": "current", "missions": ["personal"] },
+    { "name": "Vitest", "group": "quality", "symbol": "Vt", "star": "Navi", "url": "https://vitest.dev", "x": 347, "y": 520, "level": 3, "since": 2023, "lastUsed": "current", "missions": ["personal", "Ubigreen"] },
+    { "name": "Jest", "group": "quality", "symbol": "Je", "star": "Ruchbah", "url": "https://jestjs.io", "x": 306, "y": 524, "level": 2, "since": 2020, "lastUsed": "current", "missions": ["Ubigreen"] },
+    { "name": "Cypress", "group": "quality", "symbol": "Cy", "star": "Segin", "url": "https://www.cypress.io", "x": 274, "y": 480, "level": 1, "since": 2023, "lastUsed": "current", "missions": ["personal", "Ubigreen"] },
+    { "name": "Figma", "group": "tools", "symbol": "Fg", "star": "Régulus", "url": "https://www.figma.com", "x": 231, "y": 465, "level": 2, "since": 2021, "lastUsed": "current", "missions": ["Gmee", "portfolio"] },
+    { "name": "Git", "group": "tools", "symbol": "Gt", "star": "Algieba", "url": "https://git-scm.com", "x": 211, "y": 414, "level": 2, "since": 2013, "lastUsed": "current", "missions": ["all"] },
+    { "name": "Azure", "group": "tools", "symbol": "Az", "star": "Adhafera", "url": "https://azure.microsoft.com", "x": 215, "y": 384, "level": 2, "since": 2022, "lastUsed": "current", "missions": ["Ubigreen"] },
+    { "name": "VS Code", "group": "tools", "symbol": "Vs", "star": "Denebola", "url": "https://code.visualstudio.com", "x": 68, "y": 444, "level": 2, "since": 2015, "lastUsed": "current", "missions": ["all"] },
+    { "name": "Postman", "group": "tools", "symbol": "Pm", "star": "Chertan", "url": "https://www.postman.com", "x": 126, "y": 442, "level": 2, "since": 2017, "lastUsed": "current", "missions": ["Gmee"] },
+    { "name": "GitLab", "group": "tools", "symbol": "Gl", "star": "Zosma", "url": "https://about.gitlab.com", "x": 128, "y": 408, "level": 2, "lastUsed": "current" },
+    { "name": "Claude Code", "group": "tools", "symbol": "Cc", "star": "Eta Leonis", "url": "https://docs.claude.com/en/docs/claude-code/overview", "x": 231, "y": 433, "level": 2, "lastUsed": "current" },
+    { "name": "Asana", "group": "tools", "symbol": "As", "star": "Ras Elased", "url": "https://asana.com", "x": 262, "y": 385, "level": 2, "lastUsed": "current" },
+    { "name": "Express.js", "group": "off", "symbol": "Ex", "star": "Véga", "url": "https://expressjs.com", "x": 468, "y": 75, "level": 3, "since": 2015, "lastUsed": 2024, "missions": ["Gmee · API"] },
+    { "name": "MySQL", "group": "off", "symbol": "My", "star": "Zeta Lyrae", "url": "https://www.mysql.com", "x": 446, "y": 93, "level": 1, "since": 2012, "lastUsed": 2016, "missions": ["Minecraft"] },
+    { "name": "Socket.io", "group": "off", "symbol": "So", "star": "Epsilon Lyrae", "url": "https://socket.io", "x": 447, "y": 62, "level": 1, "since": 2021, "lastUsed": 2024, "missions": ["Gmee"] },
+    { "name": "PHP", "group": "off", "symbol": "Ph", "star": "Delta Lyrae", "url": "https://www.php.net", "x": 417, "y": 103, "level": 1, "since": 2012, "lastUsed": 2016, "missions": ["Minecraft"] },
+    { "name": "Java", "group": "off", "symbol": "Jv", "star": "Sheliak", "url": "https://dev.java", "x": 430, "y": 155, "level": 1, "since": 2011, "lastUsed": 2018, "missions": ["Minecraft"] },
+    { "name": "Vue.js", "group": "off", "symbol": "Vu", "star": "Sulafat", "url": "https://vuejs.org", "x": 402, "y": 165, "level": 1 }
+  ],
+  "approaching": [
+    { "name": "Unity", "status": "learning", "x": 180, "y": 52 },
+    { "name": "Rust", "status": "spotted", "x": 505, "y": 420 }
   ],
   "links": [
-    [
-      "React",
-      "React Native"
-    ],
-    [
-      "React Native",
-      "TypeScript"
-    ],
-    [
-      "TypeScript",
-      "Angular"
-    ],
-    [
-      "TypeScript",
-      "Angular Signals"
-    ],
-    [
-      "Angular Signals",
-      "Redux"
-    ],
-    [
-      "Redux",
-      "Zustand"
-    ],
-    [
-      "Redux",
-      "HTML5 / CSS3"
-    ],
-    [
-      "Angular Signals",
-      "SCSS"
-    ],
-    [
-      "Fastify",
-      "PHP"
-    ],
-    [
-      "PHP",
-      "REST API"
-    ],
-    [
-      "REST API",
-      "Java"
-    ],
-    [
-      "MySQL",
-      "SQL Server"
-    ],
-    [
-      "Node.js",
-      "Express.js"
-    ],
-    [
-      "Express.js",
-      "Fastify"
-    ],
-    [
-      "Fastify",
-      "C# / .NET"
-    ],
-    [
-      "C# / .NET",
-      "PostgreSQL"
-    ],
-    [
-      "PostgreSQL",
-      "Node.js"
-    ],
-    [
-      "PostgreSQL",
-      "MySQL"
-    ],
-    [
-      "MySQL",
-      "Redis"
-    ],
-    [
-      "Redis",
-      "REST API"
-    ],
-    [
-      "Redis",
-      "JWT Auth"
-    ],
-    [
-      "MySQL",
-      "Socket.io"
-    ],
-    [
-      "Figma",
-      "Git"
-    ],
-    [
-      "Git",
-      "Azure"
-    ],
-    [
-      "Azure",
-      "VS Code"
-    ],
-    [
-      "VS Code",
-      "Postman"
-    ],
-    [
-      "Postman",
-      "Webpack"
-    ],
-    [
-      "Webpack",
-      "Azure"
-    ],
-    [
-      "Webpack",
-      "Vite"
-    ],
-    [
-      "Vite",
-      "Vitest"
-    ],
-    [
-      "Vite",
-      "Jest"
-    ],
-    [
-      "Jest",
-      "Cypress"
-    ],
-    [
-      "Cypress",
-      "Expo"
-    ],
-    [
-      "Postman",
-      "Expo"
-    ]
+    ["Angular", "React"],
+    ["Angular", "React Native"],
+    ["React", "HTML5 / CSS3"],
+    ["React Native", "Zustand"],
+    ["HTML5 / CSS3", "SCSS"],
+    ["SCSS", "Zustand"],
+    ["HTML5 / CSS3", "Expo"],
+    ["Zustand", "TypeScript"],
+    ["React Native", "Angular Signals"],
+    ["SCSS", "Redux"],
+    ["Node.js", "REST API"],
+    ["REST API", "PostgreSQL"],
+    ["PostgreSQL", "C# / .NET"],
+    ["C# / .NET", "Node.js"],
+    ["C# / .NET", "Fastify"],
+    ["Fastify", "Redis"],
+    ["Redis", "JWT Auth"],
+    ["Redis", "SQL Server"],
+    ["Webpack", "Vite"],
+    ["Vite", "Vitest"],
+    ["Vitest", "Jest"],
+    ["Jest", "Cypress"],
+    ["Figma", "Claude Code"],
+    ["Claude Code", "Git"],
+    ["Git", "Azure"],
+    ["Azure", "Asana"],
+    ["Git", "GitLab"],
+    ["GitLab", "VS Code"],
+    ["VS Code", "Postman"],
+    ["Postman", "Figma"],
+    ["Express.js", "Socket.io"],
+    ["Express.js", "MySQL"],
+    ["Socket.io", "MySQL"],
+    ["MySQL", "PHP"],
+    ["PHP", "Vue.js"],
+    ["Vue.js", "Java"],
+    ["Java", "MySQL"]
   ]
 }

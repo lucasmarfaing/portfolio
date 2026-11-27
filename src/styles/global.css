@@ -109,6 +109,18 @@ button {
   color: var(--text-muted);
 }
 
+/* Barcodes (pass, tech cards): all the same width; drawn by src/lib/barcode-draw.ts */
+.barcode {
+  display: block;
+  width: 57px;
+  height: 26px;
+  color: var(--text);
+}
+
+.barcode--tall {
+  height: 30px;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

@@ -34,10 +34,8 @@ const structuredData = {
       '@type': 'Person',
       '@id': `${home}#person`,
       name: `${content.hero.firstName} ${content.hero.lastName}`,
-      jobTitle: content.crew.badge.job.split('·')[0]!.trim(),
-      worksFor: content.crew.badge.job.includes('·')
-        ? { '@type': 'Organization', name: content.crew.badge.job.split('·').at(-1)!.trim() }
-        : undefined,
+      jobTitle: content.crew.badge.job,
+      worksFor: content.crew.badge.employer ? { '@type': 'Organization', name: content.crew.badge.employer } : undefined,
       description: content.site.meta.description,
       url: home,
       image: new URL(photo.src, Astro.site).href,

@@ -33,6 +33,8 @@ const palette = z
     redacted: color,
     redactedBg: color,
     starBlue: color,
+    starPurple: color,
+    starOff: color,
     mapCore: color,
     mapEdge: color,
     horizonCore: color,

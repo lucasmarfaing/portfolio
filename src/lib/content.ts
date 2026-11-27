@@ -80,20 +80,31 @@ const sectionHead = {
   titleMuted: z.string(),
 };
 
-/** Text where **words** are highlighted. */
-const richText = z.string().min(1);
-
 const crewSchema = z.object({
   ...sectionHead,
-  paragraphs: z.array(richText).min(1),
+  /** The pilot's note: a quote, a paragraph and a signature */
+  note: z.object({
+    entry: z.string(),
+    place: z.string(),
+    quote: z.string().min(1),
+    text: z.string(),
+    signature: z.string(),
+    signatureRole: z.string(),
+    end: z.string(),
+  }),
+  offDuty: z.object({ label: z.string(), items: z.array(z.string().min(1)) }),
   badge: z.object({
     title: z.string(),
-    role: z.string(),
     name: z.string().min(1),
     job: z.string(),
+    /** Current company (used for search engines) */
+    employer: z.string().optional(),
     photoAlt: z.string().min(1),
-    details: z.array(z.object({ label: z.string(), value: z.string() })).max(6),
+    /** Up to 3 short facts; like the hero stats, a value can be computed from a `since` date */
+    details: z.array(stat).max(3, 'Le badge affiche 3 infos au maximum'),
+    id: z.string(),
     status: z.string(),
+    cv: link,
   }),
   skillsLabel: z.string(),
   skills: z
@@ -139,7 +150,13 @@ const trajectorySchema = z.object({
     }),
 });
 
-/** Language-neutral star map: groups, stars (position on a 620×620 map) and constellation links. */
+const mapCoord = z.number().min(20).max(600);
+const year = z.number().int().min(1990).max(2100);
+
+/**
+ * Language-neutral star map: constellations (groups), stars (position on a 620×620 map),
+ * stars "in approach" (being learnt) and constellation links.
+ */
 const skySchema = z
   .object({
     groups: z
@@ -147,7 +164,15 @@ const skySchema = z
         z.object({
           id: z.string().regex(/^[a-z0-9-]+$/),
           code: z.string().min(1).max(3),
-          color: z.enum(['red', 'blue', 'amber']),
+          color: z.enum(['red', 'blue', 'amber', 'purple', 'grey']),
+          /** Column of its list on desktop */
+          side: z.enum(['left', 'right']),
+          /** false: no mastery level shown (tools) */
+          rated: z.boolean().default(true),
+          /** true: technologies no longer used ("extinct" constellation, drawn dashed) */
+          extinct: z.boolean().default(false),
+          /** Where the constellation's name is written on the map [x, y] */
+          label: z.tuple([mapCoord, mapCoord]),
         }),
       )
       .min(1),
@@ -157,15 +182,24 @@ const skySchema = z
           name: z.string().min(1),
           group: z.string(),
           symbol: z.string().min(1).max(3),
+          /** Name of the real star it stands for, e.g. "Bételgeuse" */
+          star: z.string().min(1),
           url: z.url(),
-          x: z.number().min(20).max(600),
-          y: z.number().min(20).max(600),
-          since: z.number().int().min(1990).max(2100).optional(),
-          /** active = "En service", reserve = "En réserve", archived = "Archivé" (default: active) */
-          status: z.enum(['active', 'reserve', 'archived']).default('active'),
+          x: mapCoord,
+          y: mapCoord,
+          /** 3 = mastery, 2 = comfortable, 1 = notions (also sets the star's brightness) */
+          level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+          since: year.optional(),
+          /** "current" = still in use, or the last year it was used */
+          lastUsed: z.union([z.literal('current'), year]).optional(),
+          /** Related missions: a name ("Gmee"), or a key translated in inventory.json "missionNames" */
+          missions: z.array(z.string().min(1)).default([]),
         }),
       )
       .min(1),
+    approaching: z
+      .array(z.object({ name: z.string().min(1), status: z.enum(['learning', 'spotted']), x: mapCoord, y: mapCoord }))
+      .default([]),
     links: z.array(z.tuple([z.string(), z.string()])),
   })
   .superRefine((sky, ctx) => {
@@ -176,29 +210,56 @@ const skySchema = z
       if (names.has(s.name)) ctx.addIssue({ code: 'custom', path: ['stars', i, 'name'], message: `Étoile en double "${s.name}"` });
       names.add(s.name);
     });
+    sky.groups.forEach((g, i) => {
+      if (!sky.stars.some((s) => s.group === g.id))
+        ctx.addIssue({ code: 'custom', path: ['groups', i], message: `Constellation sans étoile "${g.id}"` });
+    });
     sky.links.forEach(([a, b], i) => {
       for (const n of [a, b])
         if (!names.has(n)) ctx.addIssue({ code: 'custom', path: ['links', i], message: `Liaison vers une étoile inconnue "${n}"` });
     });
   });
 
+const byLevel = z.object({ 1: z.string(), 2: z.string(), 3: z.string() });
+
 const inventorySchema = z.object({
   ...sectionHead,
   intro: z.string(),
   introTouch: z.string(),
   mapCaption: z.string(),
-  groups: z.record(z.string(), z.object({ label: z.string(), module: z.string(), sector: z.string() })),
+  /** Legend of the mastery bars */
+  levels: byLevel,
+  /** Brightness shown on the card ("Éclatante"…), by level */
+  brightness: byLevel,
+  extinctState: z.string(),
+  starsLabel: z.string(),
+  groups: z.record(z.string(), z.object({ label: z.string(), name: z.string(), sector: z.string() })),
+  approaching: z.object({
+    label: z.string(),
+    labelLong: z.string(),
+    status: z.object({
+      learning: z.object({ map: z.string(), short: z.string(), long: z.string() }),
+      spotted: z.object({ map: z.string(), short: z.string(), long: z.string() }),
+    }),
+    notes: z.record(z.string(), z.string()).default({}),
+  }),
   card: z.object({
     title: z.string(),
     designation: z.string(),
-    module: z.string(),
+    logbook: z.string(),
     experience: z.string(),
+    /** {year} and {years} are filled in */
+    since: z.string(),
     years: z.object({ one: z.string(), many: z.string() }),
-    status: z.string(),
-    statusValues: z.object({ active: z.string(), reserve: z.string(), archived: z.string() }),
+    lastUsed: z.string(),
+    current: z.string(),
+    state: z.string(),
     sector: z.string(),
+    missions: z.string(),
     documentation: z.string(),
   }),
+  /** Translations of mission keys used in sky.json ("all", "personal"…) */
+  missionNames: z.record(z.string(), z.string()).default({}),
   descriptions: z.record(z.string(), z.string()),
 });
 

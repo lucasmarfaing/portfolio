@@ -1,7 +1,8 @@
 ---
 import { starField } from '@/assets/star-field';
 import SectionHead from '@/components/SectionHead.astro';
-import { fill, yearsSince, type InventoryContent, type SkyContent } from '@/lib/content';
+import { labelBarcode } from '@/lib/barcode';
+import { fill, type InventoryContent, type SkyContent } from '@/lib/content';
 
 interface Props {
   content: InventoryContent;
@@ -13,28 +14,59 @@ const { content, sky, callsign } = Astro.props;
 
 const SIZE = 620; // map coordinate system
 const pct = (v: number) => `${(v / SIZE) * 100}%`;
-const colorVar = { red: 'var(--accent)', blue: 'var(--star-blue)', amber: 'var(--warning)' } as const;
+const colorVar = {
+  red: 'var(--accent)',
+  blue: 'var(--star-blue)',
+  amber: 'var(--warning)',
+  purple: 'var(--star-purple)',
+  grey: 'var(--star-off)',
+} as const;
 const groupById = new Map(sky.groups.map((g) => [g.id, g]));
 const groupColor = (id: string) => colorVar[groupById.get(id)!.color];
+const buildYear = new Date().getFullYear();
+const LEVELS = [3, 2, 1] as const;
 
 // Stars, numbered in file order (R-01, R-02…)
 const stars = sky.stars.map((s, i) => {
   const group = groupById.get(s.group)!;
   const text = content.groups[s.group]!;
-  const years = s.since ? yearsSince(`${s.since}-01-01`) : undefined;
+  const years = s.since === undefined ? undefined : buildYear - s.since;
   return {
     ...s,
     index: i,
     color: groupColor(s.group),
-    big: s.group === sky.groups[0]!.id,
-    description: content.descriptions[s.name]!,
-    module: text.module,
-    sector: text.sector,
-    experience: years === undefined ? '' : `${years} ${years > 1 ? content.card.years.many : content.card.years.one}`,
+    rated: group.rated && !group.extinct,
+    extinct: group.extinct,
     num: `R-${String(i + 1).padStart(2, '0')}`,
     serial: `${callsign.replace(/-/g, '')}-${group.code}-${String(i + 1).padStart(2, '0')}`,
     // The card opens on the side with the most room
-    side: s.x <= 350 ? 'right' : 'left',
+    side: s.x <= 330 ? 'right' : 'left',
+    card: {
+      name: s.name,
+      symbol: s.symbol,
+      starLine: `★ ${s.star} · ${text.name}`,
+      description: content.descriptions[s.name]!,
+      since: s.since === undefined ? '' : fill(content.card.since, { year: s.since }),
+      years:
+        years === undefined || years < 1 ? '' : `· ${years} ${years > 1 ? content.card.years.many : content.card.years.one}`,
+      lastUsed: s.lastUsed === undefined ? '' : s.lastUsed === 'current' ? content.card.current : String(s.lastUsed),
+      current: s.lastUsed === 'current',
+      // Tools have no level; extinct technologies are shown as such
+      state: group.extinct ? content.extinctState : group.rated ? content.brightness[s.level] : '',
+      sector: text.sector,
+      missions: s.missions.map((m) => content.missionNames[m] ?? m),
+      url: s.url,
+      urlLabel: s.url.replace(/^https?:\/\//, '').replace(/\/$/, ''),
+      num: `R-${String(i + 1).padStart(2, '0')}`,
+      serial: `${callsign.replace(/-/g, '')}-${group.code}-${String(i + 1).padStart(2, '0')}`,
+      // Real Code 128 barcode: label n° i + 1 of the series (the crew pass is n° 00)
+      barcode: labelBarcode(callsign, i + 1),
+      group: s.group,
+      color: groupColor(s.group),
+      side: s.x <= 330 ? 'right' : 'left',
+      x: s.x,
+      y: s.y,
+    },
   };
 });
 const byName = new Map(stars.map((s) => [s.name, s]));
@@ -42,16 +74,64 @@ const byName = new Map(stars.map((s) => [s.name, s]));
 const links = sky.links.map(([a, b]) => {
   const from = byName.get(a)!;
   const to = byName.get(b)!;
-  return { x1: from.x, y1: from.y, x2: to.x, y2: to.y, color: from.color };
+  return { x1: from.x, y1: from.y, x2: to.x, y2: to.y, color: from.color, dashed: from.extinct };
 });
 
-// A soft glow behind each constellation, centred on its stars
-const glows = sky.groups.map((g) => {
+const bbox = (members: { x: number; y: number }[]) => {
+  const xs = members.map((m) => m.x);
+  const ys = members.map((m) => m.y);
+  return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+};
+
+const groups = sky.groups.map((g, order) => {
   const members = stars.filter((s) => s.group === g.id);
-  const cx = members.reduce((t, s) => t + s.x, 0) / members.length;
-  const cy = members.reduce((t, s) => t + s.y, 0) / members.length;
-  return { left: pct(cx - 170), top: pct(cy - 150), color: groupColor(g.id) };
+  const b = bbox(members);
+  // A soft glow behind the constellation, around its stars
+  const w = Math.max(b.x1 - b.x0 + 100, 260);
+  const h = Math.max(b.y1 - b.y0 + 90, 150);
+  const cx = (b.x0 + b.x1) / 2;
+  const cy = (b.y0 + b.y1) / 2;
+  // Small drawing of the constellation in the list header (64×40)
+  const scale = Math.min(54 / Math.max(b.x1 - b.x0, 1), 30 / Math.max(b.y1 - b.y0, 1));
+  const ox = 32 - ((b.x1 - b.x0) * scale) / 2;
+  const oy = 20 - ((b.y1 - b.y0) * scale) / 2;
+  const mini = (x: number, y: number) => [+(ox + (x - b.x0) * scale).toFixed(1), +(oy + (y - b.y0) * scale).toFixed(1)] as const;
+  const names = new Set(members.map((m) => m.name));
+  const items = [...members].sort((p, q) => q.level - p.level);
+  return {
+    ...g,
+    order,
+    color: groupColor(g.id),
+    text: content.groups[g.id]!,
+    items,
+    rows: Math.ceil(items.length / 2),
+    count: String(members.length).padStart(2, '0'),
+    glow: { left: pct(cx - w / 2), top: pct(cy - h / 2), width: pct(w), height: pct(h) },
+    mini: {
+      dots: members.map((m) => {
+        const [x, y] = mini(m.x, m.y);
+        return { x, y, r: { 3: 1.9, 2: 1.4, 1: 1.1 }[m.level] };
+      }),
+      lines: sky.links
+        .filter(([a, c]) => names.has(a) && names.has(c))
+        .map(([a, c]) => {
+          const p = byName.get(a)!;
+          const q = byName.get(c)!;
+          const [x1, y1] = mini(p.x, p.y);
+          const [x2, y2] = mini(q.x, q.y);
+          return { x1, y1, x2, y2 };
+        }),
+    },
+  };
 });
+const sides = { left: groups.filter((g) => g.side === 'left'), right: groups.filter((g) => g.side === 'right') };
+
+const approaching = sky.approaching.map((a) => ({
+  ...a,
+  side: a.x <= 330 ? 'right' : 'left',
+  text: content.approaching.status[a.status],
+  note: content.approaching.notes[a.name] ?? '',
+}));
 
 // Planisphere graduations
 const C = SIZE / 2;
@@ -64,32 +144,7 @@ const ticks = Array.from({ length: 72 }, (_, k) => {
   return { x1, y1, x2, y2 };
 });
 
-const groupsWithStars = sky.groups.map((g) => ({
-  ...g,
-  color: groupColor(g.id),
-  label: content.groups[g.id]!.label,
-  stars: stars.filter((s) => s.group === g.id),
-}));
-
-const cardData = stars.map((s) => ({
-  name: s.name,
-  symbol: s.symbol,
-  description: s.description,
-  url: s.url,
-  module: s.module,
-  sector: s.sector,
-  experience: s.experience,
-  status: s.status,
-  statusLabel: content.card.statusValues[s.status],
-  num: s.num,
-  serial: s.serial,
-  group: s.group,
-  color: s.color,
-  side: s.side,
-  x: s.x,
-  y: s.y,
-}));
-
+const STAR_PATH = 'M12 0 C12.8 8 16 11.2 24 12 C16 12.8 12.8 16 12 24 C11.2 16 8 12.8 0 12 C8 11.2 11.2 8 12 0Z';
 const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.groups.length });
 ---
 
@@ -97,35 +152,110 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
   <div class="container inv__inner">
     <div class="inv__head">
       <SectionHead id="inv-title" index={content.index} label={content.label} title={content.title} titleMuted={titleMuted} />
-      <p class="inv__intro">
-        <span class="inv__intro-hover">{content.intro}</span>
-        <span class="inv__intro-touch">{content.introTouch}</span>
-      </p>
+      <div class="inv__aside">
+        <p class="inv__intro">
+          <span class="inv__intro-hover">{content.intro}</span>
+          <span class="inv__intro-touch">{content.introTouch}</span>
+        </p>
+        <ul class="legend">
+          {
+            LEVELS.map((lvl) => (
+              <li>
+                <span class="rate rate--legend" aria-hidden="true">
+                  {[1, 2, 3].map((k) => <span class:list={{ 'is-on': k <= lvl }} />)}
+                </span>
+                {content.levels[lvl]}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
     </div>
 
     <div class="inv__body">
-      <div class="inv__lists">
-        {
-          groupsWithStars.map((g) => (
-            <div class="group" style={`--c: ${g.color}`} data-group={g.id}>
-              <h3 class="group__title">
-                <span class="group__dot" aria-hidden="true" />
-                {g.label}
-              </h3>
-              <ul class="group__items">
-                {g.stars.map((s) => (
-                  <li>
-                    <button type="button" class="chip" data-star={s.index} aria-pressed="false" aria-controls="inv-card">
-                      {s.name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <div class="group__slot" data-slot={g.id} />
-            </div>
-          ))
-        }
-      </div>
+      {
+        (['left', 'right'] as const).map((side) => (
+          <div class:list={['inv__col', `inv__col--${side}`]}>
+            {sides[side].map((g) => (
+              <div class:list={['group', { 'is-extinct': g.extinct }]} style={`--c: ${g.color}; order: ${g.order}`} data-group={g.id}>
+                <div class="group__head">
+                  <h3 class="group__title">
+                    <span class="group__label">{g.text.label}</span>
+                    <span class="group__name">{g.text.name}</span>
+                  </h3>
+                  <div class="group__meta">
+                    <svg class="group__mini" viewBox="0 0 64 40" aria-hidden="true">
+                      {g.mini.lines.map((l) => (
+                        <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />
+                      ))}
+                      {g.mini.dots.map((d) => (
+                        <circle cx={d.x} cy={d.y} r={d.r} />
+                      ))}
+                    </svg>
+                    <span class="group__count">
+                      <span class="group__count-n">{g.count}</span>
+                      <span class="group__count-label">{content.starsLabel}</span>
+                    </span>
+                  </div>
+                </div>
+                <ul class="group__items" style={`--rows: ${g.rows}`}>
+                  {g.items.map((s, k) => (
+                    <li class:list={{ 'is-col-top': k % g.rows === 0 }}>
+                      <button
+                        type="button"
+                        class:list={['chip', `lvl-${g.rated && !g.extinct ? s.level : 2}`]}
+                        data-star={s.index}
+                        aria-pressed="false"
+                        aria-controls="inv-card"
+                        aria-label={s.rated ? `${s.name} — ${content.brightness[s.level]}` : undefined}>
+                        <span class="chip__glyph" aria-hidden="true">
+                          <svg viewBox="0 0 24 24">
+                            <path d={STAR_PATH} />
+                          </svg>
+                        </span>
+                        <span class="chip__name">{s.name}</span>
+                        {s.rated && (
+                          <span class="rate" aria-hidden="true">
+                            {[1, 2, 3].map((n) => (
+                              <span class:list={{ 'is-on': n <= s.level }} />
+                            ))}
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <div class="group__slot" data-slot={g.id} />
+              </div>
+            ))}
+            {side === 'left' && approaching.length > 0 && (
+              <div class="approach" style="order: 99">
+                <span class="approach__label">
+                  <span class="approach__label-short">{content.approaching.label}</span>
+                  <span class="approach__label-long">{content.approaching.labelLong}</span>
+                </span>
+                <ul class="approach__list">
+                  {approaching.map((a) => (
+                    <li class:list={['approach__item', `is-${a.status}`]}>
+                      <span class="marker" aria-hidden="true">
+                        <span class="marker__ping" />
+                        <span class="marker__ring" />
+                        <span class="marker__dot" />
+                      </span>
+                      <span class="approach__name">{a.name}</span>
+                      <span class="approach__short">{a.text.short}</span>
+                      <span class="approach__long">
+                        <span class="approach__status">{a.text.long}</span>
+                        {a.note && <span class="approach__note">{a.note}</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        ))
+      }
 
       <div class="sky-wrap">
         <div class="sky" data-sky>
@@ -143,16 +273,47 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
             {ticks.map((t) => <line x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} class="sky__tick" />)}
           </svg>
 
-          {glows.map((g) => <div class="sky__glow" style={`left: ${g.left}; top: ${g.top}; --c: ${g.color}`} aria-hidden="true" />)}
+          {
+            groups.map((g) => (
+              <div
+                class:list={['sky__glow', { 'is-extinct': g.extinct }]}
+                style={`left: ${g.glow.left}; top: ${g.glow.top}; width: ${g.glow.width}; height: ${g.glow.height}; --c: ${g.color}`}
+                aria-hidden="true"
+              />
+            ))
+          }
 
           <svg class="sky__links" viewBox="0 0 620 620" aria-hidden="true">
-            {links.map((l) => <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} style={`stroke: ${l.color}`} />)}
+            {links.map((l) => <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} class:list={{ 'is-dashed': l.dashed }} style={`stroke: ${l.color}`} />)}
           </svg>
+
+          {
+            groups.map((g) => (
+              <span class="sky__name" style={`left: ${pct(g.label[0])}; top: ${pct(g.label[1])}; --c: ${g.color}`} aria-hidden="true">
+                {g.text.name}
+              </span>
+            ))
+          }
+
+          {
+            approaching.map((a) => (
+              <span class:list={['sky__approach', `is-${a.status}`, `is-${a.side}`]} style={`left: ${pct(a.x)}; top: ${pct(a.y)}`} aria-hidden="true">
+                <span class="marker">
+                  <span class="marker__ping" />
+                  <span class="marker__ring" />
+                  <span class="marker__dot" />
+                </span>
+                <span class="sky__approach-label">
+                  {a.name} · {a.text.map}
+                </span>
+              </span>
+            ))
+          }
 
           {
             stars.map((s) => (
               <span
-                class:list={['star', { 'is-big': s.big }]}
+                class:list={['star', `lvl-${s.level}`, { 'is-extinct': s.extinct }]}
                 style={`left: ${pct(s.x)}; top: ${pct(s.y)}; --c: ${s.color}; --delay: ${((s.index * 0.37) % 3.2).toFixed(2)}s`}
                 data-star={s.index}
                 aria-hidden="true">
@@ -178,48 +339,72 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
       <div class="card__designation">
         <span class="card__label">{content.card.designation}</span>
         <span class="card__name" data-f="name"></span>
+        <span class="card__star" data-f="starLine"></span>
       </div>
       <span class="card__symbol" data-f="symbol" aria-hidden="true"></span>
     </div>
-    <p class="card__desc" data-f="description"></p>
+    <div class="card__log">
+      <span class="card__label">{content.card.logbook}</span>
+      <p data-f="description"></p>
+    </div>
     <dl class="card__dl">
-      <div><dt class="card__label">{content.card.module}</dt><dd data-f="module"></dd></div>
-      <div data-if-experience><dt class="card__label">{content.card.experience}</dt><dd data-f="experience"></dd></div>
-      <div>
-        <dt class="card__label">{content.card.status}</dt>
-        <dd class="card__status" data-status-tone><span aria-hidden="true"></span><span data-f="statusLabel"></span></dd>
+      <div data-if="since">
+        <dt class="card__label">{content.card.experience}</dt>
+        <dd><span data-f="since"></span> <span class="card__muted" data-f="years"></span></dd>
       </div>
-      <div><dt class="card__label">{content.card.sector}</dt><dd data-f="sector"></dd></div>
+      <div data-if="lastUsed">
+        <dt class="card__label">{content.card.lastUsed}</dt>
+        <dd class="card__last" data-last><span aria-hidden="true"></span><span data-f="lastUsed"></span></dd>
+      </div>
+      <div data-if="state">
+        <dt class="card__label">{content.card.state}</dt>
+        <dd data-f="state"></dd>
+      </div>
+      <div>
+        <dt class="card__label">{content.card.sector}</dt>
+        <dd data-f="sector"></dd>
+      </div>
     </dl>
+    <div class="card__missions" data-if="missions">
+      <span class="card__label">{content.card.missions}</span>
+      <ul data-missions></ul>
+    </div>
     <div class="card__perf" aria-hidden="true"></div>
     <div class="card__foot">
       <div class="card__code">
-        <span class="card__barcode" data-barcode aria-hidden="true"></span>
+        <canvas class="barcode barcode--tall card__barcode" data-barcode aria-hidden="true"></canvas>
         <span class="card__serial" data-f="serial"></span>
       </div>
       <a class="card__doc" data-doc target="_blank" rel="noopener noreferrer">
         <span>{content.card.documentation}</span>
-        <span class="card__doc-arrow" aria-hidden="true">↗</span>
+        <span class="card__doc-url"><span data-f="urlLabel"></span> <span aria-hidden="true">↗</span></span>
       </a>
     </div>
   </div>
 
-  <script type="application/json" data-sky-data set:html={JSON.stringify(cardData)} />
+  <script type="application/json" data-sky-data set:html={JSON.stringify(stars.map((s) => s.card))} />
 </section>
 
 <script>
+  import { drawBarcode } from '@/lib/barcode-draw';
+
   type Star = {
     name: string;
     symbol: string;
+    starLine: string;
     description: string;
-    url: string;
-    module: string;
+    since: string;
+    years: string;
+    lastUsed: string;
+    current: boolean;
+    state: string;
     sector: string;
-    experience: string;
-    status: 'active' | 'reserve' | 'archived';
-    statusLabel: string;
+    missions: string[];
+    url: string;
+    urlLabel: string;
     num: string;
     serial: string;
+    barcode: string;
     group: string;
     color: string;
     side: 'left' | 'right';
@@ -236,14 +421,6 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     const desktop = window.matchMedia('(min-width: 1100px)');
     let active: number | null = null;
     let hideTimer: number | undefined;
-
-    const barcode = (name: string) => {
-      let r = [...name].reduce((t, ch) => (t * 31 + ch.charCodeAt(0)) % 9973, 7);
-      return Array.from({ length: 22 }, () => {
-        r = (r * 17 + 11) % 97;
-        return `<span style="width:${1 + (r % 4)}px;opacity:${r % 5 === 0 ? 0.35 : 1}"></span>`;
-      }).join('');
-    };
 
     const place = (s: Star) => {
       if (!desktop.matches) {
@@ -269,13 +446,23 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
       if (active === i && !card.hidden) return;
       active = i;
       const s = data[i]!;
-      for (const el of card.querySelectorAll<HTMLElement>('[data-f]')) el.textContent = s[el.dataset.f as keyof Star] as string;
-      // Experience only appears when a "since" year is set in sky.json
-      card.querySelector<HTMLElement>('[data-if-experience]')!.hidden = !s.experience;
-      card.querySelector<HTMLElement>('[data-status-tone]')!.dataset.tone = s.status;
-      card.querySelector<HTMLElement>('[data-barcode]')!.innerHTML = barcode(s.name);
-      const doc = card.querySelector<HTMLAnchorElement>('[data-doc]')!;
-      doc.href = s.url;
+      for (const el of card.querySelectorAll<HTMLElement>('[data-f]')) el.textContent = String(s[el.dataset.f as keyof Star] ?? '');
+      // Rows without data are hidden (e.g. no "since" year in sky.json)
+      for (const el of card.querySelectorAll<HTMLElement>('[data-if]')) {
+        const v = s[el.dataset.if as keyof Star];
+        el.hidden = Array.isArray(v) ? v.length === 0 : !v;
+      }
+      card.querySelector<HTMLElement>('[data-last]')!.classList.toggle('is-current', s.current);
+      const list = card.querySelector<HTMLElement>('[data-missions]')!;
+      list.replaceChildren(
+        ...s.missions.map((m) => {
+          const li = document.createElement('li');
+          li.textContent = m;
+          return li;
+        }),
+      );
+      card.querySelector<HTMLCanvasElement>('[data-barcode]')!.dataset.code = s.barcode;
+      card.querySelector<HTMLAnchorElement>('[data-doc]')!.href = s.url;
       card.style.setProperty('--c', s.color);
       section.classList.add('has-active');
       for (const el of [...chips, ...stars]) {
@@ -288,6 +475,7 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
       void card.offsetWidth; // restart the entrance animation
       card.classList.add('is-in');
       place(s);
+      drawBarcode(card.querySelector<HTMLCanvasElement>('[data-barcode]')!);
     };
 
     const hide = () => {
@@ -357,9 +545,15 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     gap: 48px;
   }
 
+  .inv__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 560px;
+  }
+
   .inv__intro {
     margin: 0;
-    max-width: 400px;
     font-size: 18px;
     line-height: 1.6;
     color: var(--text-soft);
@@ -379,89 +573,403 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     }
   }
 
+  /* ---------- Mastery bars ---------- */
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+  }
+
+  .legend li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .rate {
+    flex: none;
+    display: flex;
+    gap: 3px;
+    margin-left: auto;
+  }
+
+  .rate span {
+    display: block;
+    width: 8px;
+    height: 4px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+  }
+
+  .rate span.is-on {
+    background: var(--c);
+  }
+
+  .chip.is-on .rate span.is-on {
+    box-shadow: 0 0 6px var(--c);
+  }
+
+  .rate--legend {
+    --c: var(--text);
+    margin-left: 0;
+  }
+
+  .rate--legend span {
+    width: 10px;
+    background: color-mix(in srgb, var(--text) 12%, transparent);
+  }
+
+  /* ---------- Layout ---------- */
+
   .inv__body {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 64px;
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
   }
 
-  /* ---------- Lists ---------- */
-
-  .inv__lists {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(20px, 3.5vh, 36px);
-  }
-
-  .group {
+  .inv__col {
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
 
+  .inv__col--left {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .inv__col--right {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  /* ---------- Lists ---------- */
+
+  .group {
+    padding: 14px 16px 8px;
+    border: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--surface) 70%, transparent);
+  }
+
+  .group__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
   .group__title {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    gap: 3px;
     margin: 0;
-    font-family: var(--font-mono);
-    font-size: 11px;
     font-weight: 400;
+  }
+
+  .group__label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--c);
   }
 
-  .group__dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--c);
-    box-shadow: 0 0 10px var(--c);
+  .group__name {
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .group__meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .group__mini {
+    width: 64px;
+    height: 40px;
+  }
+
+  .group__mini line {
+    stroke: var(--c);
+    stroke-opacity: 0.55;
+    stroke-width: 1;
+  }
+
+  .group__mini circle {
+    fill: var(--c);
+  }
+
+  .is-extinct .group__mini line {
+    stroke-dasharray: 2 2;
+  }
+
+  .is-extinct .group__mini circle {
+    fill: none;
+    stroke: var(--c);
+    stroke-width: 0.8;
+  }
+
+  .group__count {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .group__count-n {
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .group__count-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .is-extinct .group__name,
+  .is-extinct .group__count-n {
+    color: var(--text-soft);
   }
 
   .group__items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 6px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(var(--rows), auto);
+    grid-auto-flow: column;
+    column-gap: 18px;
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
+  .group__items li {
+    min-width: 0;
+    border-top: 1px solid color-mix(in srgb, var(--text) 5%, transparent);
+  }
+
+  .group__items li.is-col-top {
+    border-top: 0;
+  }
+
   .chip {
-    min-height: 34px;
-    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    height: 29px;
+    padding: 0;
     border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-soft);
-    font-size: 16px;
+    background: none;
+    color: var(--text);
+    font-size: 13px;
+    text-align: left;
     cursor: pointer;
-    transition: color 0.15s, background-color 0.15s;
+    transition: color 0.15s;
+  }
+
+  .is-extinct .chip {
+    color: var(--text-faint);
   }
 
   .chip:hover,
   .chip.is-on {
-    background: var(--c);
-    color: var(--bg);
+    color: var(--c);
+  }
+
+  .chip__glyph {
+    flex: none;
+    display: flex;
+    justify-content: center;
+    width: 12px;
+  }
+
+  .chip__glyph svg {
+    width: var(--g, 9px);
+    height: var(--g, 9px);
+    fill: var(--c);
+    opacity: var(--go, 0.85);
+    transition: opacity 0.15s;
+  }
+
+  .chip.lvl-3 .chip__glyph svg {
+    --g: 12px;
+    --go: 1;
+    filter: drop-shadow(0 0 4px var(--c));
+  }
+
+  .chip.lvl-1 .chip__glyph svg {
+    --g: 6.5px;
+    --go: 0.6;
+  }
+
+  .chip.is-on .chip__glyph svg {
+    opacity: 1;
+    filter: drop-shadow(0 0 4px var(--c));
+  }
+
+  .is-extinct .chip__glyph svg {
+    --g: 8px;
+    fill: none;
+    stroke: var(--c);
+    stroke-width: 2;
+    filter: none;
+  }
+
+  .chip__name {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .group__slot:empty {
     display: none;
   }
 
+  /* ---------- Stars in approach ---------- */
+
+  .approach {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 12px 16px;
+    border: 1px dashed var(--line-strong);
+    border-radius: 14px;
+    white-space: nowrap;
+  }
+
+  .approach__label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .approach__label-long,
+  .approach__long {
+    display: none;
+  }
+
+  .approach__list {
+    display: flex;
+    gap: 18px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .approach__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .approach__item.is-spotted {
+    color: var(--text-soft);
+  }
+
+  .approach__short {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+  }
+
+  .approach__item.is-spotted .approach__short {
+    color: var(--text-faint);
+  }
+
+  /* Marker: a dashed ring (pulsing while being learnt) */
+  .marker {
+    --m: var(--text);
+    position: relative;
+    flex: none;
+    display: block;
+    width: 10px;
+    height: 10px;
+  }
+
+  .is-spotted .marker {
+    --m: var(--text-faint);
+  }
+
+  .marker > span {
+    position: absolute;
+    border-radius: 50%;
+  }
+
+  .marker__ping {
+    inset: 0;
+    display: none;
+    border: 1px solid var(--m);
+    animation: ping 2.4s ease-out infinite;
+  }
+
+  .is-learning .marker__ping {
+    display: block;
+  }
+
+  .marker__ring {
+    inset: 0;
+    border: 1px dashed var(--m);
+  }
+
+  .marker__dot {
+    display: none;
+    left: 50%;
+    top: 50%;
+    width: 3px;
+    height: 3px;
+    margin: -1.5px 0 0 -1.5px;
+    background: var(--m);
+  }
+
+  @keyframes ping {
+    0% {
+      transform: scale(0.6);
+      opacity: 0.9;
+    }
+    100% {
+      transform: scale(2.2);
+      opacity: 0;
+    }
+  }
+
   /* ---------- Sky map ---------- */
 
   .sky-wrap {
-    justify-self: end;
+    grid-column: 2;
+    grid-row: 1;
   }
 
   .sky {
     position: relative;
-    /* Shrinks with the window height so the whole section fits on screen */
-    width: clamp(400px, calc(100svh - 320px), 620px);
+    /* Shrinks with the window so the lists keep room and the section fits on screen */
+    width: clamp(320px, min(36vw, calc(100svh - 300px)), 520px);
     aspect-ratio: 1;
   }
 
@@ -475,7 +983,7 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
       0 0 120px -30px color-mix(in srgb, var(--star-blue) 25%, transparent);
   }
 
-  .sky svg {
+  .sky > svg {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -511,19 +1019,86 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
 
   .sky__glow {
     position: absolute;
-    width: 54.8%;
-    height: 48.4%;
     border-radius: 50%;
     background: radial-gradient(closest-side, color-mix(in srgb, var(--c) 15%, transparent), transparent);
     pointer-events: none;
   }
 
+  .sky__glow.is-extinct {
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--c) 10%, transparent), transparent);
+  }
+
   .sky__links line {
-    stroke-opacity: 0.35;
+    stroke-opacity: 0.4;
     stroke-width: 1;
   }
 
+  .sky__links line.is-dashed {
+    stroke-opacity: 0.45;
+    stroke-dasharray: 3 4;
+  }
+
+  .sky__name {
+    position: absolute;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--c);
+    opacity: 0.75;
+    pointer-events: none;
+  }
+
+  .sky__approach {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin: -9px 0 0 -9px;
+    pointer-events: none;
+  }
+
+  .sky__approach .marker {
+    width: 18px;
+    height: 18px;
+  }
+
+  .sky__approach .marker__dot {
+    display: block;
+  }
+
+  .sky__approach-label {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--text);
+  }
+
+  .sky__approach.is-right .sky__approach-label {
+    left: 24px;
+  }
+
+  .sky__approach.is-left .sky__approach-label {
+    right: 24px;
+  }
+
+  .sky__approach.is-spotted .sky__approach-label {
+    color: var(--text-muted);
+  }
+
   .star {
+    --d: 8px;
+    --o: 0.9;
+    --glow: 0 0 10px 2px;
     position: absolute;
     z-index: 1;
     display: flex;
@@ -533,33 +1108,54 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     height: 28px;
     margin: -14px 0 0 -14px;
     cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .star.lvl-3 {
+    --d: 13px;
+    --o: 1;
+    --glow: 0 0 18px 4px;
+  }
+
+  .star.lvl-1 {
+    --d: 5px;
+    --o: 0.6;
+    --glow: 0 0 5px 1px;
   }
 
   .star__dot {
-    width: 7px;
-    height: 7px;
+    width: var(--d);
+    height: var(--d);
     border-radius: 50%;
     background: var(--c);
-    box-shadow: 0 0 12px 2px var(--c);
+    box-shadow: var(--glow) var(--c);
+    opacity: var(--o);
     animation: twinkle 3.2s ease-in-out infinite;
     animation-delay: var(--delay);
     transition: all 0.2s;
   }
 
-  .star.is-big .star__dot {
-    width: 10px;
-    height: 10px;
+  /* Extinct stars: an empty ring, all the same size (no mastery level any more) */
+  .star.is-extinct .star__dot {
+    width: 7px;
+    height: 7px;
+    border: 1.5px solid var(--c);
+    background: transparent;
+    box-shadow: none;
+    --o: 0.85;
   }
 
-  .has-active .star:not(.is-on) .star__dot {
+  .has-active .star:not(.is-on) {
     opacity: 0.45;
   }
 
   .star.is-on .star__dot {
     width: 18px;
     height: 18px;
+    border: 0;
     background: #fff;
     box-shadow: 0 0 28px 6px var(--c);
+    opacity: 1;
     animation: none;
   }
 
@@ -569,7 +1165,7 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
 
   @keyframes twinkle {
     50% {
-      opacity: 0.55;
+      opacity: calc(var(--o) * 0.55);
     }
   }
 
@@ -591,7 +1187,7 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
   .card {
     position: absolute;
     z-index: 5;
-    width: 290px;
+    width: 300px;
     overflow: hidden;
     border: 1px solid var(--line-dashed);
     border-radius: 16px;
@@ -601,7 +1197,8 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
       0 0 50px -16px var(--c);
   }
 
-  .card[hidden] {
+  .card[hidden],
+  .card [hidden] {
     display: none;
   }
 
@@ -652,7 +1249,8 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     min-width: 0;
   }
 
-  .card__label {
+  .card__label,
+  .card__star {
     font-family: var(--font-mono);
     font-size: 9.5px;
     letter-spacing: 0.14em;
@@ -683,12 +1281,21 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     letter-spacing: -0.04em;
   }
 
-  .card__desc {
+  .card__log {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0 18px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--text) 4%, transparent);
+  }
+
+  .card__log p {
     margin: 0;
-    padding: 0 18px;
-    font-size: 13.5px;
+    font-size: 14px;
     line-height: 1.5;
-    color: var(--text-soft);
+    color: var(--text);
   }
 
   .card__dl {
@@ -700,7 +1307,7 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
   }
 
   .card__dl dt {
-    margin-bottom: 3px;
+    margin-bottom: 4px;
   }
 
   .card__dl dd {
@@ -708,32 +1315,58 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     font-size: 13px;
   }
 
-  .card__dl [hidden] {
-    display: none;
+  .card__muted {
+    color: var(--text-muted);
   }
 
-  /* Status: green = in service, amber = in reserve, grey = archived */
-  .card__status {
-    --tone: var(--success);
+  /* Last used: green while still in use */
+  .card__last {
+    --tone: var(--text-faint);
     display: flex;
     align-items: center;
     gap: 6px;
-    color: var(--tone);
+    color: var(--text-soft);
   }
 
-  .card__status[data-tone='reserve'] {
-    --tone: var(--warning);
+  .card__last.is-current {
+    --tone: var(--success);
+    color: var(--success);
   }
 
-  .card__status[data-tone='archived'] {
-    --tone: var(--text-muted);
-  }
-
-  .card__status > span:first-child {
+  .card__last > span:first-child {
     width: 6px;
     height: 6px;
     border-radius: 50%;
     background: var(--tone);
+  }
+
+  .card__missions {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 14px;
+    padding: 0 18px;
+  }
+
+  .card__missions ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Mission chips are created by the script: :global so the scoped styles reach them */
+  .card__missions :global(li) {
+    padding: 4px 9px;
+    border: 1px solid color-mix(in srgb, var(--c) 33%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--c) 7%, transparent);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
   }
 
   .card__perf {
@@ -764,8 +1397,8 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
   .card__foot {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 14px 18px 16px;
+    gap: 10px;
+    padding: 14px 18px;
   }
 
   .card__code {
@@ -774,17 +1407,9 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     justify-content: space-between;
   }
 
-  .card__barcode {
-    display: flex;
-    gap: 2px;
-    height: 30px;
-  }
-
-  .card__barcode :global(span) {
-    background: var(--text);
-  }
 
   .card__serial {
+    white-space: nowrap;
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.12em;
@@ -795,28 +1420,49 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     display: flex;
     justify-content: space-between;
     align-items: center;
-    min-height: 44px;
-    padding: 11px 14px;
-    border: 1px solid var(--line-strong);
-    border-radius: 10px;
-    color: var(--text);
-    font-size: 14px;
-    font-weight: 600;
+    gap: 12px;
+    min-height: 32px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line-dashed);
+    color: var(--text-soft);
+    font-size: 12.5px;
+    font-weight: 500;
     text-decoration: none;
-    transition: border-color 0.2s;
+    transition: color 0.2s;
   }
 
   .card__doc:hover {
-    border-color: var(--c);
-  }
-
-  .card__doc {
-    gap: 12px;
-  }
-
-  .card__doc-arrow {
-    font-weight: 400;
     color: var(--c);
+  }
+
+  .card__doc-url {
+    min-width: 0;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    opacity: 0.85;
+  }
+
+  /* ---------- Narrow desktop ---------- */
+
+  @media (min-width: 1100px) and (max-width: 1279px) {
+    .inv__body {
+      gap: 20px;
+    }
+
+    .group {
+      padding-inline: 12px;
+    }
+
+    .group__mini {
+      display: none;
+    }
+
+    .group__items {
+      column-gap: 12px;
+    }
   }
 
   /* ---------- Tablet & mobile ---------- */
@@ -837,14 +1483,28 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
     }
 
     .inv__intro {
-      max-width: 560px;
       font-size: 15px;
     }
 
+    .legend {
+      gap: 8px 16px;
+      font-size: 10.5px;
+    }
+
+    .rate--legend {
+      gap: 4px;
+    }
+
+    /* One column: the constellations follow each other in file order */
     .inv__body {
       display: flex;
       flex-direction: column;
-      gap: 0;
+      align-items: stretch;
+      gap: 24px;
+    }
+
+    .inv__col {
+      display: contents;
     }
 
     /* The sky sits behind the lists and stays in view while scrolling them */
@@ -855,6 +1515,7 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
       z-index: 0;
       align-self: center;
       width: min(350px, 100%);
+      margin-bottom: max(-354px, calc(-94vw - 24px));
       pointer-events: none;
       opacity: 0.45;
       transition: opacity 0.3s;
@@ -868,54 +1529,168 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
       width: 100%;
     }
 
-    .sky__caption {
+    .sky__caption,
+    .sky__name,
+    .sky__approach-label {
       display: none;
     }
 
-    .inv__lists {
+    .group,
+    .approach {
       position: relative;
       z-index: 1;
-      margin-top: max(-330px, -94vw);
-      gap: 24px;
+    }
+
+    .group {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+    }
+
+    .group__head {
+      margin-bottom: 6px;
+      padding-bottom: 0;
+      border: 0;
     }
 
     .group__title {
-      gap: 8px;
+      flex-direction: row;
+      gap: 0;
+      font-family: var(--font-mono);
       font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--c);
     }
 
-    .group__dot {
-      width: 7px;
-      height: 7px;
+    .group__label::after {
+      content: ' · ';
+      white-space: pre;
+    }
+
+    .group__label,
+    .group__name {
+      font: inherit;
+      letter-spacing: inherit;
+      color: inherit;
+    }
+
+    .is-extinct .group__name {
+      color: inherit;
+    }
+
+    .group__meta {
+      display: none;
+    }
+
+    .group__items {
+      grid-template-rows: none;
+      grid-auto-flow: row;
+    }
+
+    .group__items li,
+    .group__items li.is-col-top {
+      border-top: 0;
     }
 
     .chip {
-      min-height: 40px;
-      padding: 9px 14px;
-      border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--bg) 70%, transparent);
-      font-size: 14px;
+      justify-content: space-between;
+      gap: 10px;
+      height: auto;
+      min-height: 36px;
+      padding: 6px 0;
+      font-size: 14.5px;
     }
 
-    .chip.is-on {
-      border-color: var(--c);
+    .chip__glyph {
+      display: none;
     }
 
-    .chip:hover:not(.is-on) {
-      background: color-mix(in srgb, var(--bg) 70%, transparent);
+    .group[data-group='tools'] .chip:not(.is-on) {
       color: var(--text-soft);
+    }
+
+    .rate span {
+      width: 10px;
+    }
+
+    .approach {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--text) 2.5%, transparent);
+      white-space: normal;
+    }
+
+    .approach__label-short,
+    .approach__short {
+      display: none;
+    }
+
+    .approach__label-long {
+      display: inline;
+    }
+
+    .approach__list {
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .approach__item {
+      gap: 12px;
+    }
+
+    .approach .marker {
+      width: 14px;
+      height: 14px;
+    }
+
+    .approach .marker__dot {
+      display: block;
+    }
+
+    .approach__name {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .approach__long {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .approach__status {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .is-spotted .approach__status {
+      color: var(--text-muted);
+    }
+
+    .approach__note {
+      font-size: 12px;
+      color: var(--text-muted);
     }
 
     .card {
       position: static;
       width: auto;
+      margin-top: 10px;
       border-radius: 14px;
       box-shadow: 0 0 40px -16px var(--c);
     }
 
     .card__slot,
-    .card__dl,
     .card__perf,
     .card__barcode {
       display: none;
@@ -941,24 +1716,40 @@ const titleMuted = fill(content.titleMuted, { stars: stars.length, groups: sky.g
       font-size: 22px;
     }
 
-    .card__desc {
+    .card__log {
+      margin: 0 16px;
+    }
+
+    .card__log p {
+      font-size: 14.5px;
+    }
+
+    .card__dl,
+    .card__missions {
       padding: 0 16px;
-      font-size: 14px;
+    }
+
+    .card__missions :global(li) {
+      font-size: 11px;
     }
 
     .card__foot {
       flex-direction: row;
       align-items: center;
       justify-content: space-between;
-      margin: 12px 16px 0;
-      padding: 12px 0 16px;
+      margin: 14px 16px 0;
+      padding: 12px 0 14px;
       border-top: 1px dashed var(--line-strong);
     }
 
+    .card__foot {
+      gap: 14px;
+    }
+
     .card__doc {
-      gap: 8px;
-      padding: 0 14px;
-      font-size: 13px;
+      min-width: 0;
+      padding-top: 0;
+      border-top: 0;
     }
   }
 </style>

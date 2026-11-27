@@ -3,23 +3,33 @@
   "label": "Crew",
   "title": "One foot in the stars,",
   "titleMuted": "the other in the code.",
-  "paragraphs": [
-    "Hey, I’m Lucas. I wrote my first lines of code in 2011 and turned it into my job in 2018. I love turning ideas into living applications, exploring new tech and polishing interfaces that pop.",
-    "Today I focus on **front-end** and **UI design**, because I love crafting experiences from A to Z: beautiful, smooth and fun to use."
-  ],
+  "note": {
+    "entry": "Pilot’s log · Entry 001 — 11.2026",
+    "place": "LM-26 · Toulouse",
+    "quote": "I’m the kind of dev who opens Figma before the IDE. To me, a great interface is first and foremost a consistent one: everything lands where you expect it, and using it just feels good without quite knowing why.",
+    "text": "As a lead, I set the frame so the team can move fast without the code going off in every direction. And when there’s a little room left, I slip in a detail that makes people smile… you may have already found one here.",
+    "signature": "Lucas",
+    "signatureRole": "Lead Front-End",
+    "end": "End of log"
+  },
+  "offDuty": {
+    "label": "Off duty",
+    "items": ["Marvel", "Pokémon", "Video games", "Movies", "Sunny trips", "Dr Pepper"]
+  },
   "badge": {
-    "title": "Crew pass",
-    "role": "Pilot",
+    "title": "Mission Control · Crew",
     "name": "Lucas Marfaing",
-    "job": "Lead Front-End · Ubigreen",
+    "job": "Lead Front-End",
+    "employer": "Ubigreen",
     "photoAlt": "ID photo of Lucas",
     "details": [
-      { "label": "Base", "value": "Toulouse · remote OK" },
-      { "label": "Specialty", "value": "Front-end & UI design" },
-      { "label": "Off duty", "value": "Space & Pokémon" },
-      { "label": "Fuel", "value": "Music & Dr Pepper" }
+      { "label": "Age", "since": "1997-04-25", "suffix": "y/o" },
+      { "label": "Base", "value": "Toulouse" },
+      { "label": "Team", "value": "Ubigreen" }
     ],
-    "status": "Listening"
+    "id": "ID · LM26-PL-01",
+    "status": "Listening",
+    "cv": { "label": "CV ↓", "href": "/cv/Lucas-Marfaing-CV.pdf" }
   },
   "skillsLabel": "Flight protocols · Soft skills",
   "skills": [

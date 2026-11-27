@@ -3,23 +3,33 @@
   "label": "Équipage",
   "title": "Un pied dans les étoiles,",
   "titleMuted": "l’autre dans le code.",
-  "paragraphs": [
-    "Hey, moi c’est Lucas. J’ai écrit mes premières lignes de code en 2011 et j’en ai fait mon métier en 2018. J’aime transformer des idées en applications vivantes, explorer de nouvelles technos et peaufiner des interfaces qui claquent.",
-    "Aujourd’hui je me concentre sur le **front-end** et le **design UI**, parce que j’aime créer des expériences de A à Z : belles, fluides et fun à utiliser."
-  ],
+  "note": {
+    "entry": "Note du pilote · Entrée 001 — 11.2026",
+    "place": "LM-26 · Toulouse",
+    "quote": "Je suis le genre de dev qui ouvre Figma avant l’IDE. Pour moi, une interface réussie, c’est d’abord une interface cohérente : tout tombe là où on l’attend, et l’utiliser devient agréable sans qu’on sache vraiment pourquoi.",
+    "text": "En tant que lead, je pose le cadre pour que l’équipe avance vite sans que le code parte dans tous les sens. Et quand il reste un peu de place, je glisse un détail qui fait sourire… vous en avez peut-être déjà trouvé un ici.",
+    "signature": "Lucas",
+    "signatureRole": "Lead Front-End",
+    "end": "Fin de note"
+  },
+  "offDuty": {
+    "label": "Hors mission",
+    "items": ["Marvel", "Pokémon", "Jeux vidéo", "Ciné", "Voyages au soleil", "Dr Pepper"]
+  },
   "badge": {
-    "title": "Pass équipage",
-    "role": "Pilote",
+    "title": "Mission Control · Équipage",
     "name": "Lucas Marfaing",
-    "job": "Lead Front-End · Ubigreen",
+    "job": "Lead Front-End",
+    "employer": "Ubigreen",
     "photoAlt": "Photo d’identité de Lucas",
     "details": [
-      { "label": "Base", "value": "Toulouse · remote OK" },
-      { "label": "Spécialité", "value": "Front-end & design UI" },
-      { "label": "Hors mission", "value": "Espace & Pokémon" },
-      { "label": "Carburant", "value": "Musique & Dr Pepper" }
+      { "label": "Âge", "since": "1997-04-25", "suffix": "ans" },
+      { "label": "Base", "value": "Toulouse" },
+      { "label": "Équipe", "value": "Ubigreen" }
     ],
-    "status": "À l’écoute"
+    "id": "ID · LM26-PL-01",
+    "status": "À l’écoute",
+    "cv": { "label": "CV ↓", "href": "/cv/Lucas-Marfaing-CV.pdf" }
   },
   "skillsLabel": "Protocoles de vol · Soft skills",
   "skills": [

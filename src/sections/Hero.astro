@@ -16,7 +16,12 @@ const { content } = Astro.props;
   <div class="hero__main container">
     <div class="hero__text">
       <p class="mono-label">{content.eyebrow}</p>
-      <h1 class="hero__title">{content.firstName}<br />{content.lastName}</h1>
+      <h1 class="hero__title">
+        {content.firstName}<br /><span class="hero__last"
+          >{content.lastName}<svg class="hero__spark" aria-hidden="true" viewBox="0 0 24 24"
+            ><path d="M12 0 C12.8 8 16 11.2 24 12 C16 12.8 12.8 16 12 24 C11.2 16 8 12.8 0 12 C8 11.2 11.2 8 12 0Z"></path></svg
+          ></span>
+      </h1>
       <p class="hero__intro"><span class="hero__tagline">{content.tagline}</span> {content.intro}</p>
     </div>
 
@@ -160,10 +165,38 @@ const { content } = Astro.props;
 
   .hero__title {
     margin: 0;
-    font-size: clamp(56px, 8.9vw, 128px);
+    font-size: clamp(54px, 8.05vw, 116px);
     font-weight: 600;
     line-height: 0.9;
-    letter-spacing: -0.055em;
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+  }
+
+  .hero__last {
+    position: relative;
+    display: inline-block;
+  }
+
+  /* Twinkling star next to the last name */
+  .hero__spark {
+    position: absolute;
+    right: -0.26em;
+    top: -0.07em;
+    width: 0.224em;
+    height: 0.224em;
+    min-width: 16px;
+    min-height: 16px;
+    fill: var(--accent);
+    filter: drop-shadow(0 0 6px var(--accent));
+    transform-origin: center;
+    animation: spark-twinkle 3.2s ease-in-out infinite;
+  }
+
+  @keyframes spark-twinkle {
+    50% {
+      opacity: 0.5;
+      transform: scale(0.8);
+    }
   }
 
   .hero__intro {
